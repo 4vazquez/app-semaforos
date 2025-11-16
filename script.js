@@ -62,3 +62,20 @@ fetch('semaforos.geojson')
             }
         }).addTo(map);
     });
+// Cargar GeoJSON de semáforos
+fetch('semaforos.geojson')
+    .then(response => response.json())
+    .then(data => {
+        L.geoJSON(data, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 6,
+                    fillColor: "#ff0000",
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).bindPopup("Semáforo");
+            }
+        }).addTo(map);
+    });
