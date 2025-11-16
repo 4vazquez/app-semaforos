@@ -1,36 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mapa de Semáforos Monterrey</title>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+zNcdxD2GVDsM26EJ3HkJzG3Y3e1Jp9j+v8iE+3mo="
-    crossorigin=""
-  />
-
-  <!-- Tu archivo CSS -->
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Semáforos Monterrey</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
-  <header>
     <h1>Mapa de Semáforos Monterrey</h1>
-  </header>
+    <div id="map"></div>
 
-  <div id="map"></div>
+    <!-- Widget flotante -->
+    <div id="widget">Semáforo: <span id="light-status">Rojo</span>
+        <br>
+        Opacidad: <input type="range" id="opacity-control" min="0.2" max="1" step="0.1" value="1">
+    </div>
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o9N1j/C3hYtS6YdZp2u9rKpshGWp4zG+mtwS6k6z9+8="
-    crossorigin=""
-  ></script>
-
-  <!-- Tu script -->
-  <script src="script.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
+
