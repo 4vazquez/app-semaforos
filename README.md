@@ -25,6 +25,14 @@ Este widget flotante busca evitar ese micro-caos urbano detectando cuándo el al
 
 "Si no ves el verde, el verde te avisa." 💚
 
+### 📂 Estructura del proyecto
+- `index.html`, `script.js`, `style.css` — prototipo web original (Leaflet + OpenStreetMap).
+- `export (1).geojson` — 1,579 semáforos del área metropolitana de Monterrey (OpenStreetMap, 2025-11-16).
+- `android/` — app Android nativa (Kotlin + Jetpack Compose, MVP en desarrollo).
+- `SPEC.md` — especificación del producto (MVP): alcance, flujos, modelo de datos, monetización y roadmap.
+- `TERMINOS_Y_CONDICIONES.md` — términos de uso y exención de responsabilidad (borrador, pendiente de revisión legal antes del lanzamiento).
+
 ### 🧠 Créditos
 - Idea original: Alan Vázquez
 - Asistencia técnica y desarrollo conceptual: GPT-5
+- Desarrollo del MVP Android: Jarvis (Muse Spark)

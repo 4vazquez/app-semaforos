@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Ubicación: detectar cercanía a semáforos y registrar reportes. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- Widget flotante sobre otras apps. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Servicio en primer plano para el widget y la detección. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Notificaciones de estado del widget. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Red: mapa (mosaicos OSM), backend y anuncios. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Vibración opcional al avisar del verde. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:name=".SemaforosMxApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SemaforosMx">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SemaforosMx">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Servicio del widget flotante (overlay con borde LED). -->
+        <service
+            android:name=".widget.FloatingWidgetService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <!-- AdMob: ID de aplicación de PRUEBA oficial de Google.
+             Cambiar por el ID real antes de publicar (ver README). -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+    </application>
+
+</manifest>

@@ -1,0 +1,78 @@
+<resources>
+    <!-- Nombre de la app: "Semáforos MX — El widget que despierta a los distraídos". -->
+    <string name="app_name">Semáforos MX</string>
+    <string name="app_tagline">El widget que despierta a los distraídos</string>
+    <string name="app_slogan">Si no ves el verde, el verde te avisa.</string>
+
+    <string name="welcome_title">Llega al verde a tiempo</string>
+    <string name="welcome_body">Semáforos MX te avisa justo antes de que el semáforo cambie a verde, para que no pierdas segundos en cada cruce. Mira la calle, no la pantalla.</string>
+    <string name="safety_notice">Aviso de seguridad: esta app no justifica usar el teléfono al manejar. La alerta es solo una señal visual en el borde del widget flotante para que levantes la vista a tiempo.</string>
+
+    <string name="map_title">Semáforos de Monterrey</string>
+    <string name="sync_verde">Sync verde</string>
+    <string name="sync_verde_hint">Presiona cuando el semáforo cambie a verde</string>
+    <string name="sync_recorded">Sync registrado, gracias</string>
+    <string name="no_light_nearby">No hay semáforo registrado cerca</string>
+
+    <string name="widget_activate">Activar widget flotante</string>
+    <string name="widget_deactivate">Desactivar widget</string>
+    <string name="widget_opacity">Opacidad del widget</string>
+    <string name="widget_running">Semáforos MX está activo</string>
+    <string name="widget_tap_to_open">Toca para abrir la app</string>
+
+    <string name="countdown_to_green">Verde en %1$d s</string>
+    <string name="green_now">¡Verde!</string>
+    <string name="time_approximate">Tiempo aproximado</string>
+    <string name="time_unknown">Sin datos de tiempo todavía</string>
+
+    <string name="syncs_this_month">Syncs este mes: %1$d / 20</string>
+    <string name="ad_free_active">Modo sin anuncios activo</string>
+    <string name="ad_free_hint">Con 20 syncs al mes quitas los anuncios</string>
+
+    <string name="settings">Ajustes</string>
+    <string name="setting_vibration">Vibrar al avisar del verde</string>
+    <string name="setting_detection_radius">Radio de detección (m)</string>
+    <string name="about">Acerca de</string>
+    <string name="about_body">Semáforos MX es un asistente de conducción. Tus reportes son anónimos y los tiempos publicados son promedios de muchos conductores: ningún reporte individual te identifica. Datos de semáforos: © OpenStreetMap contributors (ODbL).</string>
+
+    <string name="permission_location">Permiso de ubicación necesario para detectar semáforos cercanos.</string>
+    <string name="permission_overlay">Permiso de superposición necesario para mostrar el widget flotante.</string>
+    <string name="permission_grant">Otorgar permiso</string>
+    <string name="continue_button">Continuar</string>
+    <string name="add_light">Agregar semáforo aquí</string>
+    <string name="light_added">Semáforo agregado. Necesita reportes para tener confianza.</string>
+
+    <!-- Correcciones de mapa: "Aquí hay un semáforo" / "Ya no existe". -->
+    <string name="aqui_hay_hint">¿El semáforo no está en el mapa? Presiona el botón naranja</string>
+    <string name="light_confirmed">Semáforo confirmado. Gracias por tu reporte.</string>
+    <string name="already_reported">Este semáforo ya se envió a revisión, ¡manda otro!</string>
+    <string name="daily_cap_reached">Llegaste al límite de 5 semáforos nuevos por día</string>
+    <string name="ya_no_existe">¿Ya no existe?</string>
+    <string name="report_removed">Reportar que ya no existe</string>
+    <string name="removal_reported">Gracias. %1$d de 3 conductores han reportado que ya no existe.</string>
+    <string name="light_hidden">El semáforo se retiró del mapa. Gracias por reportarlo.</string>
+    <string name="light_unverified">Semáforo sin verificar (necesita confirmación)</string>
+    <string name="light_details">Detalles del semáforo</string>
+    <string name="close_button">Cerrar</string>
+
+    <!-- Verificación GPS y anti-abuso. -->
+    <string name="must_be_near_light">Debes estar cerca del semáforo para reportarlo</string>
+    <string name="no_gps_fix">No pudimos obtener tu ubicación. Intenta de nuevo en un momento.</string>
+    <string name="gps_stale">Tu ubicación está desactualizada. Espera unos segundos e intenta de nuevo.</string>
+    <string name="gps_inaccurate">La precisión del GPS es baja en este momento. Intenta de nuevo.</string>
+    <string name="gps_mock">Ubicación simulada detectada. Los reportes requieren ubicación real.</string>
+    <string name="report_rejected">Reporte no registrado: la ubicación no es fiable</string>
+
+    <!-- Términos y Condiciones (v1.0, borrador pendiente de revisión legal). -->
+    <string name="terms_title">Términos y Condiciones</string>
+    <string name="terms_summary_title">Antes de empezar, lo importante:</string>
+    <string name="terms_summary_driver">• Tú eres el único responsable al manejar. La app es una ayuda informativa: nunca sustituye tu atención ni el semáforo real.</string>
+    <string name="terms_summary_accuracy">• Los tiempos son aproximados y vienen de reportes de otros conductores: pueden ser inexactos. Guíate siempre por el semáforo real.</string>
+    <string name="terms_summary_liability">• Semáforos MX no se hace responsable por accidentes, daños o multas derivados del uso de la app.</string>
+    <string name="terms_summary_data">• Tus reportes se procesan de forma agregada y anonimizada. Los mapas son de OpenStreetMap (ODbL).</string>
+    <string name="terms_summary_abuse">• No se permiten ubicaciones falsas ni cuentas múltiples para manipular los datos.</string>
+    <string name="terms_read_full">Lee el texto completo a continuación. Al presionar "Acepto" confirmas que lo leíste y estás de acuerdo.</string>
+    <string name="terms_accept">Acepto</string>
+    <string name="terms_decline">No acepto</string>
+    <string name="terms_version">Versión 1.0 — 18 de noviembre de 2026</string>
+</resources>
