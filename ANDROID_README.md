@@ -1,0 +1,162 @@
+# Semáforos MX — MVP
+
+**El widget que despierta a los distraídos.**
+*«Si no ves el verde, el verde te avisa.»*
+
+Asistente de conducción que avisa cuando el semáforo está por cambiar a
+verde, para no perder segundos en cada cruce. Empieza en Monterrey, México.
+
+**Idea original:** Alan Vázquez.
+**Borrador inicial (nov 2025):** https://github.com/4vazquez/app-semaforos
+— prototipo web (Leaflet + OpenStreetMap) y GeoJSON con 1 579 semáforos
+reales de Monterrey. Esta app Android se construye sobre ese borrador
+(ver `SPEC.md` §0).
+
+La especificación completa del producto está en [`SPEC.md`](SPEC.md).
+
+## Qué incluye el MVP
+
+- **Widget flotante arrastrable** (overlay) con borde LED, cuenta
+  regresiva, parpadeo a 3 s del verde y **slider manual de opacidad**
+  (espejo del prototipo web de Alan).
+- **Mapa de semáforos de Monterrey** con OpenStreetMap (osmdroid, sin llave
+  de API ni facturación) y los **1 579 semáforos reales** del GeoJSON como
+  base semilla, con marcadores rojos (verificados) y grises (sin verificar).
+  Toque prolongado para agregar un semáforo; toque en un marcador para ver
+  su detalle (con «Ya no existe»).
+- **Botones «Sync verde» y «Aquí hay un semáforo»** grandes, de un toque:
+  corrigen los tiempos y agregan semáforos faltantes (en la ubicación GPS,
+  con sync incluido). **«Ya no existe»** reporta semáforos retirados: se
+  ocultan con 3 confirmaciones de conductores distintos.
+- **Agregación con confianza**: mediana ponderada por la confianza del
+  usuario, rechazo de atípicos por IQR y puntaje de confianza 0–1
+  (ver `TimingAggregator.kt`).
+- **Paquete anti-abuso**: verificación GPS (≤ 100 m, fix fresco y preciso),
+  detección de ubicación simulada, rechazo de saltos imposibles, cruce con
+  el sensor de movimiento, una cuenta por dispositivo, reputación (trust)
+  por usuario, semáforos nuevos sin verificar (grises, sin alertas) y tope
+  de 5 semáforos nuevos por usuario por día (ver `SPEC.md` §6.7).
+- **Monetización en tres niveles**: Gratis (con banner AdMob, ID de
+  prueba) · Colaborador (gratis y sin anuncios con 20+ actualizaciones en
+  semáforos distintos al mes; programa para conductores Uber/DiDi) ·
+  Plus (suscripción de pago, solo el flag/stub; se lanza después).
+- **Términos y Condiciones v1.1**: pantalla de aceptación obligatoria en la
+  primera apertura + relectura desde Ajustes. ⚠️ El texto es un borrador
+  pendiente de revisión legal antes del lanzamiento público.
+- **Detección pasiva de arranque** (acelerómetro/GPS) conectada al widget:
+  el arranque solo cuenta como reporte dentro de la ventana de verde ± 15 s;
+  calibración de umbrales en v1.
+
+## Requisitos para compilar
+
+- **JDK 17** (requerido por Android Gradle Plugin 8.5).
+- **Android SDK**: platform `android-34` + build-tools `34.0.0`.
+  Define `ANDROID_HOME` o crea `android/local.properties` con:
+  `sdk.dir=/ruta/a/tu/Android/Sdk`.
+- **Gradle 8.7** (se descarga solo con el wrapper).
+
+## Cómo compilar
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`.
+Instálalo en el teléfono con:
+
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+Pruebas unitarias (agregación, ponderación por confianza, correcciones de
+mapa, anti-abuso y matemática GPS):
+
+```bash
+./gradlew testDebugUnitTest
+```
+
+**Estado verificado (18 nov 2026):** el APK compila (`app-debug.apk`,
+23 MB, `com.alan.semaforosmx` v0.1.0-mvp) y las **21 pruebas unitarias
+pasan**. Nota del entorno: en este sandbox los procesos Java no pueden
+abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
+daemon ni descargar dependencias; la compilación aquí se hizo con un repo
+Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y
+Gradle en proceso (`~/gradle-offline-build.sh`, `--offline`, sin daemon).
+En una máquina normal, `./gradlew assembleDebug` funciona directo. Por el
+mismo bloqueo de TCP, la tarea `testDebugUnitTest` de Gradle no corre en
+este sandbox (sus workers forkados necesitan loopback); las 21 pruebas se
+ejecutaron directamente con `java org.junit.runner.JUnitCore` sobre las
+clases compiladas.
+
+## Cómo probar el MVP
+
+1. Instala el APK y abre la app.
+2. Lee y acepta los Términos y Condiciones (botón «Acepto»).
+3. Otorga ubicación, permiso de superposición (para el widget) y
+   notificaciones.
+4. El mapa muestra los 1 579 semáforos reales de Monterrey (círculos rojos).
+5. Activa el widget flotante con el botón de la pantalla principal y
+   arrástralo a donde no te estorbe.
+6. Acércate a un semáforo registrado (o usa un emulador con ubicación
+   simulada) y presiona **Sync verde** varias veces para ver cómo el
+   contador sube y la confianza del semáforo mejora. Prueba también
+   **«Aquí hay un semáforo»** en un cruce sin semáforo registrado: aparece
+   un marcador gris que necesita 3 confirmaciones para volverse rojo.
+
+## Activar el backend real (v1)
+
+El MVP usa un repositorio en memoria (los datos se pierden al cerrar la
+app). Para activar Supabase:
+
+1. Crea el proyecto en [supabase.com](https://supabase.com) y las tablas
+   del `SPEC.md` §6 (`traffic_lights`, `timing_reports`, `light_timings`,
+   `user_contributions`, `removal_reports`, `user_trust`).
+2. Importa el GeoJSON (`android/app/src/main/assets/semaforos_mty.geojson`)
+   a `traffic_lights` (el `id` de cada semáforo es el ID del nodo de OSM).
+3. Pon la URL y la clave anónima en `android/local.properties`:
+   `SUPABASE_URL=...` y `SUPABASE_ANON_KEY=...`.
+4. En `data/repository/RepositoryProvider.kt`, cambia `USE_SUPABASE` a
+   `true`.
+
+## Anuncios reales (v1)
+
+En `ads/AdsManager.kt`, cambia `USE_REAL_ADS` a `true` y pon el ID de
+unidad real de AdMob. También cambia el ID de aplicación en
+`AndroidManifest.xml` (meta-data `APPLICATION_ID`).
+
+## Estructura del proyecto
+
+```
+android/
+├── app/src/main/assets/semaforos_mty.geojson   # 1 579 semáforos (OSM, ODbL)
+├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.1 (verbatim)
+├── app/src/main/java/com/alan/semaforosmx/
+│   ├── MainActivity.kt            # Puerta de términos + mapa + botones + ajustes
+│   ├── SemaforosMxApp.kt          # Inicialización (OSM + AdMob + seed)
+│   ├── data/GeoJsonLightsLoader.kt # Parsea el GeoJSON semilla
+│   ├── data/UserIdentity.kt       # ID anónimo ligado al dispositivo
+│   ├── data/legal/                # Aceptación de Términos y Condiciones
+│   ├── data/model/Models.kt       # Semáforo, reporte, timing, trust, anti-abuso
+│   ├── data/aggregation/          # Mediana ponderada + IQR + confianza
+│   ├── data/repository/           # Interfaz, en memoria, Supabase (stub)
+│   ├── ui/map/                    # Mapa OpenStreetMap (rojos/grises + detalle)
+│   ├── ui/sync/                   # Botones Sync verde y Aquí hay semáforo
+│   ├── ui/terms/                  # Pantalla de Términos (aceptación/relectura)
+│   ├── ui/settings/               # Ajustes (vibración, términos, acerca de)
+│   ├── widget/                    # Servicio overlay + borde LED (arrastrable)
+│   ├── sensing/                   # Verificación GPS + detección pasiva
+│   └── ads/                       # Banner AdMob + niveles Gratis/Colaborador/Plus
+└── app/src/test/...               # Pruebas: agregador, trust, mapa, anti-abuso, GPS
+```
+
+## Notas
+
+- El MVP se publicó en el repositorio de Alan
+  (https://github.com/4vazquez/app-semaforos, commit `1fe0cb3`, 18 nov 2026)
+  por el agente principal. Este agente de construcción trabaja solo en
+  local y no sube nada a GitHub.
+- No se creó ninguna cuenta en la nube ni se publicó nada en Play Store.
+- Datos de semáforos: © OpenStreetMap contributors, licencia ODbL.
+- La app no alienta el uso del teléfono al manejar: el widget solo muestra
+  color y un número; el mensaje de la app es *mira la calle, no la pantalla*.

@@ -4,6 +4,15 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// collection-ktx 1.2.0 duplica las clases *Kt (ArrayMapKt, LruCacheKt,
+// etc.) que collection 1.4.0 ya incluye: en 1.4.0 las extensiones -ktx se
+// fusionaron en el artefacto principal y el módulo -ktx quedó obsoleto.
+// Sin esta exclusión, checkDebugDuplicateClasses falla. Alguna dependencia
+// transitiva (AndroidX) todavía arrastra collection-ktx 1.2.0.
+configurations.all {
+    exclude(group = "androidx.collection", module = "collection-ktx")
+}
+
 android {
     namespace = "com.alan.semaforosmx"
     compileSdk = 34
@@ -42,11 +51,22 @@ android {
 
     packaging {
         resources {
-            // lifecycle-common y annotation embarcan el mismo fichero de
-            // metadatos Kotlin/Native (.knm); el merge de recursos falla
-            // por duplicado. Estos ficheros solo los usa el tooling KMP,
-            // nunca la app en Android, así que se excluyen del APK.
+            // Las librerías AndroidX multiplaforma (lifecycle-common,
+            // collection, annotation, etc.) embarcan los mismos ficheros de
+            // metadatos Kotlin/Native (.knm) y el mismo `manifest` bajo
+            // commonMain/ y nonJvmMain/; el merge de recursos falla por
+            // duplicado. Estos ficheros solo los usa el tooling KMP, nunca
+            // la app en Android, así que se excluyen todos del APK.
+            // (Entradas explícitas: el glob `*Main/**` no excluyó
+            // nonJvmMain en AGP 8.5.2, comportamiento no documentado.)
+            excludes += "commonMain/**"
             excludes += "nonJvmMain/**"
+            excludes += "nativeMain/**"
+            excludes += "jsMain/**"
+            excludes += "jvmMain/**"
+            excludes += "androidMain/**"
+            excludes += "metadataMain/**"
+            excludes += "META-INF/kotlin-project-structure-metadata.json"
         }
     }
 }

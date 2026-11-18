@@ -18,6 +18,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.Gravity
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -33,13 +34,20 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.alan.semaforosmx.MainActivity
 import com.alan.semaforosmx.R
+import com.alan.semaforosmx.data.UserIdentity
 import com.alan.semaforosmx.data.aggregation.TimingAggregator
+import com.alan.semaforosmx.data.model.AntiAbuse
 import com.alan.semaforosmx.data.model.DayType
+import com.alan.semaforosmx.data.model.LightStatus
+import com.alan.semaforosmx.data.model.NewLightStatus
 import com.alan.semaforosmx.data.model.ReportSource
 import com.alan.semaforosmx.data.model.TimingReport
 import com.alan.semaforosmx.data.model.TrafficLight
 import com.alan.semaforosmx.data.repository.InMemoryTimingRepository
 import com.alan.semaforosmx.data.repository.RepositoryProvider
+import com.alan.semaforosmx.sensing.GpsVerification
+import com.alan.semaforosmx.sensing.LocationHelper
+import com.alan.semaforosmx.sensing.MovementDetector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -47,17 +55,22 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 /**
  * Servicio en primer plano del widget flotante.
  *
- * - Muestra un overlay (SYSTEM_ALERT_WINDOW) con el borde LED y el botón
- *   "Sync verde" sobre cualquier app.
- * - Cada segundo recalcula la cuenta regresiva con el semáforo más cercano.
+ * - Muestra un overlay (SYSTEM_ALERT_WINDOW) con el borde LED y los botones
+ *   "Sync verde" y "Aquí hay un semáforo" sobre cualquier app.
+ * - Cada segundo recalcula la cuenta regresiva con el semáforo VERIFICADO
+ *   más cercano. Los semáforos UNVERIFIED (grises) nunca sirven alertas.
  * - Alerta (parpadeo + vibración opcional) cuando faltan ≤ 3 s para el verde.
- * - El botón "Sync verde" registra el momento real del cambio y corrige
- *   la base de datos.
+ * - Los botones registran el momento real del cambio y corrigen la base de
+ *   datos, con verificación GPS y anti-abuso (ubicación simulada, saltos
+ *   imposibles, salto GPS con el coche detenido).
+ * - La detección pasiva (acelerómetro + GPS) registra el arranque del coche
+ *   como reporte solo si cae dentro de la ventana de verde estimado ± 15 s.
  */
 class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
@@ -110,8 +123,19 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private var overlayParams: WindowManager.LayoutParams? = null
     private var locationManager: LocationManager? = null
     private var lastLocation: Location? = null
+    private var previousLocation: Location? = null
     private var nearestLight: TrafficLight? = null
     private var lastAlertedLightId: String? = null
+    /** Último reporte pasivo: (semáforo, momento). Evita duplicados. */
+    private var lastPassiveReport: Pair<String, Long>? = null
+
+    /** Detección pasiva de arranque + estado detenido (anti-abuso). */
+    private val movementDetector by lazy {
+        MovementDetector(this) { startedAtMillis -> onVehicleStarted(startedAtMillis) }
+    }
+
+    /** ID anónimo del usuario, ligado al dispositivo (ver UserIdentity). */
+    private val userId: String by lazy { UserIdentity.get(this) }
 
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     override val savedStateRegistry: SavedStateRegistry
@@ -125,6 +149,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
+            previousLocation = lastLocation
             lastLocation = location
             scope.launch(Dispatchers.IO) { updateNearestLight(location) }
         }
@@ -161,6 +186,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         startLocationUpdates()
+        movementDetector.start()
         startTicker()
     }
 
@@ -168,6 +194,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
         tickerJob?.cancel()
+        movementDetector.stop()
         locationManager?.removeUpdates(locationListener)
         overlayView?.let { windowManager?.removeView(it) }
         overlayView = null
@@ -192,6 +219,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                             .edit().putFloat(PREF_OPACITY, value).apply()
                     },
                     onSyncVerde = { onSyncVerdePressed() },
+                    onAquiHaySemaforo = { onAquiHaySemaforoPressed() },
                     onDrag = { dragAmount -> moveWidget(dragAmount.x, dragAmount.y) },
                     onClose = { stopWidget(); stopSelf() }
                 )
@@ -251,9 +279,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         val lights = RepositoryProvider.repository.lightsNear(
             location.latitude, location.longitude, DETECTION_RADIUS_METERS
         )
-        nearestLight = lights.minByOrNull {
-            it.distanceToMeters(location.latitude, location.longitude)
-        }
+        // Solo semáforos VERIFICADOS sirven alertas: los UNVERIFIED (grises)
+        // no tienen datos de confianza todavía.
+        nearestLight = lights
+            .filter { it.status == LightStatus.VERIFIED }
+            .minByOrNull {
+                it.distanceToMeters(location.latitude, location.longitude)
+            }
         if (nearestLight == null) {
             ledState = LedState.UNKNOWN
             showCountdown = false
@@ -272,6 +304,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     private suspend fun refreshCountdown() {
         val light = nearestLight ?: return
+        // Doble protección: aunque el semáforo más cercano se calculó con
+        // VERIFICADOS, su estado pudo cambiar entre actualizaciones.
+        if (light.status != LightStatus.VERIFIED) {
+            ledState = LedState.UNKNOWN
+            showCountdown = false
+            return
+        }
         val now = System.currentTimeMillis()
         val hourSlot = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val dayType = InMemoryTimingRepository.currentDayType()
@@ -301,41 +340,173 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         }
     }
 
+    /** Toast desde el servicio (corre en el hilo principal del scope). */
+    private fun showServiceToast(resId: Int) {
+        Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Anti-abuso: ¿el GPS acaba de brincar mientras el coche está detenido?
+     * Si el sensor de movimiento dice que el coche está quieto pero el GPS
+     * saltó más de 100 m en menos de 30 s, el fix no es fiable (ubicación
+     * simulada o GPS brincando) y el reporte se rechaza.
+     */
+    private fun isSuspiciousJump(): Boolean {
+        val prev = previousLocation ?: return false
+        val curr = lastLocation ?: return false
+        if (!movementDetector.isStopped) return false
+        val dtMillis = (curr.elapsedRealtimeNanos - prev.elapsedRealtimeNanos) / 1_000_000L
+        if (dtMillis < 0 || dtMillis > AntiAbuse.STATIONARY_JUMP_WINDOW_MILLIS) return false
+        val distance = GpsVerification.distanceMeters(
+            prev.latitude, prev.longitude, curr.latitude, curr.longitude
+        )
+        return distance > AntiAbuse.STATIONARY_JUMP_METERS
+    }
+
     /** El conductor presionó "Sync verde": el semáforo cambió justo ahora. */
     private fun onSyncVerdePressed() {
-        val light = nearestLight
-        val location = lastLocation
-        scope.launch(Dispatchers.IO) {
-            val now = System.currentTimeMillis()
-            if (light != null) {
-                RepositoryProvider.repository.submitReport(
+        scope.launch {
+            val light = nearestLight
+            val location = lastLocation
+            if (light == null) {
+                showServiceToast(R.string.no_light_nearby)
+                return@launch
+            }
+            if (location == null) {
+                showServiceToast(R.string.no_gps_fix)
+                return@launch
+            }
+            val check = GpsVerification.check(
+                location, light.latitude, light.longitude
+            )
+            if (check != GpsVerification.Check.OK) {
+                showServiceToast(GpsVerification.messageRes(check))
+                return@launch
+            }
+            if (isSuspiciousJump()) {
+                showServiceToast(R.string.report_rejected)
+                return@launch
+            }
+            val accepted = withContext(Dispatchers.IO) {
+                val repo = RepositoryProvider.repository
+                val ok = repo.submitReport(
                     TimingReport(
                         lightId = light.id,
-                        reportedAtMillis = now,
+                        reportedAtMillis = System.currentTimeMillis(),
                         hourSlot = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
                         dayType = InMemoryTimingRepository.currentDayType(),
                         source = ReportSource.MANUAL_SYNC,
-                        gpsAccuracyMeters = location?.accuracy ?: 50f,
+                        gpsAccuracyMeters = location.accuracy,
                         userId = userId
                     )
                 )
+                if (ok) {
+                    repo.recordContribution(
+                        userId, InMemoryTimingRepository.currentMonth(), light.id
+                    )
+                }
+                ok
             }
-            RepositoryProvider.repository.recordSync(
-                userId, InMemoryTimingRepository.currentMonth()
-            )
+            if (!accepted) {
+                showServiceToast(R.string.report_rejected)
+                return@launch
+            }
+            // Feedback inmediato: el borde se pone verde (solo si el reporte
+            // contó; en caso de rechazo el LED no miente).
+            ledState = LedState.GREEN
+            showCountdown = false
         }
-        // Feedback inmediato: el borde se pone verde aunque no hubiera dato.
-        ledState = LedState.GREEN
-        showCountdown = false
     }
 
-    /** ID anónimo del usuario, generado una vez en el dispositivo. */
-    private val userId: String by lazy {
-        val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        prefs.getString("user_id", null) ?: run {
-            val id = java.util.UUID.randomUUID().toString()
-            prefs.edit().putString("user_id", id).apply()
-            id
+    /**
+     * El conductor presionó "Aquí hay un semáforo": está detenido en un
+     * semáforo que la app no conoce. Se crea en la ubicación GPS actual
+     * (fix fresco obligatorio) y se registra el sync de verde.
+     */
+    private fun onAquiHaySemaforoPressed() {
+        scope.launch {
+            val location = LocationHelper.getFreshLocation(this@FloatingWidgetService)
+            if (location == null) {
+                showServiceToast(R.string.no_gps_fix)
+                return@launch
+            }
+            val check = GpsVerification.check(location, null, null)
+            if (check != GpsVerification.Check.OK) {
+                showServiceToast(GpsVerification.messageRes(check))
+                return@launch
+            }
+            if (isSuspiciousJump()) {
+                showServiceToast(R.string.report_rejected)
+                return@launch
+            }
+            val outcome = withContext(Dispatchers.IO) {
+                val repo = RepositoryProvider.repository
+                val result = repo.reportNewLightAt(
+                    location.latitude, location.longitude, userId, location.accuracy
+                )
+                if ((result.status == NewLightStatus.CREATED ||
+                        result.status == NewLightStatus.CONFIRMED_EXISTING) &&
+                    result.light != null
+                ) {
+                    repo.recordContribution(
+                        userId, InMemoryTimingRepository.currentMonth(), result.light.id
+                    )
+                }
+                result
+            }
+            when (outcome.status) {
+                NewLightStatus.CREATED,
+                NewLightStatus.CONFIRMED_EXISTING -> {
+                    ledState = LedState.GREEN
+                    showCountdown = false
+                }
+                NewLightStatus.ALREADY_REPORTED ->
+                    showServiceToast(R.string.already_reported)
+                NewLightStatus.DAILY_CAP_REACHED ->
+                    showServiceToast(R.string.daily_cap_reached)
+            }
+        }
+    }
+
+    /**
+     * Detección pasiva: el coche arrancó. Solo cuenta como reporte de verde
+     * si el arranque cae dentro de la ventana de verde estimado ± 15 s
+     * (si no, fue vuelta en rojo, verde desde antes, etc.). Un reporte
+     * pasivo por semáforo cada 60 s como máximo. Los reportes pasivos NO
+     * cuentan para la cuota Colaborador: el programa premia la contribución
+     * activa (ver SPEC.md §9).
+     */
+    private fun onVehicleStarted(startedAtMillis: Long) {
+        scope.launch(Dispatchers.IO) {
+            val light = nearestLight ?: return@launch
+            if (light.status != LightStatus.VERIFIED) return@launch
+            val last = lastPassiveReport
+            if (last != null && last.first == light.id &&
+                startedAtMillis - last.second < 60_000L
+            ) return@launch
+            val now = System.currentTimeMillis()
+            val timing = RepositoryProvider.repository.timingFor(
+                light.id,
+                Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
+                InMemoryTimingRepository.currentDayType()
+            ) ?: return@launch
+            val seconds = TimingAggregator.secondsUntilGreen(timing, now) ?: return@launch
+            val estimatedGreenAt = now + seconds * 1000L
+            if (!MovementDetector.isWithinGreenWindow(startedAtMillis, estimatedGreenAt)) {
+                return@launch
+            }
+            val accepted = RepositoryProvider.repository.submitReport(
+                TimingReport(
+                    lightId = light.id,
+                    reportedAtMillis = startedAtMillis,
+                    hourSlot = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
+                    dayType = InMemoryTimingRepository.currentDayType(),
+                    source = ReportSource.PASSIVE,
+                    gpsAccuracyMeters = lastLocation?.accuracy ?: 50f,
+                    userId = userId
+                )
+            )
+            if (accepted) lastPassiveReport = light.id to startedAtMillis
         }
     }
 

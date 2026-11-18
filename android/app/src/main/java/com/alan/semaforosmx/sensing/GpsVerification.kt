@@ -88,6 +88,16 @@ object GpsVerification {
         return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     }
 
+    /** Mensaje amable (recurso de string) para cada fallo de verificación. */
+    fun messageRes(check: Check): Int = when (check) {
+        Check.OK -> 0 // No se usa: OK no muestra mensaje.
+        Check.NO_LOCATION -> com.alan.semaforosmx.R.string.no_gps_fix
+        Check.MOCK -> com.alan.semaforosmx.R.string.gps_mock
+        Check.STALE -> com.alan.semaforosmx.R.string.gps_stale
+        Check.INACCURATE -> com.alan.semaforosmx.R.string.gps_inaccurate
+        Check.TOO_FAR -> com.alan.semaforosmx.R.string.must_be_near_light
+    }
+
     /**
      * Verificación completa de un fix contra un semáforo.
      * Si [lightLatitude]/[lightLongitude] son null, solo se verifican

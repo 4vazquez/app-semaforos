@@ -39,7 +39,8 @@ import androidx.compose.ui.unit.sp
  * apretar un botón enorme. Nada más.
  *
  * Layout: asa de arrastre arriba · borde LED en el contorno ·
- * cuenta regresiva al centro · botón "Sync verde" · slider de opacidad.
+ * cuenta regresiva al centro · botones "Sync verde" y "Aquí hay
+ * semáforo" · slider de opacidad.
  */
 @Composable
 fun WidgetOverlay(
@@ -49,6 +50,7 @@ fun WidgetOverlay(
     opacity: Float,
     onOpacityChange: (Float) -> Unit,
     onSyncVerde: () -> Unit,
+    onAquiHaySemaforo: () -> Unit,
     onDrag: (Offset) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
@@ -93,24 +95,43 @@ fun WidgetOverlay(
                 }
             }
 
-            // Parte inferior: botón Sync verde + opacidad.
+            // Parte inferior: botones Sync verde + Aquí hay semáforo + opacidad.
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Button(
-                    onClick = onSyncVerde,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2E7D32),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.size(104.dp) // Grande: un toque sin mirar.
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "SYNC\nVERDE",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Button(
+                        onClick = onSyncVerde,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2E7D32),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.size(104.dp) // Grande: un toque sin mirar.
+                    ) {
+                        Text(
+                            text = "SYNC\nVERDE",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Button(
+                        onClick = onAquiHaySemaforo,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE65100),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.size(104.dp)
+                    ) {
+                        Text(
+                            text = "AQUÍ HAY\nSEMÁFORO",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

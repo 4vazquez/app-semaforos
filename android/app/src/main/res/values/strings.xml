@@ -50,6 +50,7 @@
     <string name="ya_no_existe">¿Ya no existe?</string>
     <string name="report_removed">Reportar que ya no existe</string>
     <string name="removal_reported">Gracias. %1$d de 3 conductores han reportado que ya no existe.</string>
+    <string name="removal_count">Reportes de que ya no existe: %1$d de 3</string>
     <string name="light_hidden">El semáforo se retiró del mapa. Gracias por reportarlo.</string>
     <string name="light_unverified">Semáforo sin verificar (necesita confirmación)</string>
     <string name="light_details">Detalles del semáforo</string>
@@ -74,5 +75,5 @@
     <string name="terms_read_full">Lee el texto completo a continuación. Al presionar "Acepto" confirmas que lo leíste y estás de acuerdo.</string>
     <string name="terms_accept">Acepto</string>
     <string name="terms_decline">No acepto</string>
-    <string name="terms_version">Versión 1.0 — 18 de noviembre de 2026</string>
+    <string name="terms_version">Versión 1.1 — 18 de noviembre de 2026</string>
 </resources>

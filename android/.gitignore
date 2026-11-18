@@ -1,9 +1,0 @@
-# Archivos generados por la compilación — no se versionan
-/build/
-**/build/
-.gradle/
-local.properties
-*.iml
-.idea/
-*.apk
-*.aab
