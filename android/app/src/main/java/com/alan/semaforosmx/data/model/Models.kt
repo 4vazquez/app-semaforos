@@ -198,7 +198,52 @@ data class UserTrust(
         /** Bajada por reporte que discrepa con la multitud. */
         const val REJECTED_PENALTY = 0.05f
     }
+
+    /** Nivel legible de la confianza (para la pantalla «Mis aportes»). */
+    fun level(): TrustLevel = when {
+        trustScore < 0.3f -> TrustLevel.BUILDING
+        trustScore < 0.6f -> TrustLevel.GOOD
+        trustScore < 0.85f -> TrustLevel.RELIABLE
+        else -> TrustLevel.HIGHLY_RELIABLE
+    }
 }
+
+/** Nivel de confianza de un usuario, en lenguaje sencillo. */
+enum class TrustLevel {
+    /** Menos de 0.3: historial corto o con reportes atípicos. */
+    BUILDING,
+    /** 0.3–0.6: confianza normal (incluye el neutral 0.5 de inicio). */
+    GOOD,
+    /** 0.6–0.85: historial de reportes confirmados. */
+    RELIABLE,
+    /** 0.85 o más: conductor muy confiable. */
+    HIGHLY_RELIABLE
+}
+
+/** Tipo de aporte en el historial del usuario. */
+enum class HistoryKind {
+    /** Sync verde manual (botón «Sync verde»). */
+    SYNC,
+    /** Semáforo agregado con «Aquí hay un semáforo». */
+    LIGHT_ADDED,
+    /** Reporte de retiro («Ya no existe»). */
+    LIGHT_REMOVED
+}
+
+/**
+ * Una entrada del historial de aportes del usuario (pantalla
+ * «Mis aportes»). Solo incluye aportes ACTIVOS (syncs manuales,
+ * agregados y retiros): los reportes pasivos de arranque no aparecen,
+ * porque no cuentan para la cuota Colaborador.
+ */
+data class ContributionHistoryEntry(
+    val kind: HistoryKind,
+    val lightId: String,
+    /** Nombre del cruce, si se conoce (null → «Semáforo»). */
+    val lightName: String?,
+    /** Momento del aporte, en milisegundos (UTC). */
+    val reportedAtMillis: Long
+)
 
 /** Resultado de «Aquí hay un semáforo». */
 enum class NewLightStatus {

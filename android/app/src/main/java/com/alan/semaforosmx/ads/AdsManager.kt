@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.alan.semaforosmx.data.model.UserContribution
+import com.alan.semaforosmx.widget.WidgetMode
+import com.alan.semaforosmx.widget.WidgetModes
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -51,6 +53,14 @@ object AdsManager {
      */
     fun shouldShowAds(contribution: UserContribution): Boolean =
         !contribution.isAdFree && !isPlusUser()
+
+    /**
+     * Modo del widget flotante en segundo plano para este usuario:
+     * Colaborador o Plus → widget completo (botones + opacidad);
+     * Gratis → solo LED. Ver [WidgetMode].
+     */
+    fun widgetMode(contribution: UserContribution): WidgetMode =
+        WidgetModes.forContribution(contribution, isPlusUser())
 }
 
 @Composable

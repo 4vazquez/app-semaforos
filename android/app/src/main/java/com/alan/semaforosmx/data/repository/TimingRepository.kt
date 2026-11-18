@@ -1,5 +1,6 @@
 package com.alan.semaforosmx.data.repository
 
+import com.alan.semaforosmx.data.model.ContributionHistoryEntry
 import com.alan.semaforosmx.data.model.DayType
 import com.alan.semaforosmx.data.model.LightTiming
 import com.alan.semaforosmx.data.model.MapCorrection
@@ -10,6 +11,7 @@ import com.alan.semaforosmx.data.model.RemovalReport
 import com.alan.semaforosmx.data.model.TimingReport
 import com.alan.semaforosmx.data.model.TrafficLight
 import com.alan.semaforosmx.data.model.UserContribution
+import com.alan.semaforosmx.data.model.UserTrust
 
 /**
  * Fuente de datos de semáforos y tiempos.
@@ -96,4 +98,22 @@ interface TimingRepository {
      * Con 20 semáforos distintos al mes el usuario es Colaborador.
      */
     suspend fun recordContribution(userId: String, month: String, lightId: String): UserContribution
+
+    /**
+     * Reputación (trust) actual de un usuario: puntaje 0.1–1.0 (empieza en
+     * 0.5 neutral) + conteos de reportes confirmados y rechazados. La
+     * pantalla «Mis aportes» lo muestra como nivel de confianza.
+     */
+    suspend fun userTrust(userId: String): UserTrust
+
+    /**
+     * Historial de aportes del usuario (syncs manuales, semáforos agregados
+     * y retiros reportados), del más reciente al más antiguo, hasta
+     * [limit] entradas. Los reportes pasivos de arranque NO aparecen: no
+     * cuentan para la cuota Colaborador y no son aportes activos.
+     */
+    suspend fun contributionHistory(
+        userId: String,
+        limit: Int = 50
+    ): List<ContributionHistoryEntry>
 }

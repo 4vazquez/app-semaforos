@@ -21,13 +21,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -60,6 +63,8 @@ import com.alan.semaforosmx.data.repository.InMemoryTimingRepository
 import com.alan.semaforosmx.data.repository.RepositoryProvider
 import com.alan.semaforosmx.sensing.GpsVerification
 import com.alan.semaforosmx.sensing.LocationHelper
+import com.alan.semaforosmx.ui.alertas.AlertasScreen
+import com.alan.semaforosmx.ui.aportes.MisAportesScreen
 import com.alan.semaforosmx.ui.map.TrafficLightMap
 import com.alan.semaforosmx.ui.settings.SettingsScreen
 import com.alan.semaforosmx.ui.sync.AquiHaySemaforoButton
@@ -74,18 +79,24 @@ import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 /**
- * Pantalla principal: mapa de semáforos + botones Sync verde y
- * «Aquí hay un semáforo» + control del widget flotante + contador de
- * contribuciones + banner de anuncios.
+ * Actividad principal: menú inferior (Mapa / Mis aportes / Alertas /
+ * Ajustes) + puerta de Términos y Condiciones.
+ *
+ * El menú solo existe DENTRO de la app: cuando la app está cerrada no hay
+ * menú en pantalla; en su lugar el widget flotante trabaja en segundo
+ * plano y aparece solo cuando hay un semáforo cerca (ver
+ * [FloatingWidgetService]). La actividad avisa al servicio cuando está al
+ * frente (onResume/onPause) para que el overlay se oculte mientras el
+ * usuario usa el menú.
  *
  * Flujo de arranque: primero los Términos y Condiciones (pantalla de
  * aceptación en la primera apertura; sin «Acepto» no se usa la app),
- * después el mapa. Los permisos se piden al arrancar: ubicación, overlay
+ * después el menú. Los permisos se piden al arrancar: ubicación, overlay
  * (widget flotante) y notificaciones.
  */
 class MainActivity : ComponentActivity() {
 
-    private enum class AppScreen { MAIN, SETTINGS, TERMS_VIEW }
+    private enum class AppScreen { MAP, APORTES, ALERTAS, SETTINGS, TERMS_VIEW }
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -106,6 +117,19 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // La app está al frente: el widget se oculta (el menú está aquí).
+        FloatingWidgetService.setAppInForeground(true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // La app se va a segundo plano: el widget puede aparecer si hay un
+        // semáforo cerca.
+        FloatingWidgetService.setAppInForeground(false)
     }
 
     private fun requestInitialPermissions() {
@@ -142,10 +166,12 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Raíz de la app: puerta de términos + navegación entre pantallas
-     * (mapa / ajustes / términos). Navegación por estado, sin librería de
-     * navegación (el MVP tiene 3 pantallas).
+     * Raíz de la app: puerta de términos + menú inferior (mapa / mis
+     * aportes / alertas / ajustes). Los Términos en relectura son una
+     * pantalla aparte (sin menú). Navegación por estado, sin librería de
+     * navegación.
      */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun AppRoot(
         onRequestOverlayPermission: () -> Unit,
@@ -156,13 +182,15 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(TermsAcceptance.isAccepted(context))
         }
         var termsText by remember { mutableStateOf("") }
-        var screen by remember { mutableStateOf(AppScreen.MAIN) }
+        var screen by remember { mutableStateOf(AppScreen.MAP) }
+        var widgetActive by remember { mutableStateOf(false) }
         var vibrationEnabled by remember {
             mutableStateOf(
                 context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
                     .getBoolean("vibration_enabled", true)
             )
         }
+        val userId = remember { UserIdentity.get(context) }
 
         LaunchedEffect(Unit) {
             termsText = withContext(Dispatchers.IO) {
@@ -183,36 +211,134 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        when (screen) {
-            AppScreen.MAIN -> MainScreen(
-                onRequestOverlayPermission = onRequestOverlayPermission,
-                hasOverlayPermission = hasOverlayPermission,
-                onOpenSettings = { screen = AppScreen.SETTINGS }
-            )
-            AppScreen.SETTINGS -> SettingsScreen(
-                vibrationEnabled = vibrationEnabled,
-                onVibrationChange = { enabled ->
-                    vibrationEnabled = enabled
-                    context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
-                        .edit().putBoolean("vibration_enabled", enabled).apply()
-                },
-                onTermsClick = { screen = AppScreen.TERMS_VIEW },
-                onBack = { screen = AppScreen.MAIN }
-            )
-            AppScreen.TERMS_VIEW -> TermsScreen(
+        // Relectura de Términos desde Ajustes: pantalla completa, sin menú.
+        if (screen == AppScreen.TERMS_VIEW) {
+            TermsScreen(
                 termsText = termsText,
                 mode = TermsMode.VIEW,
                 onClose = { screen = AppScreen.SETTINGS }
             )
+            return
+        }
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            stringResource(
+                                when (screen) {
+                                    AppScreen.MAP -> R.string.map_title
+                                    AppScreen.APORTES -> R.string.aportes_title
+                                    AppScreen.ALERTAS -> R.string.alertas_title
+                                    AppScreen.SETTINGS -> R.string.settings
+                                    AppScreen.TERMS_VIEW -> R.string.terms_title
+                                }
+                            )
+                        )
+                    }
+                )
+            },
+            bottomBar = {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = screen == AppScreen.MAP,
+                        onClick = { screen = AppScreen.MAP },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Map,
+                                contentDescription = stringResource(R.string.nav_map)
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_map)) }
+                    )
+                    NavigationBarItem(
+                        selected = screen == AppScreen.APORTES,
+                        onClick = { screen = AppScreen.APORTES },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.BarChart,
+                                contentDescription = stringResource(R.string.nav_aportes)
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_aportes)) }
+                    )
+                    NavigationBarItem(
+                        selected = screen == AppScreen.ALERTAS,
+                        onClick = { screen = AppScreen.ALERTAS },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = stringResource(R.string.nav_alertas)
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_alertas)) }
+                    )
+                    NavigationBarItem(
+                        selected = screen == AppScreen.SETTINGS,
+                        onClick = { screen = AppScreen.SETTINGS },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings)
+                            )
+                        },
+                        label = { Text(stringResource(R.string.settings)) }
+                    )
+                }
+            }
+        ) { padding ->
+            when (screen) {
+                AppScreen.MAP -> MapTabContent(
+                    userId = userId,
+                    modifier = Modifier.padding(padding)
+                )
+                AppScreen.APORTES -> MisAportesScreen(
+                    userId = userId,
+                    modifier = Modifier.padding(padding)
+                )
+                AppScreen.ALERTAS -> AlertasScreen(
+                    userId = userId,
+                    widgetActive = widgetActive,
+                    onToggleWidget = {
+                        if (!hasOverlayPermission()) {
+                            onRequestOverlayPermission()
+                            return@AlertasScreen
+                        }
+                        if (widgetActive) {
+                            FloatingWidgetService.stop(context)
+                        } else {
+                            FloatingWidgetService.start(context)
+                        }
+                        widgetActive = !widgetActive
+                    },
+                    modifier = Modifier.padding(padding)
+                )
+                AppScreen.SETTINGS -> SettingsScreen(
+                    vibrationEnabled = vibrationEnabled,
+                    onVibrationChange = { enabled ->
+                        vibrationEnabled = enabled
+                        context.getSharedPreferences(
+                            "semaforos_mx_prefs", Context.MODE_PRIVATE
+                        ).edit().putBoolean("vibration_enabled", enabled).apply()
+                    },
+                    onTermsClick = { screen = AppScreen.TERMS_VIEW },
+                    modifier = Modifier.padding(padding)
+                )
+                AppScreen.TERMS_VIEW -> Unit // Se maneja arriba (sin menú).
+            }
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    /**
+     * Pestaña Mapa: mapa de semáforos + botones Sync verde y «Aquí hay un
+     * semáforo» + contador de contribuciones + banner de anuncios. Sin
+     * Scaffold propio: la barra superior y el menú los pone la actividad.
+     */
     @Composable
-    private fun MainScreen(
-        onRequestOverlayPermission: () -> Unit,
-        hasOverlayPermission: () -> Boolean,
-        onOpenSettings: () -> Unit
+    private fun MapTabContent(
+        userId: String,
+        modifier: Modifier = Modifier
     ) {
         val context = this
         val scope = rememberCoroutineScope()
@@ -220,11 +346,9 @@ class MainActivity : ComponentActivity() {
         var contribution by remember {
             mutableStateOf(UserContribution("", InMemoryTimingRepository.currentMonth()))
         }
-        var widgetActive by remember { mutableStateOf(false) }
         var selectedLight by remember { mutableStateOf<TrafficLight?>(null) }
         var selectedRemovalCount by remember { mutableIntStateOf(0) }
         var selectedAlreadyReported by remember { mutableStateOf(false) }
-        val userId = remember { UserIdentity.get(context) }
 
         suspend fun refresh() {
             val cityLights = withContext(Dispatchers.IO) {
@@ -252,145 +376,101 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.map_title)) },
-                    actions = {
-                        IconButton(onClick = onOpenSettings) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings)
+        Column(
+            modifier = modifier.fillMaxSize()
+        ) {
+            // Mapa (ocupa el espacio disponible).
+            TrafficLightMap(
+                lights = lights,
+                onMapLongPress = { lat, lon ->
+                    scope.launch {
+                        val canAdd = withContext(Dispatchers.IO) {
+                            RepositoryProvider.repository.canSubmitNewLight(userId)
+                        }
+                        if (!canAdd) {
+                            showToast(R.string.daily_cap_reached)
+                            return@launch
+                        }
+                        withContext(Dispatchers.IO) {
+                            RepositoryProvider.repository.addLight(
+                                TrafficLight(
+                                    latitude = lat,
+                                    longitude = lon,
+                                    reportedBy = userId
+                                )
                             )
                         }
+                        refresh()
+                        showToast(R.string.light_added)
                     }
-                )
-            }
-        ) { padding ->
+                },
+                onMarkerClick = { light -> selectedLight = light },
+                modifier = Modifier.weight(1f)
+            )
+
+            // Panel inferior: contador, botones, actualizar.
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Mapa (ocupa el espacio disponible).
-                TrafficLightMap(
-                    lights = lights,
-                    onMapLongPress = { lat, lon ->
-                        scope.launch {
-                            val canAdd = withContext(Dispatchers.IO) {
-                                RepositoryProvider.repository.canSubmitNewLight(userId)
-                            }
-                            if (!canAdd) {
-                                showToast(R.string.daily_cap_reached)
-                                return@launch
-                            }
-                            withContext(Dispatchers.IO) {
-                                RepositoryProvider.repository.addLight(
-                                    TrafficLight(
-                                        latitude = lat,
-                                        longitude = lon,
-                                        reportedBy = userId
-                                    )
-                                )
-                            }
-                            refresh()
-                            showToast(R.string.light_added)
-                        }
+                // TODO: el texto dice «Syncs» pero el contador ahora es
+                // actualizaciones en semáforos distintos al mes. Alan
+                // revisa los textos finales por separado; no cambiar
+                // hasta confirmar la copia.
+                Text(
+                    text = if (contribution.isAdFree) {
+                        stringResource(R.string.ad_free_active)
+                    } else {
+                        stringResource(
+                            R.string.syncs_this_month,
+                            contribution.updateCount
+                        )
                     },
-                    onMarkerClick = { light -> selectedLight = light },
-                    modifier = Modifier.weight(1f)
+                    style = MaterialTheme.typography.bodyMedium
                 )
-
-                // Panel inferior: contador, botones, widget.
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // TODO: el texto dice «Syncs» pero el contador ahora es
-                    // actualizaciones en semáforos distintos al mes. Alan
-                    // revisa los textos finales por separado; no cambiar
-                    // hasta confirmar la copia.
-                    Text(
-                        text = if (contribution.isAdFree) {
-                            stringResource(R.string.ad_free_active)
-                        } else {
-                            stringResource(
-                                R.string.syncs_this_month,
-                                contribution.updateCount
-                            )
-                        },
-                        style = MaterialTheme.typography.bodyMedium
+                    SyncVerdeButton(
+                        onSync = {
+                            scope.launch { submitSyncFromApp(userId) { refresh() } }
+                        }
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        SyncVerdeButton(
-                            onSync = {
-                                scope.launch { submitSyncFromApp(userId) { refresh() } }
-                            }
-                        )
-                        AquiHaySemaforoButton(
-                            onReport = {
-                                scope.launch { submitAquiHaySemaforo(userId) { refresh() } }
-                            }
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = {
-                                if (!hasOverlayPermission()) {
-                                    onRequestOverlayPermission()
-                                    return@Button
-                                }
-                                if (widgetActive) {
-                                    FloatingWidgetService.stop(context)
-                                } else {
-                                    FloatingWidgetService.start(context)
-                                }
-                                widgetActive = !widgetActive
-                            }
-                        ) {
-                            Text(
-                                stringResource(
-                                    if (widgetActive) R.string.widget_deactivate
-                                    else R.string.widget_activate
-                                )
-                            )
+                    AquiHaySemaforoButton(
+                        onReport = {
+                            scope.launch { submitAquiHaySemaforo(userId) { refresh() } }
                         }
-                        OutlinedButton(onClick = { scope.launch { refresh() } }) {
-                            Text("Actualizar mapa")
-                        }
-                    }
-                    TextButton(
-                        onClick = {
-                            scope.launch { submitYaNoExiste(userId, null) { refresh() } }
-                        }
-                    ) {
-                        Text(stringResource(R.string.ya_no_existe))
-                    }
-                    Text(
-                        text = stringResource(R.string.sync_verde_hint),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = stringResource(R.string.aqui_hay_hint),
-                        style = MaterialTheme.typography.bodySmall
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(onClick = { scope.launch { refresh() } }) {
+                    Text("Actualizar mapa")
+                }
+                TextButton(
+                    onClick = {
+                        scope.launch { submitYaNoExiste(userId, null) { refresh() } }
+                    }
+                ) {
+                    Text(stringResource(R.string.ya_no_existe))
+                }
+                Text(
+                    text = stringResource(R.string.sync_verde_hint),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = stringResource(R.string.aqui_hay_hint),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
-                // Banner de anuncios (oculto para Colaboradores y Plus).
-                if (AdsManager.shouldShowAds(contribution)) {
-                    BannerAd()
-                }
+            // Banner de anuncios (oculto para Colaboradores y Plus).
+            if (AdsManager.shouldShowAds(contribution)) {
+                BannerAd()
             }
         }
 

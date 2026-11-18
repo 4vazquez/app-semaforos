@@ -34,6 +34,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.alan.semaforosmx.MainActivity
 import com.alan.semaforosmx.R
+import com.alan.semaforosmx.ads.AdsManager
 import com.alan.semaforosmx.data.UserIdentity
 import com.alan.semaforosmx.data.aggregation.TimingAggregator
 import com.alan.semaforosmx.data.model.AntiAbuse
@@ -61,8 +62,26 @@ import java.util.Calendar
 /**
  * Servicio en primer plano del widget flotante.
  *
- * - Muestra un overlay (SYSTEM_ALERT_WINDOW) con el borde LED y los botones
- *   "Sync verde" y "Aquí hay un semáforo" sobre cualquier app.
+ * El widget trabaja en SEGUNDO PLANO mientras la app está cerrada: el
+ * servicio vigila la ubicación y el overlay solo APARECE cuando hay un
+ * semáforo cerca (≤ 150 m) y se OCULTA al alejarse (> 200 m, con
+ * histéresis para no parpadear en el límite). Nunca se muestra mientras
+ * la app está abierta: dentro de la app está el menú; el widget es para
+ * cuando manejas con otra app al frente.
+ *
+ * Dos modos según el nivel del usuario (ver [WidgetMode]):
+ * - FULL (Colaborador/Plus): barra vertical en el borde derecho con el
+ *   borde LED, los botones «Sync verde» y «Aquí hay un semáforo» y el
+ *   slider de opacidad.
+ * - LED_ONLY (usuario normal): solo una píldora con el borde LED y la
+ *   cuenta regresiva. Sin botones, sin opacidad.
+ * El modo se re-evalúa cada 30 s y después de cada aporte: al llegar a
+ * los 20 semáforos distintos del mes, el widget pasa a completo solo.
+ *
+ * Tamaño moderado (decisión de Alan): barra/píldora compacta de como
+ * máximo un tercio del ancho de la pantalla, en un borde, arrastrable.
+ * Nunca cubre toda la pantalla.
+ *
  * - Cada segundo recalcula la cuenta regresiva con el semáforo VERIFICADO
  *   más cercano. Los semáforos UNVERIFIED (grises) nunca sirven alertas.
  * - Alerta (parpadeo + vibración opcional) cuando faltan ≤ 3 s para el verde.
@@ -86,13 +105,36 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         /** Radio de detección de semáforos cercanos (metros). */
         const val DETECTION_RADIUS_METERS = 40.0
 
+        /**
+         * Proximidad del widget (metros): el overlay APARECE cuando hay un
+         * semáforo verificado a ≤ 150 m y se OCULTA cuando no hay ninguno
+         * a ≤ 200 m. La histéresis (150/200) evita que parpadee en el
+         * límite al manejar por el borde del radio.
+         */
+        const val PROXIMITY_SHOW_RADIUS_METERS = 150.0
+        const val PROXIMITY_HIDE_RADIUS_METERS = 200.0
+
         /** Segundos antes del verde en que empieza la alerta. */
         const val ALERT_THRESHOLD_SECONDS = 3
 
-        /** Tamaño y posición inicial del widget flotante. */
-        const val WIDGET_WIDTH_DP = 320
-        const val WIDGET_HEIGHT_DP = 340
-        const val WIDGET_INITIAL_TOP_DP = 120
+        /**
+         * Tamaño del widget (dp): barra vertical completa (Colaborador) de
+         * 120 dp de ancho — un tercio de una pantalla típica de 360 dp —
+         * y píldora solo-LED (usuario normal) de 160 × 72 dp. Moderado y
+         * compacto: nunca cubre toda la pantalla.
+         */
+        const val FULL_WIDGET_WIDTH_DP = 120
+        const val FULL_WIDGET_HEIGHT_DP = 340
+        const val LED_WIDGET_WIDTH_DP = 160
+        const val LED_WIDGET_HEIGHT_DP = 72
+
+        /** Posición inicial: barra a la derecha, píldora arriba al centro. */
+        const val FULL_WIDGET_TOP_DP = 120
+        const val FULL_WIDGET_EDGE_MARGIN_DP = 8
+        const val LED_WIDGET_TOP_DP = 24
+
+        /** Cada cuántos segundos (ticks de 1 s) se re-evalúa el modo. */
+        const val MODE_RECHECK_TICKS = 30
 
         /** Arranca el widget desde cualquier Activity. */
         fun start(context: Context) {
@@ -107,6 +149,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 .setAction(ACTION_STOP)
             context.startService(intent)
         }
+
+        /**
+         * ¿La app está al frente? MainActivity lo actualiza en
+         * onResume/onPause. El overlay nunca se muestra mientras la app
+         * está abierta: dentro de la app está el menú; el widget trabaja
+         * en segundo plano cuando la app está cerrada.
+         */
+        @Volatile
+        var appInForeground: Boolean = false
+            private set
+
+        fun setAppInForeground(value: Boolean) {
+            appInForeground = value
+        }
     }
 
     // Estado del overlay (Compose).
@@ -114,6 +170,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private var secondsLeft by mutableIntStateOf(0)
     private var showCountdown by mutableStateOf(false)
     private var opacity by mutableFloatStateOf(0.9f)
+    private var widgetMode by mutableStateOf(WidgetMode.LED_ONLY)
 
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var tickerJob: Job? = null
@@ -125,9 +182,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private var lastLocation: Location? = null
     private var previousLocation: Location? = null
     private var nearestLight: TrafficLight? = null
+    /** Semáforo verificado más cercano dentro del radio de proximidad. */
+    private var nearbyLight: TrafficLight? = null
     private var lastAlertedLightId: String? = null
     /** Último reporte pasivo: (semáforo, momento). Evita duplicados. */
     private var lastPassiveReport: Pair<String, Long>? = null
+    /** Ticks de 1 s desde la última re-evaluación del modo de widget. */
+    private var ticksSinceModeCheck = 0
 
     /** Detección pasiva de arranque + estado detenido (anti-abuso). */
     private val movementDetector by lazy {
@@ -182,11 +243,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private fun startWidget() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
-        attachOverlay()
+        // El overlay NO se muestra al arrancar: aparece solo cuando hay un
+        // semáforo cerca (lo decide updateNearestLight con cada fix GPS).
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         startLocationUpdates()
         movementDetector.start()
+        scope.launch { refreshWidgetMode() }
         startTicker()
     }
 
@@ -196,9 +259,22 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         tickerJob?.cancel()
         movementDetector.stop()
         locationManager?.removeUpdates(locationListener)
-        overlayView?.let { windowManager?.removeView(it) }
-        overlayView = null
+        detachOverlay()
         stopForeground(STOP_FOREGROUND_REMOVE)
+    }
+
+    /**
+     * Muestra u oculta el overlay según la proximidad (debe correr en el
+     * hilo principal: WindowManager + Compose). El overlay se muestra solo
+     * si hay un semáforo cerca Y la app está cerrada; en cuanto te alejas
+     * o abres la app, se oculta.
+     */
+    private fun applyOverlayVisibility(shouldShow: Boolean) {
+        if (shouldShow && !appInForeground) {
+            attachOverlay()
+        } else {
+            detachOverlay()
+        }
     }
 
     private fun attachOverlay() {
@@ -213,6 +289,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     secondsLeft = secondsLeft.takeIf { showCountdown },
                     showCountdown = showCountdown,
                     opacity = opacity,
+                    mode = widgetMode,
                     onOpacityChange = { value ->
                         opacity = value
                         getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -225,29 +302,93 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 )
             }
         }
-        // Ventana flotante pequeña y arrastrable (espejo del prototipo web:
-        // el conductor la mueve a donde no le estorbe). No ocupa toda la
-        // pantalla: el borde LED va en el contorno del widget.
+        // Ventana compacta y arrastrable en un borde de la pantalla
+        // (barra de 120 dp o píldora de 160 dp según el modo): claramente
+        // visible, pero nunca cubre toda la pantalla. Los toques fuera de
+        // la ventana pasan a la app de abajo.
         val density = resources.displayMetrics.density
-        val widthPx = (WIDGET_WIDTH_DP * density).toInt()
-        val heightPx = (WIDGET_HEIGHT_DP * density).toInt()
+        val (widthDp, heightDp) = widgetWindowSizeDp(widgetMode)
+        val widthPx = (widthDp * density).toInt()
+        val heightPx = (heightDp * density).toInt()
         val screenWidthPx = resources.displayMetrics.widthPixels
         val params = WindowManager.LayoutParams(
             widthPx,
             heightPx,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            // Los toques fuera de la ventana pasan a la app de abajo.
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = (screenWidthPx - widthPx) / 2
-            y = (WIDGET_INITIAL_TOP_DP * density).toInt()
+            val (xDp, yDp) = widgetWindowPositionDp(widgetMode, screenWidthPx, density)
+            x = (xDp * density).toInt()
+            y = (yDp * density).toInt()
         }
         windowManager?.addView(view, params)
         overlayView = view
         overlayParams = params
+    }
+
+    /** Quita el overlay de la pantalla (el servicio sigue vigilando). */
+    private fun detachOverlay() {
+        overlayView?.let { windowManager?.removeView(it) }
+        overlayView = null
+        overlayParams = null
+    }
+
+    /** Tamaño de la ventana (ancho × alto, en dp) según el modo. */
+    private fun widgetWindowSizeDp(mode: WidgetMode): Pair<Int, Int> = when (mode) {
+        WidgetMode.FULL -> FULL_WIDGET_WIDTH_DP to FULL_WIDGET_HEIGHT_DP
+        WidgetMode.LED_ONLY -> LED_WIDGET_WIDTH_DP to LED_WIDGET_HEIGHT_DP
+    }
+
+    /**
+     * Posición inicial de la ventana (x, y en dp): la barra completa va en
+     * el borde derecho; la píldora solo-LED va arriba al centro.
+     */
+    private fun widgetWindowPositionDp(
+        mode: WidgetMode,
+        screenWidthPx: Int,
+        density: Float
+    ): Pair<Float, Float> = when (mode) {
+        WidgetMode.FULL -> {
+            val screenWidthDp = screenWidthPx / density
+            (screenWidthDp - FULL_WIDGET_WIDTH_DP - FULL_WIDGET_EDGE_MARGIN_DP).toFloat() to
+                FULL_WIDGET_TOP_DP.toFloat()
+        }
+        WidgetMode.LED_ONLY -> {
+            val screenWidthDp = screenWidthPx / density
+            ((screenWidthDp - LED_WIDGET_WIDTH_DP) / 2f) to LED_WIDGET_TOP_DP.toFloat()
+        }
+    }
+
+    /**
+     * Re-evalúa el modo de widget según el nivel actual del usuario
+     * (Colaborador/Plus → completo; Gratis → solo LED). Si el modo cambió
+     * y el overlay está visible, la ventana se redimensiona y se
+     * reposiciona (la posición arrastrada se restablece: el cambio de modo
+     * es raro y el tamaño cambia de todas formas).
+     */
+    private suspend fun refreshWidgetMode() {
+        val contribution = withContext(Dispatchers.IO) {
+            RepositoryProvider.repository.contributionFor(
+                userId, InMemoryTimingRepository.currentMonth()
+            )
+        }
+        val newMode = AdsManager.widgetMode(contribution)
+        if (newMode == widgetMode) return
+        widgetMode = newMode
+        val view = overlayView ?: return
+        val params = overlayParams ?: return
+        val density = resources.displayMetrics.density
+        val (widthDp, heightDp) = widgetWindowSizeDp(newMode)
+        params.width = (widthDp * density).toInt()
+        params.height = (heightDp * density).toInt()
+        val screenWidthPx = resources.displayMetrics.widthPixels
+        val (xDp, yDp) = widgetWindowPositionDp(newMode, screenWidthPx, density)
+        params.x = (xDp * density).toInt()
+        params.y = (yDp * density).toInt()
+        windowManager?.updateViewLayout(view, params)
     }
 
     /** Mueve la ventana del widget siguiendo el arrastre del asa. */
@@ -276,19 +417,47 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     }
 
     private suspend fun updateNearestLight(location: Location) {
-        val lights = RepositoryProvider.repository.lightsNear(
-            location.latitude, location.longitude, DETECTION_RADIUS_METERS
-        )
         // Solo semáforos VERIFICADOS sirven alertas: los UNVERIFIED (grises)
         // no tienen datos de confianza todavía.
-        nearestLight = lights
-            .filter { it.status == LightStatus.VERIFIED }
+        val verifiedNear = RepositoryProvider.repository.lightsNear(
+            location.latitude, location.longitude, PROXIMITY_HIDE_RADIUS_METERS
+        ).filter { it.status == LightStatus.VERIFIED }
+        nearbyLight = verifiedNear.minByOrNull {
+            it.distanceToMeters(location.latitude, location.longitude)
+        }
+        // El semáforo para la cuenta regresiva y los botones es el más
+        // cercano dentro del radio de detección (40 m).
+        nearestLight = verifiedNear
+            .filter {
+                it.distanceToMeters(location.latitude, location.longitude) <=
+                    DETECTION_RADIUS_METERS
+            }
             .minByOrNull {
                 it.distanceToMeters(location.latitude, location.longitude)
             }
         if (nearestLight == null) {
             ledState = LedState.UNKNOWN
             showCountdown = false
+        }
+
+        // Visibilidad del overlay (con histéresis): aparece a ≤ 150 m, se
+        // oculta cuando no hay nada a ≤ 200 m, y entre 150 y 200 m se queda
+        // como está. Corre en el hilo principal (WindowManager + Compose).
+        val distance = nearbyLight?.distanceToMeters(
+            location.latitude, location.longitude
+        )
+        val isVisible = overlayView != null
+        val shouldShow = when {
+            distance == null -> false
+            distance <= PROXIMITY_SHOW_RADIUS_METERS -> true
+            distance > PROXIMITY_HIDE_RADIUS_METERS -> false
+            else -> isVisible // Zona de histéresis: no cambiar.
+        }
+        if (shouldShow != isVisible) {
+            withContext(Dispatchers.Main) { applyOverlayVisibility(shouldShow) }
+        } else if (shouldShow && appInForeground) {
+            // La app se abrió mientras el widget estaba visible: ocultarlo.
+            withContext(Dispatchers.Main) { applyOverlayVisibility(false) }
         }
     }
 
@@ -297,6 +466,18 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         tickerJob = scope.launch {
             while (isActive) {
                 refreshCountdown()
+                // Re-evaluar el modo cada 30 s: si el usuario llegó a los 20
+                // semáforos distintos del mes, el widget pasa a completo sin
+                // reiniciar nada.
+                if (++ticksSinceModeCheck >= MODE_RECHECK_TICKS) {
+                    ticksSinceModeCheck = 0
+                    refreshWidgetMode()
+                }
+                // Si la app se abrió, el overlay se oculta (el menú está
+                // dentro de la app; el widget trabaja cuando está cerrada).
+                if (appInForeground && overlayView != null) {
+                    detachOverlay()
+                }
                 delay(1_000L)
             }
         }
@@ -411,6 +592,9 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 showServiceToast(R.string.report_rejected)
                 return@launch
             }
+            // El aporte puede haber completado la cuota Colaborador: el
+            // widget pasa a completo sin esperar el re-chequeo de 30 s.
+            refreshWidgetMode()
             // Feedback inmediato: el borde se pone verde (solo si el reporte
             // contó; en caso de rechazo el LED no miente).
             ledState = LedState.GREEN
@@ -457,6 +641,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             when (outcome.status) {
                 NewLightStatus.CREATED,
                 NewLightStatus.CONFIRMED_EXISTING -> {
+                    // El aporte puede haber completado la cuota Colaborador.
+                    refreshWidgetMode()
                     ledState = LedState.GREEN
                     showCountdown = false
                 }

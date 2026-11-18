@@ -2,7 +2,9 @@ package com.alan.semaforosmx.data.repository
 
 import com.alan.semaforosmx.data.aggregation.TimingAggregator
 import com.alan.semaforosmx.data.model.AntiAbuse
+import com.alan.semaforosmx.data.model.ContributionHistoryEntry
 import com.alan.semaforosmx.data.model.DayType
+import com.alan.semaforosmx.data.model.HistoryKind
 import com.alan.semaforosmx.data.model.LightStatus
 import com.alan.semaforosmx.data.model.LightTiming
 import com.alan.semaforosmx.data.model.MapCorrection
@@ -313,6 +315,58 @@ class InMemoryTimingRepository : TimingRepository {
         // La cuota cuenta SEMÁFOROS DISTINTOS: repetir el mismo cruce no suma.
         contributedLights.getOrPut("$userId|$month") { mutableSetOf() }.add(lightId)
         return contributionFor(userId, month)
+    }
+
+    override suspend fun userTrust(userId: String): UserTrust =
+        trust[userId] ?: UserTrust(userId)
+
+    override suspend fun contributionHistory(
+        userId: String,
+        limit: Int
+    ): List<ContributionHistoryEntry> {
+        val entries = mutableListOf<ContributionHistoryEntry>()
+        // Syncs manuales (los pasivos no cuentan para la cuota ni aparecen).
+        reports.values.flatten()
+            .filter { it.userId == userId && it.source == ReportSource.MANUAL_SYNC }
+            .forEach { report ->
+                entries.add(
+                    ContributionHistoryEntry(
+                        kind = HistoryKind.SYNC,
+                        lightId = report.lightId,
+                        lightName = lights[report.lightId]?.name,
+                        reportedAtMillis = report.reportedAtMillis
+                    )
+                )
+            }
+        // Semáforos agregados por este usuario.
+        lights.values
+            .filter { it.reportedBy == userId }
+            .forEach { light ->
+                entries.add(
+                    ContributionHistoryEntry(
+                        kind = HistoryKind.LIGHT_ADDED,
+                        lightId = light.id,
+                        lightName = light.name,
+                        reportedAtMillis = light.createdAtMillis
+                    )
+                )
+            }
+        // Retiros reportados por este usuario.
+        removalReports.values.flatten()
+            .filter { it.userId == userId }
+            .forEach { removal ->
+                entries.add(
+                    ContributionHistoryEntry(
+                        kind = HistoryKind.LIGHT_REMOVED,
+                        lightId = removal.lightId,
+                        lightName = lights[removal.lightId]?.name,
+                        reportedAtMillis = removal.reportedAtMillis
+                    )
+                )
+            }
+        return entries
+            .sortedByDescending { it.reportedAtMillis }
+            .take(limit)
     }
 
     companion object {

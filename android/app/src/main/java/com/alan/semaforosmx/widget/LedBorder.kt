@@ -50,6 +50,8 @@ enum class LedState {
  * @param secondsLeft segundos estimados hasta el verde (null si no hay dato).
  * @param opacity opacidad manual del widget (0.2–1.0), controlada por slider.
  * @param showCountdown true si la confianza permite cuenta regresiva.
+ * @param compact true para la píldora solo-LED (usuarios normales): borde más
+ * delgado, texto más chico y esquinas de píldora.
  */
 @Composable
 fun LedBorder(
@@ -57,7 +59,8 @@ fun LedBorder(
     secondsLeft: Int?,
     opacity: Float,
     showCountdown: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     // Parpadeo en ALERT: el borde pulsa entre visible e invisible.
     val blinkAlpha by animateFloatAsState(
@@ -76,18 +79,22 @@ fun LedBorder(
         LedState.GREEN -> Color(0xFF00E676) // Verde brillante: ¡ya!
         LedState.UNKNOWN -> Color(0xFF9E9E9E) // Gris: sin datos.
     }
+    // La píldora solo-LED es más chica: borde delgado y esquinas redondas.
+    val shape = RoundedCornerShape(if (compact) 36.dp else 24.dp)
+    val borderWidth = if (compact) 4.dp else 6.dp
+    val fontSize = if (compact) 20.sp else 28.sp
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .alpha(effectiveAlpha)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(shape)
             .border(
-                width = 6.dp,
+                width = borderWidth,
                 brush = Brush.linearGradient(
                     listOf(borderColor, borderColor.copy(alpha = 0.6f))
                 ),
-                shape = RoundedCornerShape(24.dp)
+                shape = shape
             )
             .background(Color.Black.copy(alpha = 0.15f * opacity)),
         contentAlignment = Alignment.Center
@@ -102,7 +109,7 @@ fun LedBorder(
         Text(
             text = label,
             color = Color.White,
-            fontSize = 28.sp,
+            fontSize = fontSize,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(8.dp)
         )

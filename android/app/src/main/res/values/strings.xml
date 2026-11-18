@@ -29,6 +29,44 @@
     <string name="ad_free_active">Modo sin anuncios activo</string>
     <string name="ad_free_hint">Con 20 syncs al mes quitas los anuncios</string>
 
+    <!-- Menú inferior (visible solo dentro de la app). -->
+    <string name="nav_map">Mapa</string>
+    <string name="nav_aportes">Mis aportes</string>
+    <string name="nav_alertas">Alertas</string>
+
+    <!-- Mis aportes (pantalla de colaboradores). -->
+    <string name="aportes_title">Mis aportes</string>
+    <string name="aportes_progress_title">Tu progreso de este mes</string>
+    <string name="aportes_progress">%1$d / 20 semáforos distintos</string>
+    <string name="aportes_colaborador_active">Colaborador activo</string>
+    <string name="aportes_colaborador_until">Sin anuncios hasta el %1$s</string>
+    <string name="aportes_colaborador_missing">Te faltan %1$d semáforos distintos para ser Colaborador</string>
+    <string name="aportes_colaborador_hint">Aporta en 20 semáforos distintos al mes y usa la app sin anuncios gratis. Tus datos son tu pago.</string>
+    <string name="aportes_trust_title">Tu nivel de confianza</string>
+    <string name="aportes_trust_score">Confianza: %1$d%%</string>
+    <string name="aportes_trust_counts">Confirmados: %1$d · Atípicos: %2$d</string>
+    <string name="trust_building">En construcción</string>
+    <string name="trust_good">Bueno</string>
+    <string name="trust_reliable">Confiable</string>
+    <string name="trust_high">Muy confiable</string>
+    <string name="aportes_history_title">Tu historial</string>
+    <string name="aportes_history_empty">Aún no tienes aportes. Presiona «Sync verde» cuando estés en un semáforo.</string>
+    <string name="aportes_history_sync">Sync verde en %1$s</string>
+    <string name="aportes_history_added">Semáforo agregado en %1$s</string>
+    <string name="aportes_history_removed">Reporte de retiro en %1$s</string>
+    <string name="aportes_light_unnamed">Semáforo</string>
+
+    <!-- Alertas (pantalla de control del widget). -->
+    <string name="alertas_title">Alertas</string>
+    <string name="alertas_widget_title">Widget en segundo plano</string>
+    <string name="alertas_widget_body">El widget aparece solo cuando hay un semáforo cerca y se oculta cuando te alejas. Mientras la app está abierta usas el menú; el widget trabaja cuando está cerrada.</string>
+    <string name="alertas_mode_title">Tu modo de widget</string>
+    <string name="alertas_mode_full">Widget completo</string>
+    <string name="alertas_mode_full_body">Eres Colaborador: botones «Sync verde» y «Aquí hay un semáforo» + control de opacidad.</string>
+    <string name="alertas_mode_led">Solo LED</string>
+    <string name="alertas_mode_led_body">Como usuario normal, en segundo plano solo actúa el LED cuando el semáforo cambia. Aporta en 20 semáforos distintos este mes para desbloquear el widget completo.</string>
+    <string name="alertas_preview_title">Así se ve la alerta</string>
+
     <string name="settings">Ajustes</string>
     <string name="setting_vibration">Vibrar al avisar del verde</string>
     <string name="setting_detection_radius">Radio de detección (m)</string>

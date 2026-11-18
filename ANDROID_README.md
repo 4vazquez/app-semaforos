@@ -16,9 +16,20 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
 
 ## Qué incluye el MVP
 
-- **Widget flotante arrastrable** (overlay) con borde LED, cuenta
-  regresiva, parpadeo a 3 s del verde y **slider manual de opacidad**
-  (espejo del prototipo web de Alan).
+- **Menú inferior dentro de la app** (Mapa / Mis aportes / Alertas /
+  Ajustes): el menú solo existe con la app abierta. Cuando está cerrada,
+  el widget trabaja en segundo plano.
+- **Widget flotante compacto** (barra vertical de 120 dp o píldora de
+  160 × 72 dp, como máximo un tercio del ancho, en un borde, arrastrable)
+  que aparece solo cuando hay un semáforo cerca (≤ 150 m) y se oculta al
+  alejarte (> 200 m). **Dos modos:** completo para Colaborador/Plus
+  (botones «Sync verde» y «Aquí hay un semáforo» + slider de opacidad)
+  y solo LED para usuarios normales (borde luminoso + cuenta regresiva).
+- **Pantalla «Mis aportes»**: progreso del mes (X/20 semáforos distintos,
+  con barra), estado Colaborador (activo o no, y hasta cuándo), nivel de
+  confianza e historial de aportes.
+- **Pantalla «Alertas»**: activar/desactivar el widget en segundo plano,
+  tu modo de widget y vista previa del LED.
 - **Mapa de semáforos de Monterrey** con OpenStreetMap (osmdroid, sin llave
   de API ni facturación) y los **1 579 semáforos reales** del GeoJSON como
   base semilla, con marcadores rojos (verificados) y grises (sin verificar).
@@ -77,8 +88,9 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (18 nov 2026):** el APK compila (`app-debug.apk`,
-23 MB, `com.alan.semaforosmx` v0.1.0-mvp) y las **21 pruebas unitarias
-pasan**. Nota del entorno: en este sandbox los procesos Java no pueden
+23 MB, `com.alan.semaforosmx` v0.2.0) y las **30 pruebas unitarias
+pasan** (21 del MVP + 9 nuevas: modos de widget, historial de aportes y
+niveles de confianza). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y
@@ -96,13 +108,17 @@ clases compiladas.
 3. Otorga ubicación, permiso de superposición (para el widget) y
    notificaciones.
 4. El mapa muestra los 1 579 semáforos reales de Monterrey (círculos rojos).
-5. Activa el widget flotante con el botón de la pantalla principal y
-   arrástralo a donde no te estorbe.
+5. Activa el widget flotante desde la pestaña **Alertas** del menú
+   inferior y arrástralo a donde no te estorbe. El widget aparece solo
+   cuando hay un semáforo cerca; mientras la app está abierta usas el
+   menú.
 6. Acércate a un semáforo registrado (o usa un emulador con ubicación
    simulada) y presiona **Sync verde** varias veces para ver cómo el
    contador sube y la confianza del semáforo mejora. Prueba también
    **«Aquí hay un semáforo»** en un cruce sin semáforo registrado: aparece
    un marcador gris que necesita 3 confirmaciones para volverse rojo.
+7. Revisa tu progreso en la pestaña **Mis aportes**: semáforos distintos
+   del mes (X/20), estado Colaborador, nivel de confianza e historial.
 
 ## Activar el backend real (v1)
 
@@ -132,7 +148,7 @@ android/
 ├── app/src/main/assets/semaforos_mty.geojson   # 1 579 semáforos (OSM, ODbL)
 ├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.1 (verbatim)
 ├── app/src/main/java/com/alan/semaforosmx/
-│   ├── MainActivity.kt            # Puerta de términos + mapa + botones + ajustes
+│   ├── MainActivity.kt            # Puerta de términos + menú inferior
 │   ├── SemaforosMxApp.kt          # Inicialización (OSM + AdMob + seed)
 │   ├── data/GeoJsonLightsLoader.kt # Parsea el GeoJSON semilla
 │   ├── data/UserIdentity.kt       # ID anónimo ligado al dispositivo
@@ -142,12 +158,14 @@ android/
 │   ├── data/repository/           # Interfaz, en memoria, Supabase (stub)
 │   ├── ui/map/                    # Mapa OpenStreetMap (rojos/grises + detalle)
 │   ├── ui/sync/                   # Botones Sync verde y Aquí hay semáforo
+│   ├── ui/aportes/                # Mis aportes (progreso, Colaborador, historial)
+│   ├── ui/alertas/                # Alertas (control del widget + vista previa LED)
 │   ├── ui/terms/                  # Pantalla de Términos (aceptación/relectura)
 │   ├── ui/settings/               # Ajustes (vibración, términos, acerca de)
-│   ├── widget/                    # Servicio overlay + borde LED (arrastrable)
+│   ├── widget/                    # Servicio overlay + borde LED + modos FULL/LED_ONLY
 │   ├── sensing/                   # Verificación GPS + detección pasiva
 │   └── ads/                       # Banner AdMob + niveles Gratis/Colaborador/Plus
-└── app/src/test/...               # Pruebas: agregador, trust, mapa, anti-abuso, GPS
+└── app/src/test/...               # Pruebas: agregador, trust, mapa, anti-abuso, GPS, modos
 ```
 
 ## Notas

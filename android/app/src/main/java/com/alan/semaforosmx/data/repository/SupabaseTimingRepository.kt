@@ -1,6 +1,8 @@
 package com.alan.semaforosmx.data.repository
 
+import com.alan.semaforosmx.data.model.ContributionHistoryEntry
 import com.alan.semaforosmx.data.model.DayType
+import com.alan.semaforosmx.data.model.HistoryKind
 import com.alan.semaforosmx.data.model.LightStatus
 import com.alan.semaforosmx.data.model.LightTiming
 import com.alan.semaforosmx.data.model.MapCorrection
@@ -12,6 +14,7 @@ import com.alan.semaforosmx.data.model.ReportSource
 import com.alan.semaforosmx.data.model.TimingReport
 import com.alan.semaforosmx.data.model.TrafficLight
 import com.alan.semaforosmx.data.model.UserContribution
+import com.alan.semaforosmx.data.model.UserTrust
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
@@ -208,6 +211,55 @@ class SupabaseTimingRepository(
         return updated
     }
 
+    override suspend fun userTrust(userId: String): UserTrust {
+        return api.trustFor("eq.$userId").firstOrNull()?.toDomain()
+            ?: UserTrust(userId)
+    }
+
+    override suspend fun contributionHistory(
+        userId: String,
+        limit: Int
+    ): List<ContributionHistoryEntry> {
+        // Limitación del stub: ReportRow todavía no parsea el ISO 8601 de
+        // `reported_at` (reportedAtMillis = 0 en v1), así que los syncs se
+        // ordenan al final hasta que el parseo se implemente. Los agregados
+        // y retiros traen sus propias marcas de tiempo.
+        val entries = mutableListOf<ContributionHistoryEntry>()
+        api.reportsByUser("eq.$userId", "eq.MANUAL_SYNC").forEach { row ->
+            entries.add(
+                ContributionHistoryEntry(
+                    kind = HistoryKind.SYNC,
+                    lightId = row.lightId,
+                    lightName = null,
+                    reportedAtMillis = row.toDomain().reportedAtMillis
+                )
+            )
+        }
+        api.lightsReportedBy("eq.$userId", "gte.1970-01-01").forEach { row ->
+            entries.add(
+                ContributionHistoryEntry(
+                    kind = HistoryKind.LIGHT_ADDED,
+                    lightId = row.id,
+                    lightName = row.name,
+                    reportedAtMillis = 0L
+                )
+            )
+        }
+        api.removalReportsByUser("eq.$userId").forEach { row ->
+            entries.add(
+                ContributionHistoryEntry(
+                    kind = HistoryKind.LIGHT_REMOVED,
+                    lightId = row.lightId,
+                    lightName = null,
+                    reportedAtMillis = 0L
+                )
+            )
+        }
+        return entries
+            .sortedByDescending { it.reportedAtMillis }
+            .take(limit)
+    }
+
     /** Endpoints PostgREST. */
     interface SupabaseApi {
         @GET("traffic_lights")
@@ -229,10 +281,21 @@ class SupabaseTimingRepository(
         @POST("timing_reports")
         suspend fun insertReport(@Body report: ReportRow)
 
+        @GET("timing_reports")
+        suspend fun reportsByUser(
+            @Query("user_id") userFilter: String,
+            @Query("source") sourceFilter: String
+        ): List<ReportRow>
+
         @GET("removal_reports")
         suspend fun removalReportsFor(
             @Query("light_id") lightFilter: String,
             @Query("user_id") userFilter: String? = null
+        ): List<RemovalRow>
+
+        @GET("removal_reports")
+        suspend fun removalReportsByUser(
+            @Query("user_id") userFilter: String
         ): List<RemovalRow>
 
         @POST("removal_reports")
@@ -256,6 +319,11 @@ class SupabaseTimingRepository(
             @Body contribution: ContributionRow,
             @Header("Prefer") prefer: String = "resolution=merge-duplicates"
         )
+
+        @GET("user_trust")
+        suspend fun trustFor(
+            @Query("user_id") userFilter: String
+        ): List<TrustRow>
     }
 
     // --- Filas de la base de datos (DTOs) ---
@@ -375,5 +443,15 @@ class SupabaseTimingRepository(
         @Json(name = "light_ids") val lightIds: List<String> = emptyList()
     ) {
         fun toDomain() = UserContribution(userId, month, updateCount = lightIds.distinct().size)
+    }
+
+    @JsonClass(generateAdapter = true)
+    data class TrustRow(
+        @Json(name = "user_id") val userId: String,
+        @Json(name = "trust_score") val trustScore: Float,
+        @Json(name = "confirmed_count") val confirmedCount: Int = 0,
+        @Json(name = "rejected_count") val rejectedCount: Int = 0
+    ) {
+        fun toDomain() = UserTrust(userId, trustScore, confirmedCount, rejectedCount)
     }
 }

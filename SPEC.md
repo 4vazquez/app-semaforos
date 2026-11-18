@@ -133,6 +133,7 @@ internacional.
 | 7 | Paquete anti-abuso: verificación GPS, anti-mock, anti-salto, una cuenta por dispositivo, trust, UNVERIFIED, tope diario | ✅ Implementado (cliente; la aplicación en servidor es v1, ver §6.7) |
 | 8 | Monetización en tres niveles: Gratis / Colaborador / Plus (stub) | ✅ Esqueleto (AdMob con ID de prueba; Plus sin flujo de pago) |
 | 9 | Términos y Condiciones v1.1: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal) |
+| 10 | Menú inferior dentro de la app (Mapa / Mis aportes / Alertas / Ajustes) + pantalla «Mis aportes» (progreso X/20, estado Colaborador, trust, historial) + widget por proximidad en segundo plano con dos modos (completo para Colaborador/Plus, solo LED para Gratis) | ✅ Implementado (v0.2.0) |
 
 **Fuera del MVP:** iOS, detección del semáforo por cámara con IA, voz
 («verde»), rutas/navegación, cuentas de usuario con contraseña, pagos
@@ -151,19 +152,27 @@ internacional.
 3. Permisos, en orden: ubicación (siempre, para detectar semáforos),
    superposición sobre otras apps (para el widget flotante), notificaciones.
 4. Se muestra el mapa de Monterrey con los semáforos conocidos.
-5. El usuario puede activar el widget flotante desde la pantalla principal.
+5. El usuario puede activar el widget flotante desde la pestaña
+   **Alertas** del menú inferior.
 
 ### 4.2 Conductor detenido en un semáforo (flujo principal)
-1. El GPS detecta que el usuario está detenido cerca de un semáforo
-   registrado (< 30 m, velocidad ≈ 0).
-2. El widget flotante aparece con el borde LED en rojo/ámbar y la cuenta
-   regresiva estimada hasta el verde.
+1. El servicio en segundo plano detecta por GPS que hay un semáforo
+   verificado cerca (≤ 150 m). El widget flotante APARECE en un borde de
+   la pantalla: barra vertical completa si el usuario es Colaborador/Plus
+   (botones + opacidad) o píldora solo-LED si es usuario normal. Si no
+   hay semáforo a ≤ 200 m, el widget se oculta (histéresis 150/200 m
+   para no parpadear en el límite). El widget nunca se muestra mientras
+   la app está abierta: dentro de la app está el menú.
+2. El borde LED muestra rojo/ámbar y la cuenta regresiva estimada hasta
+   el verde.
 3. A 3 segundos del verde estimado, el borde parpadea en verde y suena una
    vibración corta (opcional, configurable).
 4. Al llegar el verde, el borde queda verde fijo 2 segundos y el widget se
-   minimiza.
-5. Si el tiempo no coincidió, el conductor presiona **«Sync verde»** en el
-   momento real del cambio. Ese reporte corrige la base de datos.
+   oculta al alejarte del cruce.
+5. Si el tiempo no coincidió, el conductor Colaborador presiona
+   **«Sync verde»** en el momento real del cambio (o cualquier usuario
+   lo hace desde la pestaña Mapa de la app). Ese reporte corrige la base
+   de datos.
 
 ### 4.3 Flujo de Sync verde
 1. El botón «Sync verde» está siempre visible en el widget y en la pantalla
@@ -229,11 +238,18 @@ La app muestra un semáforo que fue retirado en la vida real:
 
 ## 5. Pantallas
 
+El menú inferior (Mapa / Mis aportes / Alertas / Ajustes) existe SOLO
+dentro de la app abierta. Cuando la app está cerrada no hay menú en
+pantalla: el widget flotante trabaja en segundo plano y aparece solo
+cuando hay un semáforo cerca.
+
 | Pantalla | Contenido |
 |----------|-----------|
-| **Mapa** (principal) | Mapa de Monterrey, marcadores rojos (verificados) y grises (sin verificar), botones «Sync verde» y «Aquí hay un semáforo», botón «¿Ya no existe?», botón para activar/desactivar el widget, contador de actualizaciones del mes (semáforos distintos), banner de anuncios (solo Gratis), acceso a Ajustes |
+| **Mapa** (principal) | Mapa de Monterrey, marcadores rojos (verificados) y grises (sin verificar), botones «Sync verde» y «Aquí hay un semáforo», botón «¿Ya no existe?», contador de actualizaciones del mes (semáforos distintos), banner de anuncios (solo Gratis) |
+| **Mis aportes** | Progreso del mes: semáforos distintos aportados, X/20, con barra · Estado Colaborador (activo o no, y hasta cuándo: fin de mes) · Nivel de confianza (puntaje + nivel + conteos) · Historial de aportes (syncs, agregados, retiros, del más reciente al más antiguo) |
+| **Alertas** | Activar/desactivar el widget en segundo plano · Tu modo de widget (completo o solo LED, según tu nivel, con la explicación de cómo desbloquear el completo) · Vista previa del LED (así se ve la alerta a 3 s del verde) |
 | **Detalle de semáforo** (diálogo) | Nombre del cruce, estado (verificado / sin verificar), reportes de retiro acumulados («2 de 3»), acción «Reportar que ya no existe» |
-| **Widget flotante** | Borde LED, cuenta regresiva, botones «Sync verde» y «Aquí hay un semáforo», slider de opacidad |
+| **Widget flotante** | Barra vertical compacta (120 dp de ancho, un tercio de la pantalla como máximo, en el borde derecho, arrastrable) o píldora solo-LED (160 × 72 dp, arriba al centro). FULL (Colaborador/Plus): borde LED, cuenta regresiva, botones «Sync verde» y «Aquí hay un semáforo», slider de opacidad. LED_ONLY (Gratis): solo el borde LED con la cuenta regresiva. Aparece a ≤ 150 m de un semáforo verificado, se oculta a > 200 m, y nunca se muestra con la app abierta |
 | **Ajustes** | Vibración al avisar, Términos y Condiciones (reabre el texto), Acerca de (qué datos se recogen + atribución OSM) |
 | **Términos y Condiciones** | Resumen en lenguaje sencillo + texto completo v1.1; en primera apertura, botones «Acepto» / «No acepto»; desde Ajustes, solo lectura |
 | **Onboarding** | Bienvenida, permisos, aviso de seguridad (después de aceptar términos) |
@@ -429,14 +445,18 @@ Tres niveles:
 
 1. **Gratis:** app completa, con banner de anuncios (AdMob) en la parte
    inferior de la pantalla del mapa. Nunca dentro del widget flotante
-   (distraería al conductor).
+   (distraería al conductor). En segundo plano el widget es **solo LED**:
+   el borde luminoso con la cuenta regresiva, sin botones ni opacidad.
 2. **Colaborador (GRATIS, sin banners, nunca se cobra):** el usuario que
    aporta **20+ actualizaciones en semáforos distintos en un mes** (syncs
    verdes, semáforos agregados o retiros reportados) usa la app sin
    anuncios gratis. Su pago son los datos que aporta. Este es el programa
    para comunidades de conductores Uber/DiDi: 1 000 conductores activos
    = cobertura de toda Monterrey. El conteo es mensual y se reinicia el
-   día 1.
+   día 1. Además, su widget en segundo plano es el **completo**: botones
+   «Sync verde» y «Aquí hay un semáforo» + slider de opacidad. El modo
+   se re-evalúa cada 30 s y tras cada aporte: al llegar a los 20, el
+   widget pasa a completo sin reiniciar nada.
 3. **Plus (suscripción de pago, se lanza DESPUÉS con buena base de
    usuarios):** para usuarios regulares que no contribuyen — sin anuncios
    + extras (alertas personalizadas, estadísticas de manejo). **En el MVP
@@ -526,7 +546,16 @@ Publicación en Play Store (cuenta de desarrollador de Alan).
 Alertas por voz («verde») · Detección por cámara con IA (opcional, solo
 con el teléfono en soporte) · Estadísticas del conductor (tiempo ahorrado)
 · Programa formal con comunidades de Uber/DiDi · Ciudades adicionales de
-México (CDMX, Guadalajara).
+México (CDMX, Guadalajara) · **Android Auto (idea de Alan):** que la
+pantalla del coche también se ilumine con los colores del semáforo cuando
+está por cambiar a verde. Restricción de la plataforma: Android Auto NO
+permite overlays arbitrarios de pantalla completa ni bordes luminosos
+personalizados — Google restringe la Car App Library a plantillas
+aprobadas. El enfoque factible en v2 es una pantalla de Car App Library
+(plantilla de navegación/conducción) que muestre el estado actual del
+semáforo + la cuenta regresiva con estilo verde dentro de la plantilla
+permitida, sujeto a la revisión de Google para apps de conducción. No es
+alcance del MVP ni de v1.
 
 ### v3 — Nacional / Premium
 Cobertura nacional · **Plus** (suscripción de pago, si aún no se lanzó en
