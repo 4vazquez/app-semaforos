@@ -70,6 +70,14 @@
     <string name="settings">Ajustes</string>
     <string name="setting_vibration">Vibrar al avisar del verde</string>
     <string name="setting_detection_radius">Radio de detección (m)</string>
+
+    <!-- Contacto (Ajustes): correo del equipo. -->
+    <string name="contact_title">Contacto</string>
+    <string name="contact_body">¿Dudas, comentarios o reportes? Escríbenos a:</string>
+    <string name="contact_copy">Copiar</string>
+    <string name="contact_copied">Correo copiado</string>
+    <string name="contact_write">Escríbenos</string>
+    <string name="contact_no_mail_app">No tienes una app de correo instalada. Copia la dirección y escríbenos desde tu correo.</string>
     <string name="about">Acerca de</string>
     <string name="about_body">Semáforos MX es un asistente de conducción. Tus reportes son anónimos y los tiempos publicados son promedios de muchos conductores: ningún reporte individual te identifica. Datos de semáforos: © OpenStreetMap contributors (ODbL).</string>
 
@@ -113,7 +121,7 @@
     <string name="terms_read_full">Lee el texto completo a continuación. Al presionar "Acepto" confirmas que lo leíste y estás de acuerdo.</string>
     <string name="terms_accept">Acepto</string>
     <string name="terms_decline">No acepto</string>
-    <string name="terms_version">Versión 1.1 — 18 de noviembre de 2026</string>
+    <string name="terms_version">Versión 1.2 — 18 de noviembre de 2026</string>
 
     <!-- Actualización automática (solo build sideload; en Play la maneja Play). -->
     <string name="update_title">Hay una nueva versión (%1$s)</string>

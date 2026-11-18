@@ -51,7 +51,7 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   prueba) · Colaborador (gratis y sin anuncios con 20+ actualizaciones en
   semáforos distintos al mes; programa para conductores Uber/DiDi) ·
   Plus (suscripción de pago, solo el flag/stub; se lanza después).
-- **Términos y Condiciones v1.1**: pantalla de aceptación obligatoria en la
+- **Términos y Condiciones v1.2**: pantalla de aceptación obligatoria en la
   primera apertura + relectura desde Ajustes. ⚠️ El texto es un borrador
   pendiente de revisión legal antes del lanzamiento público.
 - **Detección pasiva de arranque** (acelerómetro/GPS) conectada al widget:
@@ -64,6 +64,10 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   sideload: en el build de Play está desactivada (Play prohíbe
   auto-actualizarse desde fuera; ahí la maneja Play con la In-App Updates
   API). Ver `SPEC.md` §13 y «Publicar una nueva versión» abajo.
+- **Contacto** (v0.3.1): Ajustes → Contacto muestra el correo del equipo
+  (adminsemaforosmx@gmail.com) para copiarlo o escribir por correo con el
+  asunto precargado; también está nombrado en los Términos §12. Será el
+  correo de contacto de la ficha en Google Play.
 
 ## Requisitos para compilar
 
@@ -174,7 +178,7 @@ unidad real de AdMob. También cambia el ID de aplicación en
 ```
 android/
 ├── app/src/main/assets/semaforos_mty.geojson   # 1 579 semáforos (OSM, ODbL)
-├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.1 (verbatim)
+├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.2 (verbatim)
 ├── app/src/main/java/com/alan/semaforosmx/
 │   ├── MainActivity.kt            # Puerta de términos + menú inferior
 │   ├── SemaforosMxApp.kt          # Inicialización (OSM + AdMob + seed)
@@ -189,7 +193,8 @@ android/
 │   ├── ui/aportes/                # Mis aportes (progreso, Colaborador, historial)
 │   ├── ui/alertas/                # Alertas (control del widget + vista previa LED)
 │   ├── ui/terms/                  # Pantalla de Términos (aceptación/relectura)
-│   ├── ui/settings/               # Ajustes (vibración, términos, acerca de)
+│   ├── ui/contact/                # Correo de contacto + mailto (Ajustes → Contacto)
+│   ├── ui/settings/               # Ajustes (vibración, términos, contacto, acerca de)
 │   ├── widget/                    # Servicio overlay + borde LED + modos FULL/LED_ONLY
 │   ├── sensing/                   # Verificación GPS + detección pasiva
 │   ├── update/                    # Actualizador propio (GitHub Releases + instalador)

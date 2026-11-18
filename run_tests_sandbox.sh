@@ -22,6 +22,7 @@ java -cp "$CP" org.junit.runner.JUnitCore \
   com.alan.semaforosmx.data.repository.ContributionHistoryTest \
   com.alan.semaforosmx.data.repository.MapCorrectionTest \
   com.alan.semaforosmx.sensing.GpsVerificationTest \
+  com.alan.semaforosmx.ui.contact.ContactEmailTest \
   com.alan.semaforosmx.update.ReleaseParsingTest \
   com.alan.semaforosmx.update.VersionTest \
   com.alan.semaforosmx.widget.WidgetModeTest

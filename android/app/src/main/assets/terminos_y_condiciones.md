@@ -1,7 +1,7 @@
 # TÉRMINOS Y CONDICIONES DE USO — SEMÁFOROS MX
 
 **Última actualización:** 18 de noviembre de 2026
-**Versión:** 1.1 (borrador reforzado para revisión legal antes del lanzamiento)
+**Versión:** 1.2 (borrador reforzado para revisión legal antes del lanzamiento)
 
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como punto de partida. Debe ser revisado y ajustado por un abogado antes del lanzamiento público de la aplicación, ya que en México existen límites legales a las cláusulas de exención de responsabilidad (por ejemplo, no puede excluirse la responsabilidad por dolo o negligencia grave, y la PROFECO puede declarar abusivas ciertas cláusulas en contratos de adhesión).
 
@@ -115,7 +115,7 @@ Estos Términos se rigen por las leyes de los Estados Unidos Mexicanos.
 
 ## 12. Contacto
 
-Para dudas, comentarios o solicitudes relacionadas con estos Términos, el usuario puede contactar a través de los canales de contacto publicados dentro de la App.
+Para dudas, comentarios o solicitudes relacionadas con estos Términos, el usuario puede contactar al equipo de Semáforos MX por correo electrónico a **adminsemaforosmx@gmail.com**. Esta dirección también está publicada dentro de la App, en Ajustes → Contacto.
 
 ---
 
