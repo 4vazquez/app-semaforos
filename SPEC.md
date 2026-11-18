@@ -540,22 +540,26 @@ servidor** (triggers/funciones: tope diario, saltos, transiciones de
 estado, trust) · Detección pasiva calibrada con pruebas de campo ·
 Onboarding completo con permisos · AdMob con ID real · Revisión legal de
 los términos + Aviso de Privacidad + eliminación de cuenta en la app ·
-Publicación en Play Store (cuenta de desarrollador de Alan).
+Publicación en Play Store (cuenta de desarrollador de Alan) · **Al
+publicar en Play, el actualizador propio se apaga y la actualización la
+maneja Play con la In-App Updates API (flexible/inmediata)** — ver §13.
 
 ### v2 — Crecimiento
 Alertas por voz («verde») · Detección por cámara con IA (opcional, solo
 con el teléfono en soporte) · Estadísticas del conductor (tiempo ahorrado)
 · Programa formal con comunidades de Uber/DiDi · Ciudades adicionales de
-México (CDMX, Guadalajara) · **Android Auto (idea de Alan):** que la
-pantalla del coche también se ilumine con los colores del semáforo cuando
-está por cambiar a verde. Restricción de la plataforma: Android Auto NO
-permite overlays arbitrarios de pantalla completa ni bordes luminosos
-personalizados — Google restringe la Car App Library a plantillas
-aprobadas. El enfoque factible en v2 es una pantalla de Car App Library
-(plantilla de navegación/conducción) que muestre el estado actual del
-semáforo + la cuenta regresiva con estilo verde dentro de la plantilla
-permitida, sujeto a la revisión de Google para apps de conducción. No es
-alcance del MVP ni de v1.
+México (CDMX, Guadalajara) · **Android Auto (idea de Alan):** que el
+contorno de la pantalla del coche parpadee el color del semáforo 2–3
+segundos antes de que cambie a verde, para que el conductor se ponga
+alerta. Restricción de la plataforma: Android Auto NO permite overlays
+arbitrarios ni dibujar sobre el borde de la pantalla — el sistema es dueño
+del marco y Google restringe la Car App Library a plantillas aprobadas.
+El enfoque factible en v2 es una app de Android Auto en categoría
+navegación/conducción con superficie de dibujo propia (SurfaceRenderer de
+la plantilla de navegación), donde el borde luminoso se dibuja DENTRO del
+área de la app: mismo efecto visual para el conductor (borde parpadeando
+2–3 s antes del verde), sujeto a la revisión de Google para apps de
+conducción. No es alcance del MVP ni de v1.
 
 ### v3 — Nacional / Premium
 Cobertura nacional · **Plus** (suscripción de pago, si aún no se lanzó en
@@ -563,3 +567,53 @@ v1/v2): sin anuncios, personalización de alertas y estadísticas de
 eficiencia en conducción (según el README del borrador) · Localización
 (portugués, inglés) · API de datos agregados para ciudades y logística ·
 Modo pasajero (sin widget de conducción).
+
+## 13. Actualización automática (sideload)
+
+El usuario nunca tiene que descargar e instalar el APK a mano: la app se
+actualiza sola con un toque (idea de Alan, v0.3.0).
+
+### 13.1 Cómo funciona
+
+- **Fuente:** los releases de GitHub del repo
+  (https://github.com/4vazquez/app-semaforos). Al arrancar, la app
+  consulta `GET /repos/4vazquez/app-semaforos/releases/latest` y compara
+  el tag del release (formato obligatorio `vX.Y.Z`, igual que el
+  `versionName`) con la versión instalada. Si el tag es mayor, hay
+  actualización.
+- **Frecuencia:** la red se consulta como máximo una vez al día (la hora
+  del último chequeo persiste). Sin red o con error de la API, falla en
+  silencio: no hay diálogo ni crash.
+- **Aviso:** diálogo en la app — «Hay una nueva versión (vX.Y.Z)» con las
+  notas del release — y botones «Actualizar» y «Más tarde». «Más tarde»
+  silencia esa versión 24 h; una versión distinta vuelve a avisar.
+- **Un toque:** «Actualizar» descarga el APK del asset del release (con
+  barra de progreso) y lanza el instalador del sistema. Android pide la
+  confirmación final; la app nunca instala sola. El archivo se verifica
+  (no vacío) antes de instalar y los parciales se borran.
+- **Permiso de instalar:** en Android 8+, instalar desde fuera de Play
+  requiere el permiso `REQUEST_INSTALL_PACKAGES`, que el usuario concede
+  por app en Ajustes («Permitir desde esta fuente»). Si falta, la app lo
+  explica y abre los Ajustes; al volver, la descarga se reanuda sola.
+
+### 13.2 La regla de Google Play (no negociable)
+
+**Google Play PROHÍBE que una app distribuida en Play se actualice desde
+fuera de Play.** Por eso el actualizador está detrás del flag
+`BuildConfig.SELF_UPDATE_ENABLED`: `true` en el build debug/sideload,
+`false` en el build release/Play (ver `app/build.gradle.kts`). Al
+publicar en Play, la actualización la maneja Play con la **In-App
+Updates API** (modo flexible: descarga en segundo plano y aplica al
+reiniciar; modo inmediato: pantalla completa que bloquea hasta actualizar).
+Implementar la In-App Updates API es un pendiente de v1, en el momento de
+la publicación en Play; no se implementa ahora porque el piloto se
+distribuye por APK directo.
+
+### 13.3 Publicar una nueva versión
+
+1. Subir `versionCode` y `versionName` en `app/build.gradle.kts`.
+2. Compilar el APK debug y verificarlo (`./gradlew assembleDebug`).
+3. Push a GitHub y crear un release con el tag `vX.Y.Z` (igual que el
+   `versionName`) adjuntando el `app-debug.apk` como asset.
+4. Los usuarios con la app instalada reciben el aviso al abrirla (como
+   máximo una vez al día) y actualizan con un toque.

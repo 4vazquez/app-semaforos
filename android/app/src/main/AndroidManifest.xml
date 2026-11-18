@@ -17,6 +17,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Vibración opcional al avisar del verde. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Actualizador propio (solo build sideload): instalar el APK
+         descargado de GitHub. El usuario lo concede en Ajustes; en el
+         build de Play el actualizador está desactivado (ver SPEC.md §13). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".SemaforosMxApp"
@@ -42,6 +46,18 @@
             android:name=".widget.FloatingWidgetService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- FileProvider para el actualizador: expone el APK descargado
+             al instalador del sistema (solo la caché de actualizaciones). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <!-- AdMob: ID de aplicación de PRUEBA oficial de Google.
              Cambiar por el ID real antes de publicar (ver README). -->

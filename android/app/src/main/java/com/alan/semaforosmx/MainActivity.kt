@@ -72,7 +72,12 @@ import com.alan.semaforosmx.ui.sync.SyncVerdeButton
 import com.alan.semaforosmx.ui.terms.TermsMode
 import com.alan.semaforosmx.ui.terms.TermsScreen
 import com.alan.semaforosmx.ui.theme.SemaforosMxTheme
+import com.alan.semaforosmx.update.ReleaseInfo
+import com.alan.semaforosmx.update.SelfUpdater
+import com.alan.semaforosmx.update.UpdateDialog
+import com.alan.semaforosmx.update.UpdateUiState
 import com.alan.semaforosmx.widget.FloatingWidgetService
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,6 +103,13 @@ class MainActivity : ComponentActivity() {
 
     private enum class AppScreen { MAP, APORTES, ALERTAS, SETTINGS, TERMS_VIEW }
 
+    /**
+     * Contador de onResume: permite reanudar la descarga de una
+     * actualización cuando el usuario vuelve de Ajustes tras conceder el
+     * permiso de instalar (ver AppRoot).
+     */
+    private var resumeCount by mutableIntStateOf(0)
+
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { /* El mapa funciona sin ubicación; el widget la necesita. */ }
@@ -121,6 +133,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        resumeCount++
         // La app está al frente: el widget se oculta (el menú está aquí).
         FloatingWidgetService.setAppInForeground(true)
     }
@@ -192,6 +205,10 @@ class MainActivity : ComponentActivity() {
         }
         val userId = remember { UserIdentity.get(context) }
 
+        // Estado del actualizador propio (solo build sideload).
+        var updateState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Hidden) }
+        val updateScope = rememberCoroutineScope()
+
         LaunchedEffect(Unit) {
             termsText = withContext(Dispatchers.IO) {
                 runCatching { TermsAcceptance.loadTermsText(context) }.getOrDefault("")
@@ -209,6 +226,29 @@ class MainActivity : ComponentActivity() {
                 onDecline = { finish() }
             )
             return
+        }
+
+        // Revisar actualizaciones una vez al arrancar. El chequeo de red
+        // es como máximo una vez al día y falla en silencio (ver
+        // SelfUpdater): si no hay nada nuevo, no pasa nada.
+        LaunchedEffect(Unit) {
+            if (!SelfUpdater.isEnabled()) return@LaunchedEffect
+            val release = withContext(Dispatchers.IO) {
+                SelfUpdater.checkForUpdate(context)
+            }
+            if (release != null) {
+                updateState = UpdateUiState.Available(release)
+            }
+        }
+
+        // Al volver de Ajustes (permiso de instalar), reanudar la
+        // descarga si el permiso ya está concedido.
+        LaunchedEffect(resumeCount) {
+            val pending = updateState as? UpdateUiState.NeedPermission
+                ?: return@LaunchedEffect
+            if (SelfUpdater.canInstallPackages(context)) {
+                startUpdateDownload(updateScope, pending.release) { updateState = it }
+            }
         }
 
         // Relectura de Términos desde Ajustes: pantalla completa, sin menú.
@@ -327,6 +367,60 @@ class MainActivity : ComponentActivity() {
                 )
                 AppScreen.TERMS_VIEW -> Unit // Se maneja arriba (sin menú).
             }
+        }
+
+        // Diálogo de actualización (solo si hay versión nueva pendiente).
+        UpdateDialog(
+            state = updateState,
+            onUpdate = { release -> startUpdateFlow(updateScope, release) { updateState = it } },
+            onLater = { release ->
+                SelfUpdater.dismiss(context, release.tag)
+                updateState = UpdateUiState.Hidden
+            },
+            onRetry = { release -> startUpdateFlow(updateScope, release) { updateState = it } },
+            onGrantPermission = { SelfUpdater.openInstallPermissionSettings(context) }
+        )
+    }
+
+    /**
+     * Flujo de actualización con un toque: si falta el permiso de
+     * instalar, pedirlo primero (Ajustes del sistema); si ya está,
+     * descargar e instalar.
+     */
+    private fun startUpdateFlow(
+        scope: CoroutineScope,
+        release: ReleaseInfo,
+        setState: (UpdateUiState) -> Unit
+    ) {
+        if (!SelfUpdater.canInstallPackages(this)) {
+            setState(UpdateUiState.NeedPermission(release))
+            return
+        }
+        startUpdateDownload(scope, release, setState)
+    }
+
+    /**
+     * Descarga el APK con progreso y lanza el instalador del sistema. El
+     * usuario confirma la instalación en el diálogo de Android; la app
+     * nunca instala sola.
+     */
+    private fun startUpdateDownload(
+        scope: CoroutineScope,
+        release: ReleaseInfo,
+        setState: (UpdateUiState) -> Unit
+    ) {
+        scope.launch {
+            setState(UpdateUiState.Downloading(release, 0f))
+            val file = SelfUpdater.downloadApk(this@MainActivity, release.apkUrl) { progress ->
+                setState(UpdateUiState.Downloading(release, progress))
+            }
+            if (file == null) {
+                setState(UpdateUiState.Failed(release))
+                return@launch
+            }
+            SelfUpdater.clearPendingUpdate(this@MainActivity)
+            SelfUpdater.installApk(this@MainActivity, file)
+            setState(UpdateUiState.Hidden)
         }
     }
 

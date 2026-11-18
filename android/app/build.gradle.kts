@@ -21,13 +21,23 @@ android {
         applicationId = "com.alan.semaforosmx"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            // Actualizador propio ACTIVO: la app se distribuye sideload
+            // (APK directo / GitHub Releases) y se actualiza sola.
+            buildConfigField("boolean", "SELF_UPDATE_ENABLED", "true")
+        }
         release {
+            // Actualizador propio DESACTIVADO: Google Play PROHÍBE que
+            // una app de Play se actualice desde fuera de Play. En el
+            // build de Play la actualización la maneja Play (In-App
+            // Updates API). No cambiar a true (ver SPEC.md §13).
+            buildConfigField("boolean", "SELF_UPDATE_ENABLED", "false")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -47,6 +57,9 @@ android {
 
     buildFeatures {
         compose = true
+        // BuildConfig genera SELF_UPDATE_ENABLED (flag del actualizador
+        // propio, distinto por buildType). AGP 8.x lo trae apagado.
+        buildConfig = true
     }
 
     packaging {

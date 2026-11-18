@@ -114,4 +114,19 @@
     <string name="terms_accept">Acepto</string>
     <string name="terms_decline">No acepto</string>
     <string name="terms_version">Versión 1.1 — 18 de noviembre de 2026</string>
+
+    <!-- Actualización automática (solo build sideload; en Play la maneja Play). -->
+    <string name="update_title">Hay una nueva versión (%1$s)</string>
+    <string name="update_body">Hay una nueva versión de Semáforos MX disponible. Con un toque se descarga e instala, sin borrar la app ni perder tus datos.</string>
+    <string name="update_whats_new">Novedades:</string>
+    <string name="update_now">Actualizar</string>
+    <string name="update_later">Más tarde</string>
+    <string name="update_downloading">Descargando actualización… %1$d%%</string>
+    <string name="update_downloading_unknown">Descargando actualización…</string>
+    <string name="update_failed">No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="update_retry">Reintentar</string>
+    <string name="update_permission_title">Permiso para instalar</string>
+    <string name="update_permission_body">Para instalar la actualización, Android te pedirá permitir la instalación desde esta app. Es un permiso normal para apps que se actualizan fuera de Google Play.</string>
+    <string name="update_permission_steps">Toca «Ir a ajustes», activa «Permitir desde esta fuente» y vuelve aquí para actualizar.</string>
+    <string name="update_permission_button">Ir a ajustes</string>
 </resources>

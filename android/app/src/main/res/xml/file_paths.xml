@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    FileProvider para el actualizador: el instalador del sistema necesita
+    una URI de contenido para leer el APK descargado (Android 7+ ya no
+    acepta file://). Solo se expone la carpeta de caché de actualizaciones.
+-->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>
