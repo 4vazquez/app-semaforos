@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -13,6 +15,18 @@ configurations.all {
     exclude(group = "androidx.collection", module = "collection-ktx")
 }
 
+// Firma estable del build debug: si existe keystore/keystore.properties
+// (fuera del repo, en la raíz del proyecto), el debug se firma con ese
+// keystore. Sin él (p. ej. un clon fresco), Gradle usa la firma debug por
+// defecto con un aviso — pero esa firma cambia por máquina y ROMPE las
+// actualizaciones en el teléfono ("conflicto con un paquete", nov 2026:
+// v0.3.1 y v0.3.2 se firmaron con certificados debug distintos).
+val keystorePropertiesFile = rootProject.file("../keystore/keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.alan.semaforosmx"
     compileSdk = 34
@@ -26,8 +40,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("stableDebug") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("stableDebug")
+            } else {
+                logger.warn("keystore.properties no encontrado: el build debug usará la firma debug por defecto (cambia por máquina; las actualizaciones en el teléfono pueden fallar con 'conflicto con un paquete').")
+            }
             // Actualizador propio ACTIVO: la app se distribuye sideload
             // (APK directo / GitHub Releases) y se actualiza sola.
             buildConfigField("boolean", "SELF_UPDATE_ENABLED", "true")

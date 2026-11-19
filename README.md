@@ -148,6 +148,26 @@ este sandbox (sus workers forkados necesitan loopback); las pruebas se
 ejecutaron directamente con `java org.junit.runner.JUnitCore` sobre las
 clases compiladas.
 
+## Firma de los builds (keystore estable)
+
+Todos los builds se firman con un único keystore del proyecto en
+`keystore/semaforosmx-release.keystore` (alias `semaforosmx`), configurado
+en `android/app/build.gradle.kts` a través de `keystore/keystore.properties`.
+El keystore y el properties **NO están en git** (ver `.gitignore`): en un
+clon fresco el build usa la firma debug por defecto, con un aviso.
+
+⚠️ **Haz una copia de seguridad de `keystore/` antes del lanzamiento en
+Play**: si se pierde la llave, Android y Play tratan la app como una app
+distinta y habría que publicar una ficha nueva; los usuarios tendrían que
+desinstalar y volver a instalar.
+
+⚠️ **v0.3.2 cambió de firma**: v0.3.1 y anteriores se firmaron con
+certificados debug distintos por máquina, así que quien tenga v0.3.1 o
+anterior debe **desinstalar la app una vez** antes de instalar v0.3.2
+(«No se instaló la app debido a un conflicto con un paquete» si se intenta
+actualizar encima). A partir de v0.3.2 las actualizaciones encima vuelven
+a funcionar con normalidad.
+
 ## Cómo probar el MVP
 
 1. Instala el APK y abre la app.

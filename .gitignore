@@ -1,0 +1,4 @@
+# Keystore de firma del proyecto — NUNCA en git. Una llave filtrada
+# compromete todas las actualizaciones; una llave perdida obliga a
+# publicar la app como si fuera nueva (ver README, "Firma de los builds").
+keystore/
