@@ -737,6 +737,13 @@ la plantilla de navegación), donde el borde luminoso se dibuja DENTRO del
 2–3 s antes del verde), sujeto a la revisión de Google para apps de
 conducción. No es alcance del MVP ni de v1.
 
+### Rechazado (no volver a proponer)
+**Feed de incidentes estilo Bipper** (reportes de una línea tipo «aguas,
+choque en Cuauhtémoc y Colón»): rechazado por Alan el 19 nov 2026 —
+la app debe mantenerse limpia y cumplir su función (semáforos), sin
+abarcar de más («el que mucho abarca, poco aprieta»). Waze ya cubre
+los reportes de incidentes; el feed diluiría el producto.
+
 ### v3 — Nacional / Premium
 Cobertura nacional · **Plus** (suscripción de pago, si aún no se lanzó en
 v1/v2): sin anuncios, personalización de alertas y estadísticas de
