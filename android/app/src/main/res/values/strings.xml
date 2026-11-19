@@ -86,6 +86,17 @@
     <string name="about">Acerca de</string>
     <string name="about_body">Semáforos MX es un asistente de conducción. Tus reportes son anónimos y los tiempos publicados son promedios de muchos conductores: ningún reporte individual te identifica. Datos de semáforos: © OpenStreetMap contributors (ODbL).</string>
 
+    <!-- Versión y opciones de desarrollador (Ajustes). -->
+    <string name="app_version">Versión de la app</string>
+    <string name="dev_options_title">Opciones de desarrollador</string>
+    <string name="dev_options_unlocked">Opciones de desarrollador activadas</string>
+    <string name="dev_options_taps_left">Te faltan %1$d toques para activar las opciones de desarrollador</string>
+    <string name="test_mode_title">Modo prueba</string>
+    <string name="test_mode_body">Simula que estás junto a un semáforo para probar el widget sin manejar: el LED cicla cada 30 s entre espera, alerta y verde, con cuenta regresiva. Nada de lo que hagas en modo prueba se guarda como aporte real. Activa el widget en Alertas y cierra la app para verlo (mientras la app está abierta el widget no se muestra).</string>
+    <string name="test_mode_badge">PRUEBA</string>
+    <string name="test_mode_no_save">En modo prueba no se guarda nada</string>
+    <string name="test_mode_no_light">No hay semáforos verificados cerca para simular</string>
+
     <string name="permission_location">Permiso de ubicación necesario para detectar semáforos cercanos.</string>
     <string name="permission_overlay">Permiso de superposición necesario para mostrar el widget flotante.</string>
     <string name="permission_grant">Otorgar permiso</string>

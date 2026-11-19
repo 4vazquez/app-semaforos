@@ -76,7 +76,9 @@ import com.alan.semaforosmx.update.ReleaseInfo
 import com.alan.semaforosmx.update.SelfUpdater
 import com.alan.semaforosmx.update.UpdateDialog
 import com.alan.semaforosmx.update.UpdateUiState
+import com.alan.semaforosmx.widget.DEV_UNLOCK_PREF_KEY
 import com.alan.semaforosmx.widget.FloatingWidgetService
+import com.alan.semaforosmx.widget.TEST_MODE_PREF_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -261,6 +263,20 @@ class MainActivity : ComponentActivity() {
                     .getBoolean("vibration_enabled", true)
             )
         }
+        // Opciones de desarrollador (7 toques en la versión) y Modo prueba:
+        // persisten en preferencias, igual que el estado del widget.
+        var devUnlocked by remember {
+            mutableStateOf(
+                context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
+                    .getBoolean(DEV_UNLOCK_PREF_KEY, false)
+            )
+        }
+        var testModeEnabled by remember {
+            mutableStateOf(
+                context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
+                    .getBoolean(TEST_MODE_PREF_KEY, false)
+            )
+        }
         val userId = remember { UserIdentity.get(context) }
 
         // Estado del actualizador propio (solo build sideload).
@@ -440,6 +456,20 @@ class MainActivity : ComponentActivity() {
                         ).edit().putBoolean("vibration_enabled", enabled).apply()
                     },
                     onTermsClick = { screen = AppScreen.TERMS_VIEW },
+                    devUnlocked = devUnlocked,
+                    onDevUnlock = {
+                        devUnlocked = true
+                        context.getSharedPreferences(
+                            "semaforos_mx_prefs", Context.MODE_PRIVATE
+                        ).edit().putBoolean(DEV_UNLOCK_PREF_KEY, true).apply()
+                    },
+                    testModeEnabled = testModeEnabled,
+                    onTestModeChange = { enabled ->
+                        testModeEnabled = enabled
+                        context.getSharedPreferences(
+                            "semaforos_mx_prefs", Context.MODE_PRIVATE
+                        ).edit().putBoolean(TEST_MODE_PREF_KEY, enabled).apply()
+                    },
                     modifier = Modifier.padding(padding)
                 )
                 AppScreen.TERMS_VIEW -> Unit // Se maneja arriba (sin menú).

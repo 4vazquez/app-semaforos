@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.location.Location
 import android.location.LocationListener
@@ -14,6 +15,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.Gravity
@@ -90,6 +92,16 @@ import java.util.Calendar
  *   imposibles, salto GPS con el coche detenido).
  * - La detección pasiva (acelerómetro + GPS) registra el arranque del coche
  *   como reporte solo si cae dentro de la ventana de verde estimado ± 15 s.
+ *
+ * Modo prueba (solo Admin, ver [TestModeSimulator]): con el interruptor
+ * de Ajustes (detrás del desbloqueo de 7 toques en la versión), el
+ * servicio usa una ubicación SIMULADA (~30 m del semáforo verificado más
+ * cercano) y un ciclo de tiempos sintético de 30 s, alimentando la misma
+ * ruta de proximidad que el GPS real. El widget lleva la marca «PRUEBA»,
+ * los botones no guardan nada y la detección pasiva queda desactivada:
+ * ningún dato de prueba toca el repositorio real. En v1, con login de
+ * Google y roles, el modo prueba se limitará al rol Admin y el desbloqueo
+ * de 7 toques desaparecerá.
  */
 class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
@@ -172,6 +184,28 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private var opacity by mutableFloatStateOf(0.9f)
     private var widgetMode by mutableStateOf(WidgetMode.LED_ONLY)
 
+    /** Modo prueba activo: ubicación y tiempos simulados, sin guardar nada. */
+    private var isTestMode by mutableStateOf(false)
+    /** Inicio del ciclo de prueba actual (ms); el LED cicla cada 30 s. */
+    private var testCycleStartMillis: Long = 0L
+    /** Ubicación simulada (~30 m del semáforo de prueba). */
+    private var testSimulatedLocation: Location? = null
+    /** Último estado LED en modo prueba (vibrar solo al entrar en ALERT). */
+    private var previousTestLedState: LedState? = null
+
+    /**
+     * El interruptor de modo prueba vive en Ajustes (la actividad): este
+     * listener lo aplica en cuanto cambia, sin reiniciar el servicio.
+     * Actividad y servicio corren en el mismo proceso, así que el listener
+     * de preferencias sí llega (ver AndroidManifest: sin android:process).
+     */
+    private val testModePrefsListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            if (key == TEST_MODE_PREF_KEY) {
+                scope.launch { applyTestMode(prefs.getBoolean(TEST_MODE_PREF_KEY, false)) }
+            }
+        }
+
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var tickerJob: Job? = null
 
@@ -212,7 +246,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         override fun onLocationChanged(location: Location) {
             previousLocation = lastLocation
             lastLocation = location
-            scope.launch(Dispatchers.IO) { updateNearestLight(location) }
+            // En modo prueba el GPS real no mueve el widget: la ubicación
+            // simulada alimenta la misma ruta de proximidad. El fix real
+            // sí se guarda (sirve de referencia al elegir el semáforo de
+            // prueba y al volver al GPS al apagar el modo).
+            if (!isTestMode) {
+                scope.launch(Dispatchers.IO) { updateNearestLight(location) }
+            }
         }
 
         @Deprecated("Deprecated in Java")
@@ -233,6 +273,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         opacity = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getFloat(PREF_OPACITY, 0.9f)
+        getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .registerOnSharedPreferenceChangeListener(testModePrefsListener)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -257,6 +299,14 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         startLocationUpdates()
         movementDetector.start()
         scope.launch { refreshWidgetMode() }
+        // Si el modo prueba quedó encendido en Ajustes, activarlo al
+        // arrancar (el estado persiste en preferencias, igual que el del
+        // widget).
+        if (getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getBoolean(TEST_MODE_PREF_KEY, false)
+        ) {
+            scope.launch { applyTestMode(true) }
+        }
         startTicker()
     }
 
@@ -268,6 +318,11 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         locationManager?.removeUpdates(locationListener)
         detachOverlay()
         stopForeground(STOP_FOREGROUND_REMOVE)
+        // Estado transitorio de prueba: al re-arrancar, startWidget lo
+        // vuelve a calcular desde la preferencia.
+        testSimulatedLocation = null
+        previousTestLedState = null
+        isTestMode = false
     }
 
     /**
@@ -297,6 +352,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     showCountdown = showCountdown,
                     opacity = opacity,
                     mode = widgetMode,
+                    isTestMode = isTestMode,
                     onOpacityChange = { value ->
                         opacity = value
                         getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -423,6 +479,97 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         }
     }
 
+    /**
+     * Activa o desactiva el modo prueba (ver [TestModeSimulator]). Al
+     * activar, se elige el semáforo verificado más cercano a la última
+     * ubicación real (o a Lincoln / Ruiz Cortines si no hay ninguno a
+     * menos de 2 km) y se simula estar parado a ~30 m de él, alimentando
+     * la MISMA ruta de proximidad que el GPS real ([updateNearestLight]).
+     * Al desactivar, el servicio vuelve al GPS real de inmediato.
+     *
+     * La ubicación simulada NUNCA se guarda en [lastLocation] ni se pasa
+     * a la verificación GPS: los reportes quedan bloqueados por las
+     * guardas de [onSyncVerdePressed], [onAquiHaySemaforoPressed] y
+     * [onVehicleStarted], así que ningún dato de prueba toca el
+     * repositorio real.
+     */
+    private suspend fun applyTestMode(enabled: Boolean) {
+        if (enabled == isTestMode) return
+        if (enabled) enableTestMode() else disableTestMode()
+    }
+
+    private suspend fun enableTestMode() {
+        val simulated = withContext(Dispatchers.IO) {
+            val repo = RepositoryProvider.repository
+            val real = lastLocation
+            val target = real?.let {
+                TestModeSimulator.selectTargetLight(
+                    repo.lightsNear(
+                        it.latitude, it.longitude,
+                        TestModeSimulator.SEARCH_RADIUS_METERS
+                    ),
+                    it.latitude, it.longitude,
+                    TestModeSimulator.SEARCH_RADIUS_METERS
+                )
+            } ?: TestModeSimulator.selectTargetLight(
+                repo.lightsNear(
+                    TestModeSimulator.DEFAULT_LATITUDE,
+                    TestModeSimulator.DEFAULT_LONGITUDE,
+                    TestModeSimulator.SEARCH_RADIUS_METERS
+                ),
+                TestModeSimulator.DEFAULT_LATITUDE,
+                TestModeSimulator.DEFAULT_LONGITUDE,
+                TestModeSimulator.SEARCH_RADIUS_METERS
+            )
+            target?.let {
+                buildSimulatedLocation(TestModeSimulator.simulatedPosition(it))
+            }
+        }
+        if (simulated == null) {
+            // Sin semáforos verificados cerca ni en el punto por defecto:
+            // no hay nada que simular. El interruptor queda encendido en
+            // Ajustes; al arrancar de nuevo el servicio lo reintenta.
+            showServiceToast(R.string.test_mode_no_light)
+            return
+        }
+        testCycleStartMillis = System.currentTimeMillis()
+        previousTestLedState = null
+        testSimulatedLocation = simulated
+        isTestMode = true
+        withContext(Dispatchers.IO) { updateNearestLight(simulated) }
+    }
+
+    private suspend fun disableTestMode() {
+        isTestMode = false
+        testSimulatedLocation = null
+        previousTestLedState = null
+        ledState = LedState.UNKNOWN
+        showCountdown = false
+        // Volver al GPS real de inmediato: re-evaluar con el último fix.
+        val real = lastLocation
+        if (real != null) {
+            withContext(Dispatchers.IO) { updateNearestLight(real) }
+        } else {
+            withContext(Dispatchers.Main) { applyOverlayVisibility(false) }
+        }
+    }
+
+    /**
+     * Construye la ubicación simulada a partir de una posición calculada
+     * ([TestModeSimulator.simulatedPosition]). NO es una ubicación
+     * simulada del sistema: es un objeto `Location` normal creado en la
+     * app, así que `isFromMockProvider` es falso y no dispara la
+     * detección anti-abuso. Solo alimenta [updateNearestLight].
+     */
+    private fun buildSimulatedLocation(position: Pair<Double, Double>): Location =
+        Location("test").apply {
+            latitude = position.first
+            longitude = position.second
+            accuracy = 5f
+            time = System.currentTimeMillis()
+            elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+        }
+
     private suspend fun updateNearestLight(location: Location) {
         // Solo semáforos VERIFICADOS sirven alertas: los UNVERIFIED (grises)
         // no tienen datos de confianza todavía.
@@ -473,6 +620,16 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         tickerJob = scope.launch {
             while (isActive) {
                 refreshCountdown()
+                // En modo prueba, re-alimentar la ubicación simulada cada
+                // segundo: si el usuario abrió la app (el overlay se
+                // oculta) y la cierra, el widget vuelve a aparecer sin
+                // esperar un fix GPS real (que en modo prueba se ignora).
+                if (isTestMode) {
+                    val simulated = testSimulatedLocation
+                    if (simulated != null) {
+                        scope.launch(Dispatchers.IO) { updateNearestLight(simulated) }
+                    }
+                }
                 // Re-evaluar el modo cada 30 s: si el usuario llegó a los 20
                 // semáforos distintos del mes, el widget pasa a completo sin
                 // reiniciar nada.
@@ -500,6 +657,23 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             return
         }
         val now = System.currentTimeMillis()
+        // Modo prueba: el tiempo es un ciclo sintético de 30 s (ver
+        // TestTimingCycle). No se consulta el repositorio real: los datos
+        // de prueba nunca se mezclan con la agregación.
+        if (isTestMode) {
+            val elapsedSeconds = (now - testCycleStartMillis) / 1000L
+            val fake = TestTimingCycle.stateAt(elapsedSeconds)
+            if (fake.ledState == LedState.ALERT &&
+                previousTestLedState != LedState.ALERT
+            ) {
+                vibrateAlert()
+            }
+            previousTestLedState = fake.ledState
+            ledState = fake.ledState
+            secondsLeft = fake.secondsLeft
+            showCountdown = fake.showCountdown
+            return
+        }
         val hourSlot = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val dayType = InMemoryTimingRepository.currentDayType()
         val timing = RepositoryProvider.repository.timingFor(light.id, hourSlot, dayType)
@@ -553,6 +727,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     /** El conductor presionó "Sync verde": el semáforo cambió justo ahora. */
     private fun onSyncVerdePressed() {
+        // En modo prueba los botones no guardan nada (además de estar
+        // desactivados en el overlay): doble protección, la de verdad es
+        // esta — la UI sola no basta.
+        if (isTestMode) {
+            showServiceToast(R.string.test_mode_no_save)
+            return
+        }
         scope.launch {
             val light = nearestLight
             val location = lastLocation
@@ -615,6 +796,11 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
      * (fix fresco obligatorio) y se registra el sync de verde.
      */
     private fun onAquiHaySemaforoPressed() {
+        // En modo prueba los botones no guardan nada (ver onSyncVerdePressed).
+        if (isTestMode) {
+            showServiceToast(R.string.test_mode_no_save)
+            return
+        }
         scope.launch {
             val location = LocationHelper.getFreshLocation(this@FloatingWidgetService)
             if (location == null) {
@@ -670,6 +856,9 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
      * activa (ver SPEC.md §9).
      */
     private fun onVehicleStarted(startedAtMillis: Long) {
+        // En modo prueba la detección pasiva no reporta: el coche está
+        // parado en el sillón, no en un semáforo.
+        if (isTestMode) return
         scope.launch(Dispatchers.IO) {
             val light = nearestLight ?: return@launch
             if (light.status != LightStatus.VERIFIED) return@launch
@@ -744,6 +933,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     override fun onDestroy() {
         super.onDestroy()
+        getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(testModePrefsListener)
         stopWidget()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         tickerJob?.cancel()

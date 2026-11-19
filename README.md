@@ -55,7 +55,7 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   primera apertura + relectura desde Ajustes. Incluye cuentas, roles y
   login con Google (§7 Bis) y el Aviso de Privacidad v1.0
   (`AVISO_DE_PRIVACIDAD.md`). ⚠️ Ambos textos son borradores pendientes
-  de revisión legal antes del lanzamiento público. (La app v0.3.2 ya
+  de revisión legal antes del lanzamiento público. (La app v0.3.3 ya
   muestra los Términos v1.3; al actualizar vuelve a mostrar la pantalla
   «Acepto» una vez.)
 - **Detección pasiva de arranque** (acelerómetro/GPS) conectada al widget:
@@ -79,12 +79,20 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   explicación en español) y el estado del widget persiste al reiniciar la
   app. Esta versión ya muestra los Términos v1.3, así que vuelve a pedir
   «Acepto» una vez al actualizar.
+- **Modo prueba** (v0.3.3, solo Admin): simula estar junto a un semáforo
+  para probar el widget, el LED y la cuenta regresiva sin manejar. Se
+  desbloquea tocando 7 veces la versión de la app en Ajustes (estilo
+  «opciones de desarrollador» de Android): sin login todavía, es la única
+  forma de distinguir al Admin. En modo prueba la ubicación y los tiempos
+  son simulados (ciclo de 30 s: espera → alerta → verde), el widget lleva
+  la marca «PRUEBA», los botones no guardan nada y la detección pasiva
+  queda desactivada. En v1, con login de Google, se limitará al rol Admin.
 
 ## Roles y login con Google (documentado en v1.3, trabajo de backend en v1)
 
 Aprobado por Alan el 18 nov 2026 (ver `SPEC.md` §4.7 y §6.9,
 `TERMINOS_Y_CONDICIONES.md` §7 Bis y `AVISO_DE_PRIVACIDAD.md`).
-**Nada de esto está aún en la app v0.3.2**, que sigue siendo anónima y
+**Nada de esto está aún en la app v0.3.3**, que sigue siendo anónima y
 local; es trabajo del backend real en v1 (Supabase).
 
 - **Usuario común (sin login):** mapa + alerta del verde (+ Sync verde
@@ -135,9 +143,9 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (18 nov 2026):** el APK compila (`app-debug.apk`,
-23 MB, `com.alan.semaforosmx` v0.3.0) y las **55 pruebas unitarias
-pasan** (30 de v0.2.0 + 25 nuevas: comparación de versiones y parseo de
-releases de GitHub para el actualizador). Nota del entorno: en este sandbox los procesos Java no pueden
+23 MB, `com.alan.semaforosmx` v0.3.3) y las **74 pruebas unitarias
+pasan** (58 de v0.3.2 + 16 nuevas del modo prueba: ciclo de tiempos
+sintético y selección de la ubicación simulada). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y
@@ -186,6 +194,30 @@ a funcionar con normalidad.
    un marcador gris que necesita 3 confirmaciones para volverse rojo.
 7. Revisa tu progreso en la pestaña **Mis aportes**: semáforos distintos
    del mes (X/20), estado Colaborador, nivel de confianza e historial.
+
+## Modo prueba (solo Admin, v0.3.3)
+
+Para probar el widget sin manejar:
+
+1. En **Ajustes**, toca 7 veces la **Versión de la app**: se activan las
+   Opciones de desarrollador (un aviso lo confirma). El desbloqueo queda
+   guardado; no hay que repetirlo.
+2. Activa **Modo prueba**: la app simula que estás parado a ~30 m del
+   semáforo verificado más cercano a tu última ubicación real (o de
+   Av. Lincoln / Ruiz Cortines si no hay ninguno a menos de 2 km).
+3. Activa el widget en **Alertas** y cierra la app con el botón Home: el
+   widget aparece con la marca **PRUEBA** y el LED cicla cada 30 s entre
+   espera (cuenta regresiva), alerta y verde.
+4. Para volver a lo real, apaga Modo prueba: el servicio vuelve al GPS de
+   inmediato.
+
+Seguridad: en modo prueba los botones del widget están desactivados, los
+syncs no se guardan (el servicio los rechaza además de la UI), la
+detección pasiva no reporta y nada de lo simulado toca el repositorio
+real. La simulación es interna de la app, no una ubicación simulada del
+sistema, así que no dispara la detección anti-abuso. En v1, con login de
+Google y roles, el modo prueba se limitará al rol Admin (Alan) y el
+desbloqueo de 7 toques desaparecerá.
 
 ## Publicar una nueva versión
 

@@ -25,4 +25,5 @@ java -cp "$CP" org.junit.runner.JUnitCore \
   com.alan.semaforosmx.ui.contact.ContactEmailTest \
   com.alan.semaforosmx.update.ReleaseParsingTest \
   com.alan.semaforosmx.update.VersionTest \
-  com.alan.semaforosmx.widget.WidgetModeTest
+  com.alan.semaforosmx.widget.WidgetModeTest \
+  com.alan.semaforosmx.widget.TestModeTest
