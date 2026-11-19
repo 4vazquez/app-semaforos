@@ -51,9 +51,13 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   prueba) · Colaborador (gratis y sin anuncios con 20+ actualizaciones en
   semáforos distintos al mes; programa para conductores Uber/DiDi) ·
   Plus (suscripción de pago, solo el flag/stub; se lanza después).
-- **Términos y Condiciones v1.2**: pantalla de aceptación obligatoria en la
-  primera apertura + relectura desde Ajustes. ⚠️ El texto es un borrador
-  pendiente de revisión legal antes del lanzamiento público.
+- **Términos y Condiciones v1.3**: pantalla de aceptación obligatoria en la
+  primera apertura + relectura desde Ajustes. Incluye cuentas, roles y
+  login con Google (§7 Bis) y el Aviso de Privacidad v1.0
+  (`AVISO_DE_PRIVACIDAD.md`). ⚠️ Ambos textos son borradores pendientes
+  de revisión legal antes del lanzamiento público. (La app v0.3.1
+  instalada aún muestra los Términos v1.2; la v1.3 entra en el siguiente
+  build, que volverá a mostrar la pantalla «Acepto» una vez.)
 - **Detección pasiva de arranque** (acelerómetro/GPS) conectada al widget:
   el arranque solo cuenta como reporte dentro de la ventana de verde ± 15 s;
   calibración de umbrales en v1.
@@ -68,6 +72,31 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   (adminsemaforosmx@gmail.com) para copiarlo o escribir por correo con el
   asunto precargado; también está nombrado en los Términos §12. Será el
   correo de contacto de la ficha en Google Play.
+
+## Roles y login con Google (documentado en v1.3, trabajo de backend en v1)
+
+Aprobado por Alan el 18 nov 2026 (ver `SPEC.md` §4.7 y §6.9,
+`TERMINOS_Y_CONDICIONES.md` §7 Bis y `AVISO_DE_PRIVACIDAD.md`).
+**Nada de esto está aún en la app v0.3.1**, que sigue siendo anónima y
+local; es trabajo del backend real en v1 (Supabase).
+
+- **Usuario común (sin login):** mapa + alerta del verde (+ Sync verde
+  desde la pestaña Mapa, que alimenta la agregación pero no la cuota).
+- **Colaborador (login con Google):** sync desde el widget, agregar y
+  reportar semáforos, ver solo sus propios aportes. El rol se llama
+  oficialmente «Colaborador», nunca «socio»: el Colaborador **no** es
+  empleado, socio, asociado, agente ni accionista, y su único beneficio
+  es el uso sin anuncios mientras cumpla las condiciones del programa
+  (sin valor en efectivo, sin participación en ingresos o utilidades,
+  intransferible).
+- **Admin (solo Alan):** privilegios totales — aprobar/rechazar
+  semáforos, ver reportes y métricas, moderar cuentas — en un panel
+  aparte, fuera del APK público.
+- **Login híbrido (SSO con Google):** sin cuenta para uso básico; con
+  cuenta de Google para aportar, ser Colaborador o tener Plus. Google
+  entrega nombre, correo, foto e ID; la contraseña de Google nunca se
+  recibe ni se guarda. La separación de permisos se hace cumplir en el
+  servidor (Supabase RLS + funciones), no solo escondiendo botones.
 
 ## Requisitos para compilar
 
@@ -159,7 +188,8 @@ app). Para activar Supabase:
 
 1. Crea el proyecto en [supabase.com](https://supabase.com) y las tablas
    del `SPEC.md` §6 (`traffic_lights`, `timing_reports`, `light_timings`,
-   `user_contributions`, `removal_reports`, `user_trust`).
+   `user_contributions`, `removal_reports`, `user_trust`, `users` — esta
+   última con Google ID y rol, ver `SPEC.md` §6.9).
 2. Importa el GeoJSON (`android/app/src/main/assets/semaforos_mty.geojson`)
    a `traffic_lights` (el `id` de cada semáforo es el ID del nodo de OSM).
 3. Pon la URL y la clave anónima en `android/local.properties`:
@@ -178,7 +208,7 @@ unidad real de AdMob. También cambia el ID de aplicación en
 ```
 android/
 ├── app/src/main/assets/semaforos_mty.geojson   # 1 579 semáforos (OSM, ODbL)
-├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.2 (verbatim)
+├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.3 (verbatim)
 ├── app/src/main/java/com/alan/semaforosmx/
 │   ├── MainActivity.kt            # Puerta de términos + menú inferior
 │   ├── SemaforosMxApp.kt          # Inicialización (OSM + AdMob + seed)

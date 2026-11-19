@@ -7,7 +7,14 @@
 > **Idea original:** Alan Vázquez · **Borrador inicial:** noviembre de 2025
 > (prototipo web con asistencia de GPT-5) ·
 > **Repositorio del borrador:** https://github.com/4vazquez/app-semaforos
-> **Fecha de este documento:** 18 de noviembre de 2026 · **Versión:** 1.1 (MVP)
+> **Fecha de este documento:** 18 de noviembre de 2026 · **Versión:** 1.2
+>
+> **Cambios en v1.2 (18 nov 2026):** roles y permisos (Usuario común /
+> Colaborador / Admin, §6.9), login híbrido con Google (§4.7),
+> `user_id` ligado al login en v1 (§6.5, §6.7, §6.8), Términos y
+> Condiciones v1.3 y Aviso de Privacidad v1.0 (§10). Los roles y el login
+> son trabajo de backend en v1: la app v0.3.1 sigue siendo anónima y
+> local, sin cuentas.
 >
 > **Cambios en v1.1 (18 nov 2026):** botones de corrección de mapa
 > («Aquí hay un semáforo» y «Ya no existe»), paquete anti-abuso completo
@@ -61,9 +68,19 @@ documento se construye sobre ese borrador.
 - Monetización en tres niveles: Gratis (con banner), Colaborador (gratis y
   sin anuncios con 20+ actualizaciones en semáforos distintos al mes) y
   Plus (suscripción de pago, solo el flag/stub en el MVP; se lanza después).
-- Términos y Condiciones v1.2: pantalla de aceptación en la primera
+- Términos y Condiciones v1.3: pantalla de aceptación en la primera
   apertura («Acepto» obligatorio) y relectura desde Ajustes. El texto es
   un borrador pendiente de revisión legal antes del lanzamiento público.
+  La v1.3 añade cuentas, roles y login con Google (§7 Bis) y el Aviso de
+  Privacidad v1.0 (`AVISO_DE_PRIVACIDAD.md`).
+- **Roles y login híbrido (documentados en v1.2 del SPEC, trabajo de
+  backend en v1, NO en la app v0.3.1):** Usuario común sin login (mapa +
+  alerta), Colaborador con login de Google (aporta y ve solo sus
+  aportes) y Admin (solo Alan, privilegios totales, panel aparte). Ver
+  §4.7 y §6.9. La app v0.3.1 sigue siendo anónima y local. El rol se
+  llama oficialmente **Colaborador** (nunca «socio» en texto visible al
+  usuario o legal: «socio» implica derechos sobre utilidades, que el
+  programa no otorga — ver Términos §7 Bis).
 - Importación del GeoJSON como base semilla dentro de la app
   (`assets/semaforos_mty.geojson`).
 
@@ -132,7 +149,7 @@ internacional.
 | 6 | Base de datos colaborativa de tiempos + agregación con confianza (mediana ponderada por trust) | ✅ Modelo + agregación implementados; cliente de backend en stub |
 | 7 | Paquete anti-abuso: verificación GPS, anti-mock, anti-salto, una cuenta por dispositivo, trust, UNVERIFIED, tope diario | ✅ Implementado (cliente; la aplicación en servidor es v1, ver §6.7) |
 | 8 | Monetización en tres niveles: Gratis / Colaborador / Plus (stub) | ✅ Esqueleto (AdMob con ID de prueba; Plus sin flujo de pago) |
-| 9 | Términos y Condiciones v1.2: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal) |
+| 9 | Términos y Condiciones v1.3: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal; la app v0.3.1 aún muestra v1.2 hasta el siguiente build) |
 | 10 | Menú inferior dentro de la app (Mapa / Mis aportes / Alertas / Ajustes) + pantalla «Mis aportes» (progreso X/20, estado Colaborador, trust, historial) + widget por proximidad en segundo plano con dos modos (completo para Colaborador/Plus, solo LED para Gratis) | ✅ Implementado (v0.2.0) |
 
 **Fuera del MVP:** iOS, detección del semáforo por cámara con IA, voz
@@ -143,7 +160,7 @@ internacional.
 
 ### 4.1 Primera ejecución (onboarding)
 1. **Términos y Condiciones (obligatorio):** resumen en lenguaje sencillo
-   de las cláusulas clave + texto completo (v1.2). El usuario debe
+   de las cláusulas clave + texto completo (v1.3). El usuario debe
    presionar **«Acepto»** para usar la app; «No acepto» cierra la app.
    La aceptación se guarda localmente (versión + fecha/hora). Si los
    términos cambian de versión, hay que aceptarlos de nuevo.
@@ -231,12 +248,42 @@ La app muestra un semáforo que fue retirado en la vida real:
 - **Primera apertura:** pantalla de aceptación (ver §4.1, paso 1).
 - **Relectura:** Ajustes → «Términos y Condiciones» reabre el texto
   completo (modo solo lectura, con botón «Cerrar»).
-- El texto es el archivo `TERMINOS_Y_CONDICIONES.md` del repo (v1.2),
+- El texto es el archivo `TERMINOS_Y_CONDICIONES.md` del repo (v1.3),
   copiado verbatim a `assets/terminos_y_condiciones.md` para que la app
   lo muestre. ⚠️ **Es un borrador: debe revisarlo un abogado antes del
   lanzamiento público** (ver §10).
 - El §12 nombra el correo de contacto del equipo
   (adminsemaforosmx@gmail.com), publicado también en Ajustes → Contacto.
+
+### 4.7 Login híbrido con Google (v1, aprobado por Alan el 18 nov 2026)
+
+El uso básico no requiere cuenta; aportar sí. Así no se espanta al
+usuario común y a la vez se construye la base de usuarios que aportan,
+con su rol, su confianza y sus aportes (§6.9).
+
+- **Sin login:** ver el mapa y recibir la alerta del verde. Nada más.
+  También puede hacer Sync verde desde la pestaña Mapa de la app; ese
+  sync alimenta la agregación de tiempos pero, al no haber cuenta, no
+  cuenta para la cuota Colaborador ni aparece en «Mis aportes».
+- **Con login (Google, SSO):** obligatorio para hacer sync desde el
+  widget, agregar o reportar semáforos, ser Colaborador y tener Plus.
+- **Qué recibe la app:** con Google Sign-In NO se ve la contraseña del
+  usuario. Llega: nombre, correo, foto (si tiene) e identificador de
+  Google. Eso basta para la base de usuarios (`users`, ver §6.9).
+- **Una cuenta por login:** en v1 el `user_id` de Supabase se liga al
+  login de Google, no al ANDROID_ID anónimo del MVP (§6.7, regla 5).
+  Reinstalar con el mismo Google recupera la misma cuenta, sus aportes
+  y su confianza. Un mismo login de Google puede usarse en varios
+  dispositivos; lo que sigue prohibido es tener varias cuentas para
+  manipular los datos (Términos §8).
+- **Eliminación de cuenta:** el usuario puede borrar su cuenta y sus
+  datos personales desde la app (Ajustes → Eliminar cuenta), como exige
+  Play. Al borrarla se borran nombre/correo/foto/ID de Google; sus
+  reportes previos quedan solo como datos agregados y anonimizados (no
+  identificables).
+- **Migración desde el MVP:** los reportes anónimos del MVP (ID ligado
+  al dispositivo) se archivan sin identidad o se migran como datos
+  agregados; no se pueden ligar retroactivamente a una cuenta de Google.
 
 ## 5. Pantallas
 
@@ -253,7 +300,7 @@ cuando hay un semáforo cerca.
 | **Detalle de semáforo** (diálogo) | Nombre del cruce, estado (verificado / sin verificar), reportes de retiro acumulados («2 de 3»), acción «Reportar que ya no existe» |
 | **Widget flotante** | Barra vertical compacta (120 dp de ancho, un tercio de la pantalla como máximo, en el borde derecho, arrastrable) o píldora solo-LED (160 × 72 dp, arriba al centro). FULL (Colaborador/Plus): borde LED, cuenta regresiva, botones «Sync verde» y «Aquí hay un semáforo», slider de opacidad. LED_ONLY (Gratis): solo el borde LED con la cuenta regresiva. Aparece a ≤ 150 m de un semáforo verificado, se oculta a > 200 m, y nunca se muestra con la app abierta |
 | **Ajustes** | Vibración al avisar, Términos y Condiciones (reabre el texto), Contacto (correo del equipo para copiar o escribir con asunto precargado), Acerca de (qué datos se recogen + atribución OSM) |
-| **Términos y Condiciones** | Resumen en lenguaje sencillo + texto completo v1.2; en primera apertura, botones «Acepto» / «No acepto»; desde Ajustes, solo lectura |
+| **Términos y Condiciones** | Resumen en lenguaje sencillo + texto completo v1.3; en primera apertura, botones «Acepto» / «No acepto»; desde Ajustes, solo lectura |
 | **Onboarding** | Bienvenida, permisos, aviso de seguridad (después de aceptar términos) |
 
 ## 6. Modelo de datos
@@ -266,8 +313,8 @@ cuando hay un semáforo cerca.
 | `name` | String? | Nombre opcional (cruce: «Av. Lincoln / Ruiz Cortines») |
 | `city` | String | «Monterrey» (permite crecer a otras ciudades) |
 | `status` | enum | `VERIFIED` (en el mapa, con alertas) / `UNVERIFIED` (gris, sin alertas, pendiente de 3 confirmaciones) / `REMOVED` (oculto, 3 reportes de retiro) |
-| `reported_by` | UUID? | Usuario anónimo que lo reportó (solo UNVERIFIED; sirve para el anti-spam) |
-| `created_by` | UUID? | Usuario que lo agregó (opcional) |
+| `reported_by` | UUID? | Usuario que lo reportó (con login en v1; anónimo ligado al dispositivo en el MVP; solo UNVERIFIED; sirve para el anti-spam) |
+| `created_by` | UUID? | Usuario que lo agregó (opcional; con login en v1) |
 | `created_at` | timestamp | Creación |
 
 La base semilla (GeoJSON de OSM) entra como `VERIFIED`. Todo semáforo
@@ -283,7 +330,7 @@ agregado por un usuario empieza `UNVERIFIED`.
 | `day_type` | enum | `WEEKDAY` / `SATURDAY` / `SUNDAY_HOLIDAY` |
 | `source` | enum | `MANUAL_SYNC` (botón) / `PASSIVE` (sensor) |
 | `gps_accuracy_m` | float | Precisión del GPS al reportar |
-| `user_id` | UUID? | Anónimo por defecto (ver §10) |
+| `user_id` | UUID? | Usuario con login en v1; nulo para syncs sin login desde el Mapa y para reportes del MVP anónimo (ver §6.9 y §10) |
 
 ### 6.3 Tiempos agregados (`light_timings`, calculado)
 | Campo | Tipo | Descripción |
@@ -336,7 +383,7 @@ cliente (para cálculo local) y en el backend (para el cálculo oficial).
 ### 6.5 Contribución del usuario (`user_contributions`)
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `user_id` | UUID | Usuario (anónimo, ligado al dispositivo; ver §6.7) |
+| `user_id` | UUID | Usuario con login de Google en v1 (ver §4.7 y §6.9); en el MVP era el ID anónimo ligado al dispositivo (ver §6.7) |
 | `month` | String | «2026-11» |
 | `light_ids` | text[] | Semáforos distintos a los que aportó en el mes |
 | `update_count` | int | `light_ids` distintos (derivado). Con 20+ el usuario es Colaborador (sin anuncios, gratis) |
@@ -346,7 +393,8 @@ cliente (para cálculo local) y en el backend (para el cálculo oficial).
 ese semáforo, pero repetir el mismo cruce no suma de nuevo. Así no se puede
 farmear el Colaborador en un solo semáforo. Los reportes pasivos
 (detección de arranque) NO cuentan para la cuota: el programa premia la
-contribución activa.
+contribución activa. Tampoco cuentan los syncs sin login desde el Mapa
+(§4.7): sin cuenta no hay cuota que acreditar.
 
 ### 6.6 Reporte de retiro (`removal_reports`)
 | Campo | Tipo | Descripción |
@@ -354,7 +402,7 @@ contribución activa.
 | `id` | UUID | Identificador |
 | `light_id` | UUID | Semáforo reportado como retirado |
 | `reported_at` | timestamp | Momento del reporte |
-| `user_id` | UUID? | Usuario anónimo (uno por semáforo, para siempre) |
+| `user_id` | UUID? | Usuario con login en v1 (uno por semáforo, para siempre); anónimo ligado al dispositivo en el MVP |
 
 Un semáforo se oculta (`status = REMOVED`) al acumular reportes de **3
 usuarios distintos**. Nunca se borra: queda para auditoría y restauración.
@@ -386,16 +434,81 @@ falló. Los mensajes de verificación GPS (demasiado lejos, ubicación vieja
 o imprecisa) sí son específicos, porque son problemas honestos del
 conductor.
 
+**Cambio en v1 (regla 5):** la identidad deja de ser el hash del
+ANDROID_ID y pasa a ser el login de Google (§4.7, §6.9). La regla pasa a
+ser **una cuenta por login de Google**: un mismo login puede usarse en
+varios dispositivos, y lo que sigue prohibido es crear varias cuentas
+para manipular los datos. Los reportes anónimos del MVP se archivan sin
+identidad y no se ligan retroactivamente a ninguna cuenta.
+
 ### 6.8 Confianza del usuario (`user_trust`)
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `user_id` | UUID | Usuario anónimo |
+| `user_id` | UUID | Usuario con login de Google en v1; ID anónimo ligado al dispositivo en el MVP |
 | `trust_score` | float | 0.1–1.0, empieza en 0.5 (neutral) |
 | `confirmed_count` | int | Reportes confirmados por la multitud |
 | `rejected_count` | int | Reportes rechazados como atípicos |
 
 En el MVP la confianza vive en el repositorio en memoria; en v1 es una
 tabla de Supabase que la función de agregación consulta para ponderar.
+El `user_id` es la clave foránea a `users` (§6.9).
+
+### 6.9 Roles y permisos (v1, aprobado por Alan el 18 nov 2026)
+
+Tres roles, con privilegios mínimos (cada rol solo ve y hace lo que
+ocupa). **El rol de aporte se llama oficialmente «Colaborador»** en
+todo texto visible al usuario y legal; «socio» no se usa ahí porque en
+español implica un socio de negocio con derechos sobre utilidades, que
+el programa no otorga (ver Términos §7 Bis).
+
+| Capacidad | Usuario común (sin login) | Colaborador (login Google) | Admin (Alan, solo él) |
+|---|---|---|---|
+| Ver mapa y recibir alerta del verde | ✅ sí | ✅ sí | ✅ sí |
+| Hacer Sync verde | ✅ sí, desde la app (Mapa) | ✅ sí, también desde el widget | ✅ sí |
+| Agregar semáforo («Aquí hay un semáforo») | ❌ no | ✅ sí | ✅ sí |
+| Reportar «Ya no existe» | ❌ no | ✅ sí | ✅ sí |
+| Ver sus propios aportes y progreso (X/20, confianza) | ❌ no | ✅ solo los suyos | ✅ los suyos y los de todos |
+| Widget completo (botones + opacidad) | ❌ solo LED | ✅ al llegar a 20 distintos/mes | ✅ sí |
+| Aprobar / rechazar semáforos nuevos | ❌ no | ❌ no | ✅ solo admin |
+| Ocultar / restaurar semáforos | ❌ no | ❌ no | ✅ solo admin |
+| Ver reportes, confianza de usuarios y métricas globales | ❌ no | ❌ no | ✅ solo admin |
+| Moderar / suspender cuentas | ❌ no | ❌ no | ✅ solo admin |
+| Ver ingresos, datos de otros usuarios o datos globales | ❌ no | ❌ no | ✅ solo admin |
+
+**El Colaborador NO es empleado, socio, asociado, agente ni accionista
+de Semáforos MX.** Su participación es voluntaria, sin horario,
+exclusividad ni subordinación; el ÚNICO beneficio es el uso sin
+anuncios mientras cumpla las condiciones del programa (20 semáforos
+distintos al mes), sin valor en efectivo, sin participación en ingresos
+o utilidades, sin equity e intransferible. El programa y sus
+condiciones pueden modificarse o terminarse, con aviso dentro de la app
+(Términos §7 Bis).
+
+**Regla de oro (v1, servidor):** la separación se hace cumplir en
+Supabase (Row Level Security + funciones), no solo escondiendo botones
+en la app. En el MVP todo vive local y anónimo, así que hoy cualquiera
+podría brincárselo; por eso los roles son trabajo de backend en v1, no
+del MVP. El panel de admin es **aparte de la app pública** (no va dentro
+del APK que descargan los usuarios).
+
+**Tabla `users` (v1, nueva):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID | `user_id` de Supabase (clave de `user_contributions`, `user_trust`, reportes) |
+| `google_id` | String | Identificador de Google (SSO); la contraseña de Google nunca se recibe ni se guarda |
+| `email` | String | Correo de la cuenta de Google |
+| `display_name` | String? | Nombre de la cuenta de Google |
+| `photo_url` | String? | Foto de perfil de Google (si la tiene) |
+| `role` | enum | `USER` (común, con login) / `COLLABORATOR` / `ADMIN` (solo Alan) |
+| `created_at` | timestamp | Creación de la cuenta |
+
+Un usuario común que inicia sesión con Google pero aún no aporta es
+`USER`; al aportar sigue siendo `USER` con aportes registrados, y el
+estado Colaborador (sin anuncios) se deriva de la cuota mensual de §6.5,
+no es un rol distinto en la base de datos. El rol `COLLABORATOR` marca
+a los conductores del programa (p. ej. comunidades Uber/DiDi) que
+aportan de forma regular.
 
 ## 7. Detección pasiva de arranque (diseño)
 
@@ -475,10 +588,15 @@ terceros, sin identificar a usuarios individuales.
 
 ## 10. Privacidad y legal
 
-- **Sin cuentas obligatorias:** el usuario es un ID anónimo ligado al
-  dispositivo (hash SHA-256 del ANDROID_ID; el ID crudo nunca sale del
-  teléfono). No se pide nombre, correo ni teléfono. Una cuenta por
-  dispositivo (ver §6.7, regla 5).
+- **Cuentas (v1):** el uso básico (mapa + alerta del verde) no requiere
+  cuenta. Para aportar (sync desde el widget, agregar o reportar
+  semáforos), ser Colaborador o tener Plus, el usuario inicia sesión con
+  su cuenta de Google (§4.7). Con Google Sign-In se reciben nombre,
+  correo, foto (si la tiene) e identificador de Google; **la contraseña
+  de Google nunca se recibe ni se guarda**. En el MVP el usuario es un
+  ID anónimo ligado al dispositivo (hash SHA-256 del ANDROID_ID; el ID
+  crudo nunca sale del teléfono); en v1 ese ID se sustituye por el login
+  de Google (ver §6.7, regla 5, y §6.9).
 - **Ubicación:** se usa solo para detectar cercanía a semáforos y para
   validar reportes. Los reportes guardan el semáforo (no la ubicación
   exacta del usuario) y la precisión del GPS.
@@ -490,21 +608,38 @@ terceros, sin identificar a usuarios individuales.
 - **Contenido del usuario:** al enviar reportes, el usuario otorga a
   Semáforos MX una licencia para usarlos de forma agregada y anonimizada
   como parte del servicio (Términos §6 Ter).
-- **Términos y Condiciones v1.2** (`TERMINOS_Y_CONDICIONES.md`, copiado a
+- **Finalidades del uso de datos (v1.3):** los datos de la cuenta se
+  tratan solo para las finalidades listadas en el Aviso de Privacidad:
+  operar la App, mejorar los tiempos, prevenir fraude y abuso, avisar de
+  cambios, estadísticas agregadas y anonimizadas y soporte. Los datos
+  personales identificables **no se venden ni se comparten sin
+  consentimiento expreso aparte**. No existe una cláusula de uso «a
+  conveniencia»: la LFPDPPP exige finalidades específicas.
+- **Términos y Condiciones v1.3** (`TERMINOS_Y_CONDICIONES.md`, copiado a
   `assets/terminos_y_condiciones.md`): el conductor es el único
   responsable; la app es una ayuda informativa, no sustituye la atención
   ni el semáforo real; sin responsabilidad por accidentes, daños o
   multas; los datos colaborativos pueden ser inexactos; los mapas son
-  OpenStreetMap (ODbL, no son nuestros); ley mexicana, tribunales de
+  OpenStreetMap (ODbL, no son nuestros); cuentas, roles y login con
+  Google (§7 Bis: el Colaborador no es empleado ni socio y su único
+  beneficio es el uso sin anuncios); ley mexicana, tribunales de
   Monterrey. Aceptación obligatoria en la primera apertura (§4.6).
   ⚠️ **El texto es un borrador y DEBE revisarlo un abogado antes del
   lanzamiento público** (en México no puede excluirse la responsabilidad
   por dolo o negligencia grave, y PROFECO puede declarar abusivas
   ciertas cláusulas en contratos de adhesión).
-- **Pendiente para el lanzamiento público:** Aviso de Privacidad completo
-  en la app y en la ficha de Play Store (Ley Federal de Protección de
-  Datos Personales, México); flujo de eliminación de cuenta y datos desde
-  la app (los términos §7 ya prometen que el usuario puede solicitarlo).
+- **Aviso de Privacidad v1.0** (`AVISO_DE_PRIVACIDAD.md`, 18 nov 2026):
+  responsable y contacto (adminsemaforosmx@gmail.com), datos recabados,
+  finalidades, transferencias (solo procesadores del servicio: Google
+  Sign-In, Supabase, Play/AdMob), retención de 90 días, derechos ARCO y
+  eliminación de cuenta. ⚠️ **También es un borrador pendiente de
+  revisión legal**; falta integrarlo dentro de la app y en la ficha de
+  Play Store antes del lanzamiento público.
+- **Pendiente para el lanzamiento público:** revisión legal de Términos
+  v1.3 + Aviso de Privacidad; Aviso de Privacidad visible en la app y en
+  la ficha de Play Store (Ley Federal de Protección de Datos Personales,
+  México); flujo de eliminación de cuenta y datos desde la app (los
+  términos §7 y §7 Bis ya prometen que el usuario puede solicitarlo).
 
 ## 11. Seguridad vial (no negociable)
 
@@ -533,13 +668,15 @@ Monterrey con los 1 579 semáforos reales del GeoJSON (rojos/grises) ·
 Botones Sync verde y «Aquí hay un semáforo» · «Ya no existe» con 3
 confirmaciones · Agregación con confianza (mediana ponderada por trust) ·
 Paquete anti-abuso (cliente) · Detección pasiva conectada · Monetización
-en tres niveles (Plus como stub) · Términos v1.2 con aceptación obligatoria.
+en tres niveles (Plus como stub) · Términos v1.3 con aceptación obligatoria.
 
 ### v1 — Beta Monterrey (primer lanzamiento público)
 Backend Supabase real (tablas + PostGIS + función de agregación, con el
 GeoJSON importado a `traffic_lights`) · **Anti-abuso aplicado en el
 servidor** (triggers/funciones: tope diario, saltos, transiciones de
-estado, trust) · Detección pasiva calibrada con pruebas de campo ·
+estado, trust) · **Roles y permisos + login híbrido con Google (§4.7,
+§6.9):** tabla `users`, RLS por rol, panel de admin aparte (solo Alan),
+eliminación de cuenta en la app · Detección pasiva calibrada con pruebas de campo ·
 Onboarding completo con permisos · AdMob con ID real · Revisión legal de
 los términos + Aviso de Privacidad + eliminación de cuenta en la app ·
 Publicación en Play Store (cuenta de desarrollador de Alan) · **Al

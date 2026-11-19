@@ -1,7 +1,7 @@
 # TÉRMINOS Y CONDICIONES DE USO — SEMÁFOROS MX
 
 **Última actualización:** 18 de noviembre de 2026
-**Versión:** 1.2 (borrador reforzado para revisión legal antes del lanzamiento)
+**Versión:** 1.3 (borrador reforzado para revisión legal antes del lanzamiento)
 
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como punto de partida. Debe ser revisado y ajustado por un abogado antes del lanzamiento público de la aplicación, ya que en México existen límites legales a las cláusulas de exención de responsabilidad (por ejemplo, no puede excluirse la responsabilidad por dolo o negligencia grave, y la PROFECO puede declarar abusivas ciertas cláusulas en contratos de adhesión).
 
@@ -75,7 +75,17 @@ El usuario se obliga a **indemnizar, defender y mantener indemne** a Semáforos 
 - La App recopila datos de ubicación del dispositivo para identificar semáforos cercanos y validar reportes.
 - Los reportes se procesan de forma **agregada y anonimizada**; la App no publica rutas individuales ni identifica públicamente a los usuarios que realizan reportes.
 - Los datos personales se tratan conforme al Aviso de Privacidad de la App, disponible dentro de la misma.
+- Los datos de la cuenta de Google se tratan conforme a las finalidades listadas en el Aviso de Privacidad: operar la App, mejorar los tiempos, prevenir fraude y abuso, avisar de cambios, estadísticas agregadas y anonimizadas y soporte. Los datos personales identificables no se venden ni se comparten sin consentimiento expreso aparte.
+- El usuario puede ejercer sus derechos ARCO (acceso, rectificación, cancelación y oposición) y revocar su consentimiento desde la App o por correo a adminsemaforosmx@gmail.com.
 - El usuario puede solicitar la eliminación de su cuenta y de sus datos personales en cualquier momento desde la App o por correo electrónico.
+
+## 7 Bis. Cuentas, roles y login con Google
+
+- El uso básico (ver el mapa y recibir la alerta del verde) no requiere cuenta. Para aportar (sync desde el widget, agregar o reportar semáforos), ser Colaborador o contratar Plus, el usuario debe iniciar sesión con su cuenta de Google.
+- Con Google Sign-In, Semáforos MX recibe nombre, correo electrónico, foto de perfil (si la tiene) e identificador de Google. No recibe ni almacena la contraseña de Google del usuario.
+- Roles: (a) **Usuario común**: usa el mapa y las alertas; (b) **Colaborador**: además aporta tiempos y reportes, y ve solo sus propios aportes y su progreso; (c) **Administrador**: únicamente el titular del proyecto, con privilegios totales de moderación, aprobación de semáforos y gestión de cuentas. Los permisos se hacen cumplir en el servidor; eludirlos (app modificada, acceso no autorizado) es causa de suspensión.
+- **El Colaborador no es empleado, socio, asociado, agente ni accionista de Semáforos MX.** Su participación en el programa es voluntaria, sin horario, exclusividad ni subordinación. El único beneficio del Colaborador es el uso de la App sin anuncios mientras cumpla las condiciones vigentes del programa; dicho beneficio no tiene valor en efectivo, no es transferible y no constituye participación alguna en ingresos, utilidades o capital de Semáforos MX, ni derecho a pago, prima o compensación de ningún tipo. Los reportes aportados por el Colaborador se rigen por la licencia de la sección 6 Ter (uso agregado y anonimizado). Semáforos MX podrá modificar o terminar el programa y sus condiciones en cualquier momento, con aviso dentro de la App.
+- El usuario puede eliminar su cuenta y sus datos personales desde la App (Ajustes → Eliminar cuenta) o por correo a adminsemaforosmx@gmail.com. La eliminación borra sus datos identificables; sus reportes previos quedan únicamente como datos agregados y anonimizados.
 
 ## 8. Uso de la cuenta y conducta del usuario
 
@@ -83,6 +93,7 @@ El usuario se compromete a:
 
 - Proporcionar información veraz en sus reportes.
 - No utilizar ubicaciones falsas (GPS simulado), cuentas múltiples para manipular la información, ni cualquier método para alterar los datos de la App.
+- No compartir su cuenta con terceros ni intentar acceder a funciones de otro rol (incluido el panel de administración).
 - No utilizar la App para fines ilícitos.
 - No intentar acceder de forma no autorizada a los sistemas de la App, ni realizar ingeniería inversa, scraping automatizado o extracción masiva de datos.
 
