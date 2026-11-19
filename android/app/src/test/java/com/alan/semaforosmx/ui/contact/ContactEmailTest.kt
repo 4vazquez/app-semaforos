@@ -20,7 +20,7 @@ class ContactEmailTest {
     fun `mailto lleva el asunto precargado codificado`() {
         assertEquals(
             "mailto:adminsemaforosmx@gmail.com" +
-                "?subject=Sem%C3%A1foros%20MX%20%E2%80%94%20Contacto",
+                "?subject=V%C3%ADa%20Verde%20%E2%80%94%20Contacto",
             ContactEmail.mailtoUriString()
         )
     }

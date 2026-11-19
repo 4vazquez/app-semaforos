@@ -17,7 +17,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 /**
- * Actualizador propio (sideload) de Semáforos MX.
+ * Actualizador propio (sideload) de Vía Verde.
  *
  * El usuario nunca tiene que descargar e instalar el APK a mano: la app
  * consulta el último release de GitHub, avisa si hay versión nueva y la

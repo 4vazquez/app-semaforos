@@ -1,7 +1,7 @@
-# Semáforos MX — MVP
+# Vía Verde — MVP
 
 **El widget que despierta a los distraídos.**
-*«Si no ves el verde, el verde te avisa.»*
+*«Si no ves el verde, Vía Verde te avisa.»*
 
 Asistente de conducción que avisa cuando el semáforo está por cambiar a
 verde, para no perder segundos en cada cruce. Empieza en Monterrey, México.
@@ -136,6 +136,13 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Renombre a Vía Verde** (v1.1.5): la app, los Términos (v1.6), el
+  Aviso de Privacidad (v1.2), la SPEC y el README ahora usan el nombre
+  «Vía Verde» (antes «Semáforos MX», decisión de Alan el 2026-11-19).
+  El paquete interno `com.alan.semaforosmx`, el correo
+  adminsemaforosmx@gmail.com y el repo de GitHub no cambian (son
+  identificadores técnicos, no visibles para el usuario). La app vuelve
+  a mostrar la pantalla «Acepto» una vez al instalar esta versión.
 - **Aviso de Privacidad en la app + Términos v1.5** (v1.1.4): el Aviso
   de Privacidad v1.1 ya se puede leer dentro de la app, desde la
   pantalla «Acepto» (antes de decidir) y desde Ajustes; Términos v1.5
@@ -203,12 +210,11 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.4) y las **101 pruebas unitarias
-pasan** (sin cambios de lógica respecto a v1.1.2, solo documentos
-legales en la app), corridas con `run_tests_sandbox.sh` (JUnitCore
-directo: el ejecutor de pruebas de Gradle se cae en este sandbox
-porque sus workers se comunican por sockets TCP y Java no puede
-abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.5) y las **101 pruebas unitarias
+pasan** (solo cambio de nombre en textos, sin cambios de lógica),
+corridas con `run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de
+pruebas de Gradle se cae en este sandbox porque sus workers se
+comunican por sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

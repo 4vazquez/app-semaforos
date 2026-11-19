@@ -1,4 +1,4 @@
-# Supabase — backend de Semáforos MX (v1.1)
+# Supabase — backend de Vía Verde (v1.1)
 
 Todo lo necesario para levantar el backend. La app funciona sin él
 (modo local en memoria), pero el login, los roles y los datos

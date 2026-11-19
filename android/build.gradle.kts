@@ -1,4 +1,4 @@
-// Top-level build file — Semáforos MX (MVP)
+// Top-level build file — Vía Verde (MVP)
 plugins {
     id("com.android.application") version "8.5.2" apply false
     id("org.jetbrains.kotlin.android") version "2.0.20" apply false

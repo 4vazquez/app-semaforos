@@ -1,6 +1,6 @@
-# AVISO DE PRIVACIDAD — SEMÁFOROS MX
+# AVISO DE PRIVACIDAD — VÍA VERDE
 
-> **Versión:** 1.1 — 19 de noviembre de 2026.
+> **Versión:** 1.2 — 19 de noviembre de 2026.
 > Responsable de contacto: adminsemaforosmx@gmail.com
 >
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como
@@ -11,7 +11,7 @@
 
 ## 1. Responsable del tratamiento
 
-**Semáforos MX** (proyecto en fase piloto/beta, con sede en Monterrey,
+**Vía Verde** (proyecto en fase piloto/beta, con sede en Monterrey,
 Nuevo León, México) es responsable del tratamiento de sus datos
 personales. Contacto para privacidad, derechos ARCO y eliminación de
 cuenta: **adminsemaforosmx@gmail.com**.

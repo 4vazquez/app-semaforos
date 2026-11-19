@@ -6,11 +6,11 @@ import android.content.Context
  * Aceptación de los Términos y Condiciones (primera apertura).
  *
  * - El texto completo vive en `assets/terminos_y_condiciones.md`, copia
- *   exacta de `TERMINOS_Y_CONDICIONES.md` del repo (v1.5, borrador).
+ *   exacta de `TERMINOS_Y_CONDICIONES.md` del repo (v1.6, borrador).
  *   ⚠️ El texto es un BORRADOR: debe revisarlo un abogado antes del
  *   lanzamiento público (ver SPEC.md §10).
  * - El Aviso de Privacidad vive en `assets/aviso_de_privacidad.md`
- *   (copia exacta de `AVISO_DE_PRIVACIDAD.md`, v1.1) y puede leerse
+ *   (copia exacta de `AVISO_DE_PRIVACIDAD.md`, v1.2) y puede leerse
  *   desde la pantalla de aceptación y desde Ajustes: el usuario acepta
  *   los Términos y el Aviso juntos, así que ambos deben estar
  *   disponibles antes de presionar «Acepto».
@@ -23,10 +23,10 @@ import android.content.Context
 object TermsAcceptance {
 
     /** Versión vigente de los términos (debe coincidir con el documento). */
-    const val CURRENT_VERSION = "1.5"
+    const val CURRENT_VERSION = "1.6"
 
     /** Versión vigente del Aviso de Privacidad (informativa, no bloquea). */
-    const val PRIVACY_VERSION = "1.1"
+    const val PRIVACY_VERSION = "1.2"
 
     private const val PREFS = "semaforos_mx_prefs"
     private const val KEY_TERMS_VERSION = "terms_accepted_version"

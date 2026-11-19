@@ -1,18 +1,18 @@
 <resources>
-    <!-- Nombre de la app: "Semáforos MX — El widget que despierta a los distraídos". -->
-    <string name="app_name">Semáforos MX</string>
+    <!-- Nombre de la app: "Vía Verde — El widget que despierta a los distraídos". -->
+    <string name="app_name">Vía Verde</string>
     <string name="app_tagline">El widget que despierta a los distraídos</string>
-    <string name="app_slogan">Si no ves el verde, el verde te avisa.</string>
+    <string name="app_slogan">Si no ves el verde, Vía Verde te avisa.</string>
 
     <string name="welcome_title">Llega al verde a tiempo</string>
-    <string name="welcome_body">Semáforos MX te avisa justo antes de que el semáforo cambie a verde, para que no pierdas segundos en cada cruce. Mira la calle, no la pantalla.</string>
+    <string name="welcome_body">Vía Verde te avisa justo antes de que el semáforo cambie a verde, para que no pierdas segundos en cada cruce. Mira la calle, no la pantalla.</string>
     <string name="safety_notice">Aviso de seguridad: esta app no justifica usar el teléfono al manejar. La alerta es solo una señal visual en el borde del widget flotante para que levantes la vista a tiempo.</string>
 
     <string name="map_title">Semáforos de Monterrey</string>
 
     <!-- v1.0 map: botón «Mi ubicación» en el mapa. -->
     <string name="my_location_button">Mi ubicación</string>
-    <string name="my_location_no_permission">Para centrar el mapa en tu ubicación, activa el permiso de ubicación en Ajustes del teléfono → Apps → Semáforos MX → Permisos → Ubicación.</string>
+    <string name="my_location_no_permission">Para centrar el mapa en tu ubicación, activa el permiso de ubicación en Ajustes del teléfono → Apps → Vía Verde → Permisos → Ubicación.</string>
     <!-- /v1.0 map -->
     <string name="sync_verde">Sync verde</string>
     <string name="sync_verde_hint">Presiona cuando el semáforo cambie a verde</string>
@@ -22,7 +22,7 @@
     <string name="widget_activate">Activar widget flotante</string>
     <string name="widget_deactivate">Desactivar widget</string>
     <string name="widget_opacity">Opacidad del widget</string>
-    <string name="widget_running">Semáforos MX está activo</string>
+    <string name="widget_running">Vía Verde está activo</string>
     <string name="widget_tap_to_open">Toca para abrir la app</string>
 
     <string name="countdown_to_green">Verde en %1$d s</string>
@@ -69,7 +69,7 @@
     <string name="background_location_body">Para avisarte del verde cuando la app está cerrada, el widget necesita tu ubicación en segundo plano. En la siguiente pantalla elige «Permitir todo el tiempo». Sin eso, el widget no puede detectar semáforos.</string>
     <string name="background_location_allow">Continuar</string>
     <string name="background_location_later">Ahora no</string>
-    <string name="alertas_background_hint">El widget necesita «Ubicación todo el tiempo» para detectar semáforos con la app cerrada. Actívala en Ajustes del teléfono → Apps → Semáforos MX → Permisos → Ubicación.</string>
+    <string name="alertas_background_hint">El widget necesita «Ubicación todo el tiempo» para detectar semáforos con la app cerrada. Actívala en Ajustes del teléfono → Apps → Vía Verde → Permisos → Ubicación.</string>
     <string name="alertas_mode_title">Tu modo de widget</string>
     <string name="alertas_mode_full">Widget completo</string>
     <string name="alertas_mode_full_body">Eres Colaborador: botones «Sync verde» y «Aquí hay un semáforo» + control de opacidad.</string>
@@ -89,7 +89,7 @@
     <string name="contact_write">Escríbenos</string>
     <string name="contact_no_mail_app">No tienes una app de correo instalada. Copia la dirección y escríbenos desde tu correo.</string>
     <string name="about">Acerca de</string>
-    <string name="about_body">Semáforos MX es un asistente de conducción. Tus reportes son anónimos y los tiempos publicados son promedios de muchos conductores: ningún reporte individual te identifica. Datos de semáforos: © OpenStreetMap contributors (ODbL).</string>
+    <string name="about_body">Vía Verde es un asistente de conducción. Tus reportes son anónimos y los tiempos publicados son promedios de muchos conductores: ningún reporte individual te identifica. Datos de semáforos: © OpenStreetMap contributors (ODbL).</string>
 
     <!-- Versión y opciones de desarrollador (Ajustes). -->
     <string name="app_version">Versión de la app</string>
@@ -163,21 +163,21 @@
     <string name="terms_summary_title">Antes de empezar, lo importante:</string>
     <string name="terms_summary_driver">• Tú eres el único responsable al manejar. La app es una ayuda informativa: nunca sustituye tu atención ni el semáforo real.</string>
     <string name="terms_summary_accuracy">• Los tiempos son aproximados y vienen de reportes de otros conductores: pueden ser inexactos. Guíate siempre por el semáforo real.</string>
-    <string name="terms_summary_liability">• Semáforos MX no se hace responsable por accidentes, daños o multas derivados del uso de la app.</string>
+    <string name="terms_summary_liability">• Vía Verde no se hace responsable por accidentes, daños o multas derivados del uso de la app.</string>
     <string name="terms_summary_data">• Tus reportes se procesan de forma agregada y anonimizada. Los mapas son de OpenStreetMap (ODbL).</string>
     <string name="terms_summary_abuse">• No se permiten ubicaciones falsas ni cuentas múltiples para manipular los datos.</string>
     <string name="terms_read_full">Lee el texto completo a continuación. Al presionar "Acepto" confirmas que lo leíste y estás de acuerdo.</string>
     <string name="terms_accept">Acepto</string>
     <string name="terms_decline">No acepto</string>
-    <string name="terms_version">Versión 1.5 — 19 de noviembre de 2026</string>
+    <string name="terms_version">Versión 1.6 — 19 de noviembre de 2026</string>
     <string name="privacy_title">Aviso de Privacidad</string>
-    <string name="privacy_version">Versión 1.1 — 19 de noviembre de 2026</string>
+    <string name="privacy_version">Versión 1.2 — 19 de noviembre de 2026</string>
     <string name="privacy_read">Leer el Aviso de Privacidad</string>
     <string name="privacy_back">Volver a los Términos</string>
 
     <!-- Actualización automática (solo build sideload; en Play la maneja Play). -->
     <string name="update_title">Hay una nueva versión (%1$s)</string>
-    <string name="update_body">Hay una nueva versión de Semáforos MX disponible. Con un toque se descarga e instala, sin borrar la app ni perder tus datos.</string>
+    <string name="update_body">Hay una nueva versión de Vía Verde disponible. Con un toque se descarga e instala, sin borrar la app ni perder tus datos.</string>
     <string name="update_whats_new">Novedades:</string>
     <string name="update_now">Actualizar</string>
     <string name="update_later">Más tarde</string>

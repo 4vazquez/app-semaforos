@@ -12,7 +12,7 @@ class ReleaseParsingTest {
 
     private fun releaseJson(
         tag: String = "v0.3.0",
-        name: String? = "Semáforos MX v0.3.0",
+        name: String? = "Vía Verde v0.3.0",
         body: String? = "Actualización automática",
         assets: String = """
             [{"name": "app-debug.apk",
@@ -33,7 +33,7 @@ class ReleaseParsingTest {
         val release = parseLatestRelease(releaseJson())
         assertEquals("v0.3.0", release?.tag)
         assertEquals(AppVersion(0, 3, 0), release?.version)
-        assertEquals("Semáforos MX v0.3.0", release?.name)
+        assertEquals("Vía Verde v0.3.0", release?.name)
         assertEquals("Actualización automática", release?.notes)
         assertEquals(
             "https://github.com/4vazquez/app-semaforos/releases/download/v0.3.0/app-debug.apk",

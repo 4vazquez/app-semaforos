@@ -3,7 +3,7 @@ package com.alan.semaforosmx.ui.contact
 import java.net.URLEncoder
 
 /**
- * Canal de contacto del equipo de Semáforos MX.
+ * Canal de contacto del equipo de Vía Verde.
  *
  * - La dirección es la cuenta de Google del negocio, creada para la app
  *   (adminsemaforosmx@gmail.com). Es también la dirección que se usará
@@ -21,7 +21,7 @@ object ContactEmail {
     const val ADDRESS = "adminsemaforosmx@gmail.com"
 
     /** Asunto precargado al escribir desde la app. */
-    const val SUBJECT = "Semáforos MX — Contacto"
+    const val SUBJECT = "Vía Verde — Contacto"
 
     /**
      * URI `mailto:` con el asunto precargado (RFC 6068): los espacios se
