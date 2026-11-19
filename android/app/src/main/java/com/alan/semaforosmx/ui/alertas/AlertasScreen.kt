@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,13 +69,16 @@ fun AlertasScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Widget en segundo plano: activar/desactivar.
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 Text(
                     text = stringResource(R.string.alertas_widget_title),
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = stringResource(R.string.alertas_widget_body),
                     style = MaterialTheme.typography.bodyMedium
@@ -106,13 +110,16 @@ fun AlertasScreen(
         }
 
         // Tu modo de widget (según tu nivel).
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 Text(
                     text = stringResource(R.string.alertas_mode_title),
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = stringResource(
                         if (mode == WidgetMode.FULL) {
@@ -137,23 +144,29 @@ fun AlertasScreen(
             }
         }
 
-        // Vista previa del LED (alerta a 3 s del verde).
+        // Vista previa del LED (alerta a 3 s del verde), enmarcada en
+        // una tarjeta para que se distinga del fondo.
         Text(
             text = stringResource(R.string.alertas_preview_title),
             style = MaterialTheme.typography.titleMedium
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            LedBorder(
-                state = LedState.ALERT,
-                secondsLeft = 3,
-                opacity = 0.9f,
-                showCountdown = true,
-                modifier = Modifier.fillMaxSize()
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+            ) {
+                LedBorder(
+                    state = LedState.ALERT,
+                    secondsLeft = 3,
+                    opacity = 0.9f,
+                    showCountdown = true,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

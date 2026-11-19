@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -48,6 +52,9 @@ import com.alan.semaforosmx.ui.contact.ContactEmail
  *
  * Sin Scaffold ni barra superior propios: la barra superior y el menú
  * inferior los pone la actividad (el menú solo existe dentro de la app).
+ *
+ * v1.0: las secciones van agrupadas en tarjetas (misma información y
+ * mismos gestos que antes, solo presentación).
  */
 @Composable
 fun SettingsScreen(
@@ -98,174 +105,197 @@ fun SettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Vibración.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.setting_vibration),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = vibrationEnabled,
-                onCheckedChange = onVibrationChange
-            )
-        }
-
-        // Términos y Condiciones.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onTermsClick)
-                .padding(vertical = 12.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.terms_title),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text = stringResource(R.string.terms_version),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Contacto.
-        Text(
-            text = stringResource(R.string.contact_title),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.contact_body),
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        // Preferencias: vibración + Términos y Condiciones.
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = ContactEmail.ADDRESS,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = ::copyEmail)
-                    .padding(vertical = 8.dp)
-            )
-            TextButton(onClick = ::copyEmail) {
-                Text(text = stringResource(R.string.contact_copy))
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.setting_vibration),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = vibrationEnabled,
+                        onCheckedChange = onVibrationChange
+                    )
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onTermsClick)
+                        .padding(vertical = 4.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.terms_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(R.string.terms_version),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
             }
         }
-        Button(onClick = ::writeEmail) {
-            Text(text = stringResource(R.string.contact_write))
+
+        // Contacto.
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.contact_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.contact_body),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = ContactEmail.ADDRESS,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(onClick = ::copyEmail)
+                            .padding(vertical = 8.dp)
+                    )
+                    TextButton(onClick = ::copyEmail) {
+                        Text(text = stringResource(R.string.contact_copy))
+                    }
+                }
+                Button(onClick = ::writeEmail) {
+                    Text(text = stringResource(R.string.contact_write))
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Acerca de.
-        Text(
-            text = stringResource(R.string.about),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.about_body),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.about),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.about_body),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
 
         // Versión de la app: 7 toques seguidos desbloquean las opciones de
         // desarrollador (estilo «opciones de desarrollador» de Android).
         // Sin login todavía, es la única forma de distinguir al Admin: en
         // v1, con login de Google y roles, el Modo prueba se limitará al
         // rol Admin y este desbloqueo desaparecerá.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    if (devUnlocked) return@clickable
-                    versionTaps++
-                    when {
-                        versionTaps >= 7 -> {
-                            onDevUnlock()
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.dev_options_unlocked),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        versionTaps >= 5 -> {
-                            Toast.makeText(
-                                context,
-                                context.getString(
-                                    R.string.dev_options_taps_left,
-                                    7 - versionTaps
-                                ),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                }
-                .padding(vertical = 12.dp)
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = stringResource(R.string.app_version),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = BuildConfig.VERSION_NAME,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (devUnlocked) return@clickable
+                            versionTaps++
+                            when {
+                                versionTaps >= 7 -> {
+                                    onDevUnlock()
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.dev_options_unlocked),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                versionTaps >= 5 -> {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(
+                                            R.string.dev_options_taps_left,
+                                            7 - versionTaps
+                                        ),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                        .padding(vertical = 4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.app_version),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = BuildConfig.VERSION_NAME,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Opciones de desarrollador: solo visibles tras el desbloqueo.
+                if (devUnlocked) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                    Text(
+                        text = stringResource(R.string.dev_options_title),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.test_mode_title),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = testModeEnabled,
+                            onCheckedChange = onTestModeChange
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.test_mode_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
 
-        // Opciones de desarrollador: solo visibles tras el desbloqueo.
-        if (devUnlocked) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.dev_options_title),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.test_mode_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f)
-                )
-                Switch(
-                    checked = testModeEnabled,
-                    onCheckedChange = onTestModeChange
-                )
-            }
-            Text(
-                text = stringResource(R.string.test_mode_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        // Espacio final para que la última tarjeta no quede pegada al menú.
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

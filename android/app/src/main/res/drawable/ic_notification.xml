@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- v1.0: icono de notificación (silueta blanca, como exige Android):
+         caja de semáforo con las tres luces recortadas. Se usa en la
+         notificación persistente del widget (FloatingWidgetService) en
+         lugar del icono genérico del sistema. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M9,2h6a3,3 0 0,1 3,3v14a3,3 0 0,1 -3,3H9a3,3 0 0,1 -3,-3V5a3,3 0 0,1 3,-3z
+            M12,7m-2.2,0a2.2,2.2 0 1,1 4.4,0a2.2,2.2 0 1,1 -4.4,0
+            M12,12m-2.2,0a2.2,2.2 0 1,1 4.4,0a2.2,2.2 0 1,1 -4.4,0
+            M12,17m-2.2,0a2.2,2.2 0 1,1 4.4,0a2.2,2.2 0 1,1 -4.4,0" />
+</vector>

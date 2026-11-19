@@ -9,6 +9,11 @@
     <string name="safety_notice">Aviso de seguridad: esta app no justifica usar el teléfono al manejar. La alerta es solo una señal visual en el borde del widget flotante para que levantes la vista a tiempo.</string>
 
     <string name="map_title">Semáforos de Monterrey</string>
+
+    <!-- v1.0 map: botón «Mi ubicación» en el mapa. -->
+    <string name="my_location_button">Mi ubicación</string>
+    <string name="my_location_no_permission">Para centrar el mapa en tu ubicación, activa el permiso de ubicación en Ajustes del teléfono → Apps → Semáforos MX → Permisos → Ubicación.</string>
+    <!-- /v1.0 map -->
     <string name="sync_verde">Sync verde</string>
     <string name="sync_verde_hint">Presiona cuando el semáforo cambie a verde</string>
     <string name="sync_recorded">Sync registrado, gracias</string>

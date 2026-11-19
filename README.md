@@ -87,13 +87,29 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   son simulados (ciclo de 30 s: espera → alerta → verde), el widget lleva
   la marca «PRUEBA», los botones no guardan nada y la detección pasiva
   queda desactivada. En v1, con login de Google, se limitará al rol Admin.
+- **Logo nuevo + renovación visual + botón «Mi ubicación»** (v1.0.0):
+  icono de launcher rediseñado (semáforo moderno, verde encendido con
+  halo sobre fondo verde oscuro), esquema de color «semáforo» en claro y
+  oscuro (el modo oscuro ahora sí se activa con el sistema), tarjetas
+  pulidas en Mis aportes, Alertas y Ajustes, icono de notificación propio
+  (silueta de semáforo), y botón flotante «Mi ubicación» en el mapa
+  (estilo Google Maps: centra el mapa en tu GPS con animación y muestra
+  el punto azul de tu posición). ⚠️ **El login con Google y el backend
+  Supabase NO están en esta versión**: su implementación quedó pendiente
+  (ver «Roles y login» abajo) — la app v1.0.0 sigue siendo anónima y
+  local, igual que v0.3.3 en ese aspecto.
 
 ## Roles y login con Google (documentado en v1.3, trabajo de backend en v1)
 
 Aprobado por Alan el 18 nov 2026 (ver `SPEC.md` §4.7 y §6.9,
 `TERMINOS_Y_CONDICIONES.md` §7 Bis y `AVISO_DE_PRIVACIDAD.md`).
-**Nada de esto está aún en la app v0.3.3**, que sigue siendo anónima y
-local; es trabajo del backend real en v1 (Supabase).
+**Nada de esto está aún en la app v1.0.0**, que sigue siendo anónima y
+local; es trabajo del backend real en v1 (Supabase). Su implementación
+quedó pendiente tras el intento de la noche del 18–19 nov 2026 (los
+trabajos de login y backend no pudieron completarse); cuando se retome
+harán falta: crear el proyecto Supabase y correr el SQL del esquema,
+crear el cliente OAuth de Google (Android + Web) y poner el client ID
+en `local.properties` (ver `SPEC.md` §4.7/§6.9 para el diseño).
 
 - **Usuario común (sin login):** mapa + alerta del verde (+ Sync verde
   desde la pestaña Mapa, que alimenta la agregación pero no la cuota).
@@ -142,10 +158,9 @@ mapa, anti-abuso y matemática GPS):
 ./gradlew testDebugUnitTest
 ```
 
-**Estado verificado (18 nov 2026):** el APK compila (`app-debug.apk`,
-23 MB, `com.alan.semaforosmx` v0.3.3) y las **74 pruebas unitarias
-pasan** (58 de v0.3.2 + 16 nuevas del modo prueba: ciclo de tiempos
-sintético y selección de la ubicación simulada). Nota del entorno: en este sandbox los procesos Java no pueden
+**Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
+23 MB, `com.alan.semaforosmx` v1.0.0) y las **85 pruebas unitarias
+pasan** (74 de v0.3.3 + 11 nuevas del selector de ubicación del mapa). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

@@ -7,7 +7,13 @@
 > **Idea original:** Alan Vázquez · **Borrador inicial:** noviembre de 2025
 > (prototipo web con asistencia de GPT-5) ·
 > **Repositorio del borrador:** https://github.com/4vazquez/app-semaforos
-> **Fecha de este documento:** 18 de noviembre de 2026 · **Versión:** 1.2
+> **Fecha de este documento:** 19 de noviembre de 2026 · **Versión:** 1.3
+>
+> **Cambios en v1.3 (19 nov 2026):** app v1.0.0 — logo nuevo y renovación
+> visual (esquema «semáforo» claro/oscuro), botón «Mi ubicación» en el
+> mapa. Los roles y el login con Google y el backend Supabase siguen
+> pendientes de implementación: la app v1.0.0 sigue siendo anónima y
+> local, sin cuentas.
 >
 > **Cambios en v1.2 (18 nov 2026):** roles y permisos (Usuario común /
 > Colaborador / Admin, §6.9), login híbrido con Google (§4.7),

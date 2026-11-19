@@ -924,7 +924,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         return Notification.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.widget_running))
             .setContentText(getString(R.string.widget_tap_to_open))
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pending)
             .build()
     }

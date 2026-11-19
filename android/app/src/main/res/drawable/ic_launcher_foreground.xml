@@ -3,17 +3,44 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Semáforo: caja oscura con tres luces; la verde encendida. -->
+    <!-- v1.0: marca nueva, más llamativa. Semáforo en caja pizarra sobre
+         fondo verde oscuro; las tres luces de la marca, la verde encendida
+         con halo luminoso (el «te avisa» de la app). Todo el contenido
+         importante queda dentro de la zona segura del icono adaptativo
+         (círculo central de 66 dp), así se lee bien en cualquier máscara. -->
+    <!-- Caja del semáforo. -->
     <path
-        android:fillColor="#1B1B1B"
-        android:pathData="M34,14h40a8,8 0 0,1 8,8v64a8,8 0 0,1 -8,8H34a8,8 0 0,1 -8,-8V22a8,8 0 0,1 8,-8z" />
+        android:fillColor="#23272E"
+        android:pathData="M48,22h12a10,10 0 0,1 10,10v44a10,10 0 0,1 -10,10H48a10,10 0 0,1 -10,-10V32a10,10 0 0,1 10,-10z" />
+    <!-- Borde sutil: separa la caja del fondo oscuro. -->
     <path
-        android:fillColor="#B71C1C"
-        android:pathData="M54,27m-8,0a8,8 0 1,1 16,0a8,8 0 1,1 -16,0" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.14"
+        android:strokeWidth="1.5"
+        android:pathData="M48,22h12a10,10 0 0,1 10,10v44a10,10 0 0,1 -10,10H48a10,10 0 0,1 -10,-10V32a10,10 0 0,1 10,-10z" />
+    <!-- Luz roja (apagada, tenue). -->
     <path
-        android:fillColor="#F9A825"
-        android:pathData="M54,54m-8,0a8,8 0 1,1 16,0a8,8 0 1,1 -16,0" />
+        android:fillColor="#FF5252"
+        android:fillAlpha="0.55"
+        android:pathData="M54,35m-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0" />
+    <!-- Luz ámbar (apagada, tenue). -->
+    <path
+        android:fillColor="#FFC107"
+        android:fillAlpha="0.55"
+        android:pathData="M54,54m-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0" />
+    <!-- Halo de la luz verde encendida. -->
     <path
         android:fillColor="#00E676"
-        android:pathData="M54,81m-8,0a8,8 0 1,1 16,0a8,8 0 1,1 -16,0" />
+        android:fillAlpha="0.30"
+        android:pathData="M54,73m-14.5,0a14.5,14.5 0 1,1 29,0a14.5,14.5 0 1,1 -29,0" />
+    <!-- Luz verde encendida. -->
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M54,73m-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0" />
+    <!-- Brillo especular en la luz verde. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.9"
+        android:pathData="M50.5,69.5m-2.5,0a2.5,2.5 0 1,1 5,0a2.5,2.5 0 1,1 -5,0" />
 </vector>
