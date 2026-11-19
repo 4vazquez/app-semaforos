@@ -53,6 +53,7 @@ import com.alan.semaforosmx.ui.contact.ContactEmail
  *   y eliminación de cuenta.
  * - Vibración al avisar del verde (interruptor).
  * - Términos y Condiciones (reabre el texto completo).
+ * - Aviso de Privacidad (reabre el texto completo).
  * - Contacto: correo del equipo (tocar para copiar) + botón «Escríbenos»
  *   que abre la app de correo con el asunto precargado.
  * - Acerca de (qué es la app + atribución de OpenStreetMap).
@@ -71,6 +72,7 @@ fun SettingsScreen(
     vibrationEnabled: Boolean,
     onVibrationChange: (Boolean) -> Unit,
     onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
     authState: AuthState,
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
@@ -262,6 +264,30 @@ fun SettingsScreen(
                         )
                         Text(
                             text = stringResource(R.string.terms_version),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onPrivacyClick)
+                        .padding(vertical = 4.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.privacy_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(R.string.privacy_version),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

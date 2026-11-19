@@ -35,6 +35,11 @@ create table if not exists public.verification_requests (
   photo_path text,
   status verification_status not null default 'PENDING',
   submitted_at timestamptz not null default now(),
+  -- Consentimiento expreso del usuario para tratar la foto de su
+  -- licencia (LFPDPPP art. 9: los datos sensibles exigen consentimiento
+  -- expreso). La app lo registra al marcar la casilla de autorización;
+  -- sin consentimiento, la foto no se envía (SPEC §6.9).
+  consent_at timestamptz,
   reviewed_at timestamptz,
   reviewed_by uuid references public.users (id) on delete set null,
   rejection_reason text

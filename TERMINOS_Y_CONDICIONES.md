@@ -1,7 +1,7 @@
 # TÉRMINOS Y CONDICIONES DE USO — SEMÁFOROS MX
 
 **Última actualización:** 19 de noviembre de 2026
-**Versión:** 1.4 (borrador reforzado para revisión legal antes del lanzamiento)
+**Versión:** 1.5 (borrador reforzado para revisión legal antes del lanzamiento)
 
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como punto de partida. Debe ser revisado y ajustado por un abogado antes del lanzamiento público de la aplicación, ya que en México existen límites legales a las cláusulas de exención de responsabilidad (por ejemplo, no puede excluirse la responsabilidad por dolo o negligencia grave, y la PROFECO puede declarar abusivas ciertas cláusulas en contratos de adhesión).
 
@@ -56,7 +56,7 @@ En la máxima medida permitida por la legislación aplicable:
 - La App se proporciona **"tal cual" y "según disponibilidad"**, sin garantías de ningún tipo, expresas o implícitas, incluyendo sin limitación garantías de comerciabilidad, idoneidad para un fin determinado o no infracción.
 - Semáforos MX, sus desarrolladores, colaboradores y afiliados **no serán responsables** por daños directos, indirectos, incidentales, consecuenciales, punitivos, pérdida de ingresos, pérdida de datos, pérdida de oportunidades, accidentes, lesiones personales, daños a la propiedad, multas o cualquier otro daño o perjuicio, derivados del uso o la imposibilidad de uso de la App, aun cuando se les haya advertido de la posibilidad de tales daños.
 - Semáforos MX **no absorbe responsabilidades ajenas**: cada usuario es responsable de sus propios actos, de su conducción y del cumplimiento de la ley.
-- La responsabilidad total de Semáforos MX, en caso de que resultara procedente conforme a la ley, se limitará al monto efectivamente pagado por el usuario por el servicio en los 12 meses anteriores al evento que dio origen al reclamo. Si el usuario no ha pagado monto alguno, la responsabilidad total será de cero.
+- La responsabilidad total de Semáforos MX, en caso de que resultara procedente conforme a la ley, se limitará al mayor entre (a) el monto efectivamente pagado por el usuario por el servicio en los 12 meses anteriores al evento que dio origen al reclamo y (b) **$5,000 MXN (cinco mil pesos mexicanos)**.
 - **Fase piloto / beta:** durante el periodo piloto la App se encuentra en fase de pruebas; el usuario reconoce que pueden existir errores, interrupciones o inexactitudes, y acepta utilizarla bajo su propio riesgo.
 - **Servicios de emergencia:** la App no es un servicio de emergencias. En caso de emergencia, el usuario deberá contactar al 911 o a los servicios de emergencia correspondientes.
 
@@ -99,7 +99,7 @@ Semáforos MX podrá publicar un ranking semanal de Colaboradores como **reconoc
 - **Participación:** solo aparecen en el ranking los usuarios que activaron «aparecer en el ranking» y eligieron un apodo; lo único que se publica es el apodo y el conteo de aportes. Participa una sola cuenta por persona; usar varias cuentas para el ranking es causa de descalificación.
 - **Empates:** se resuelven por mayor nivel de confianza y, si persiste, por el primer aporte de la semana más temprano.
 - **Entrega:** el Administrador revisa a los ganadores al cierre de la semana y los contacta por el correo de su cuenta. El ganador tiene **15 días** para responder; si no responde, pierde el premio. Si el usuario elimina su cuenta antes de recibir el premio, también lo pierde. Si hay menos de tres participantes con aportes verificados, solo se premian los lugares con ganador real; si nadie aporta en la semana, no hay premios esa semana.
-- **Descalificación:** Semáforos MX podrá descalificar a un usuario de la semana (y del programa si reincide) si detecta reportes falsos, ubicaciones simuladas, farming (aportes artificiales para subir en el ranking) o cualquier manipulación. La decisión del Administrador es final, sin perjuicio de que el usuario pueda exponer su caso por correo a adminsemaforosmx@gmail.com.
+- **Descalificación:** Semáforos MX podrá descalificar a un usuario de la semana (y del programa si reincide) si detecta reportes falsos, ubicaciones simuladas, farming (aportes artificiales para subir en el ranking) o cualquier manipulación, indicando el motivo por correo. El usuario puede impugnar una descalificación por correo a adminsemaforosmx@gmail.com dentro de los 15 días siguientes; el Administrador revisará el caso y responderá por el mismo medio. La decisión tras esa revisión es final.
 - **Impuestos:** cada ganador es responsable de los impuestos que en su caso le correspondan por el premio recibido, conforme a la ley aplicable.
 - **Cambios:** Semáforos MX podrá modificar, suspender o terminar el ranking y sus premios en cualquier momento, con aviso dentro de la App, sin responsabilidad alguna por premios de semanas no concluidas.
 

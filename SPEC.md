@@ -24,7 +24,12 @@
 > verificación de licencia (dato sensible, se borra tras revisarla),
 > términos de la suscripción Plus y notificación de brechas (LFPDPPP
 > art. 20). Siguen pendientes de revisión de un abogado antes del
-> lanzamiento público. App v1.1.0 — login con Google
+> lanzamiento público. App v1.1.4 — Aviso de Privacidad visible en la
+> app (desde la pantalla «Acepto» y desde Ajustes), Términos v1.5
+> (tope de responsabilidad con piso de $5,000 MXN en vez de cero,
+> impugnación de descalificaciones del ranking en 15 días) y
+> consentimiento expreso documentado para la foto de la licencia
+> (§6.9, LFPDPPP art. 9). App v1.1.0 — login con Google
 > (Credential Manager / Google ID) y backend Supabase implementados:
 > sesión cifrada, roles `USER` / `COLLABORATOR` / `ADMIN` en la tabla
 > `users`, puertas en la app según el rol (§4.7, §6.9), esquema SQL con
@@ -98,7 +103,7 @@ documento se construye sobre ese borrador.
 - Monetización en tres niveles: Gratis (con banner), Colaborador (gratis y
   sin anuncios con 20+ actualizaciones en semáforos distintos al mes) y
   Plus (suscripción de pago, solo el flag/stub en el MVP; se lanza después).
-- Términos y Condiciones v1.4: pantalla de aceptación en la primera
+- Términos y Condiciones v1.5: pantalla de aceptación en la primera
   apertura («Acepto» obligatorio) y relectura desde Ajustes. El texto es
   un borrador pendiente de revisión legal antes del lanzamiento público.
   La v1.3 añade cuentas, roles y login con Google (§7 Bis) y el Aviso de
@@ -179,7 +184,7 @@ internacional.
 | 6 | Base de datos colaborativa de tiempos + agregación con confianza (mediana ponderada por trust) | ✅ Modelo + agregación implementados; cliente de backend en stub |
 | 7 | Paquete anti-abuso: verificación GPS, anti-mock, anti-salto, una cuenta por dispositivo, trust, UNVERIFIED, tope diario | ✅ Implementado (cliente; la aplicación en servidor es v1, ver §6.7) |
 | 8 | Monetización en tres niveles: Gratis / Colaborador / Plus (stub) | ✅ Esqueleto (AdMob con ID de prueba; Plus sin flujo de pago) |
-| 9 | Términos y Condiciones v1.4: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal) |
+| 9 | Términos y Condiciones v1.5: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal) |
 | 10 | Menú inferior dentro de la app (Mapa / Mis aportes / Alertas / Ajustes) + pantalla «Mis aportes» (progreso X/20, estado Colaborador, trust, historial) + widget por proximidad en segundo plano con dos modos (completo para Colaborador/Plus, solo LED para Gratis) | ✅ Implementado (v0.2.0) |
 
 **Fuera del MVP:** iOS, detección del semáforo por cámara con IA, voz
@@ -555,6 +560,12 @@ aportan de forma regular.
    Supabase Storage (solo el dueño y el Admin pueden verla), se revisa
    una sola vez y se borra tras la verificación; solo queda guardado el
    estado «verificado», la fecha y el tipo de licencia, nunca la imagen.
+   Al subir la foto, el usuario otorga su **consentimiento expreso**
+   marcando la casilla «Autorizo el tratamiento de la foto de mi
+   licencia para verificar mi condición de conductor» (LFPDPPP art. 9:
+   los datos sensibles exigen consentimiento expreso); la app guarda la
+   fecha y hora de ese consentimiento (`consent_at`). Sin la casilla
+   marcada, la foto no se envía.
    Un rechazo no bloquea el uso de la app: el usuario sigue aportando y
    puede ganar el sin anuncios por cuota, y puede volver a solicitar
    la verificación.
@@ -595,7 +606,8 @@ formal («sin definir como competencia»).
 - **Anti-trampa:** cuentan solo los aportes verificados (§6.7). El
   Admin puede descalificar a un usuario de la semana (y del programa si
   reincide) si detecta farming; la descalificación queda registrada con
-  motivo.
+  motivo, y el usuario puede impugnarla por correo dentro de los 15 días
+  siguientes (Términos §7 Ter).
 - **Legal:** es un reconocimiento por mérito (quien más aporta, gana),
   no un sorteo: no hay azar. Las reglas van en los Términos (pendiente
   de revisión del abogado, como el resto del documento).
@@ -726,7 +738,7 @@ terceros, sin identificar a usuarios individuales.
   personales identificables **no se venden ni se comparten sin
   consentimiento expreso aparte**. No existe una cláusula de uso «a
   conveniencia»: la LFPDPPP exige finalidades específicas.
-- **Términos y Condiciones v1.4** (`TERMINOS_Y_CONDICIONES.md`, copiado a
+- **Términos y Condiciones v1.5** (`TERMINOS_Y_CONDICIONES.md`, copiado a
   `assets/terminos_y_condiciones.md`): el conductor es el único
   responsable; la app es una ayuda informativa, no sustituye la atención
   ni el semáforo real; sin responsabilidad por accidentes, daños o
@@ -747,10 +759,11 @@ terceros, sin identificar a usuarios individuales.
   revisión legal**; falta integrarlo dentro de la app y en la ficha de
   Play Store antes del lanzamiento público.
 - **Pendiente para el lanzamiento público:** revisión legal de Términos
-  v1.4 + Aviso de Privacidad v1.1; Aviso de Privacidad visible en la app y en
-  la ficha de Play Store (Ley Federal de Protección de Datos Personales,
-  México); flujo de eliminación de cuenta y datos desde la app (los
-  términos §7 y §7 Bis ya prometen que el usuario puede solicitarlo).
+  v1.5 + Aviso de Privacidad v1.1; Aviso de Privacidad en la ficha de
+  Play Store (ya está visible dentro de la app desde v1.1.4, en la
+  pantalla «Acepto» y en Ajustes); flujo de eliminación de cuenta y
+  datos desde la app (los términos §7 y §7 Bis ya prometen que el
+  usuario puede solicitarlo).
 
 ## 11. Seguridad vial (no negociable)
 
@@ -779,7 +792,7 @@ Monterrey con los 1 579 semáforos reales del GeoJSON (rojos/grises) ·
 Botones Sync verde y «Aquí hay un semáforo» · «Ya no existe» con 3
 confirmaciones · Agregación con confianza (mediana ponderada por trust) ·
 Paquete anti-abuso (cliente) · Detección pasiva conectada · Monetización
-en tres niveles (Plus como stub) · Términos v1.4 con aceptación obligatoria.
+en tres niveles (Plus como stub) · Términos v1.5 con aceptación obligatoria.
 
 ### v1 — Beta Monterrey (primer lanzamiento público)
 Backend Supabase real (tablas + PostGIS + función de agregación, con el

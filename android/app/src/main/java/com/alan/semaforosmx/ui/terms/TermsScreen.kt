@@ -17,14 +17,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alan.semaforosmx.R
 
-/** Modo de la pantalla de términos. */
+/** Modo de la pantalla de documentos legales. */
 enum class TermsMode {
     /** Primera apertura: resumen + texto completo + Acepto / No acepto. */
     ACCEPTANCE,
@@ -32,16 +37,25 @@ enum class TermsMode {
     VIEW
 }
 
+/** Qué documento legal muestra la pantalla. */
+enum class LegalDocument {
+    /** Términos y Condiciones (el documento que se acepta). */
+    TERMS,
+    /** Aviso de Privacidad (se acepta junto con los Términos). */
+    PRIVACY
+}
+
 /**
- * Pantalla de Términos y Condiciones.
+ * Pantalla de documentos legales (Términos y Aviso de Privacidad).
  *
  * En modo [TermsMode.ACCEPTANCE] (primera apertura) muestra primero un
  * resumen en lenguaje sencillo de las cláusulas clave y después el texto
- * completo (verbatim, desde assets). El usuario debe presionar «Acepto»
- * para usar la app; «No acepto» cierra la app.
+ * completo de los Términos (verbatim, desde assets), con un botón para
+ * leer el Aviso de Privacidad antes de decidir. El usuario debe presionar
+ * «Acepto» para usar la app; «No acepto» cierra la app.
  *
  * En modo [TermsMode.VIEW] (desde Ajustes) solo muestra el texto completo
- * con un botón para cerrar.
+ * del documento indicado con un botón para cerrar.
  *
  * El texto se muestra sin formato Markdown (se quitan los caracteres de
  * formato, sin tocar las palabras). Un renderizador Markdown queda para
@@ -50,16 +64,38 @@ enum class TermsMode {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TermsScreen(
-    termsText: String,
+    documentText: String,
     mode: TermsMode,
+    document: LegalDocument = LegalDocument.TERMS,
+    privacyText: String = "",
     onAccept: () -> Unit = {},
     onDecline: () -> Unit = {},
     onClose: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // En la aceptación, el usuario puede ir a leer el Aviso de Privacidad
+    // antes de decidir: acepta los dos documentos juntos, así que ambos
+    // deben estar disponibles antes de presionar «Acepto».
+    var showingPrivacy by remember { mutableStateOf(false) }
+    val showingDocument =
+        if (mode == TermsMode.ACCEPTANCE && showingPrivacy) LegalDocument.PRIVACY else document
+    val visibleText =
+        if (showingDocument == LegalDocument.PRIVACY) privacyText else documentText
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.terms_title)) })
+            TopAppBar(
+                title = {
+                    Text(
+                        stringResource(
+                            when (showingDocument) {
+                                LegalDocument.TERMS -> R.string.terms_title
+                                LegalDocument.PRIVACY -> R.string.privacy_title
+                            }
+                        )
+                    )
+                }
+            )
         }
     ) { padding ->
         Column(
@@ -73,7 +109,7 @@ fun TermsScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                if (mode == TermsMode.ACCEPTANCE) {
+                if (mode == TermsMode.ACCEPTANCE && showingDocument == LegalDocument.TERMS) {
                     // Resumen en lenguaje sencillo (no sustituye al texto).
                     Text(
                         text = stringResource(R.string.terms_summary_title),
@@ -102,12 +138,17 @@ fun TermsScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
                 Text(
-                    text = stripMarkdown(termsText),
+                    text = stripMarkdown(visibleText),
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = stringResource(R.string.terms_version),
+                    text = stringResource(
+                        when (showingDocument) {
+                            LegalDocument.TERMS -> R.string.terms_version
+                            LegalDocument.PRIVACY -> R.string.privacy_version
+                        }
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -115,29 +156,47 @@ fun TermsScreen(
             }
 
             // Botones fijos al pie (fuera del scroll).
-            when (mode) {
-                TermsMode.ACCEPTANCE -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            when {
+                showingDocument == LegalDocument.PRIVACY && mode == TermsMode.ACCEPTANCE -> {
+                    Button(
+                        onClick = { showingPrivacy = false },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 12.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = onDecline,
-                            modifier = Modifier.weight(1f)
+                        Text(stringResource(R.string.privacy_back))
+                    }
+                }
+                mode == TermsMode.ACCEPTANCE -> {
+                    Column {
+                        TextButton(
+                            onClick = { showingPrivacy = true },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(stringResource(R.string.terms_decline))
+                            Text(stringResource(R.string.privacy_read))
                         }
-                        Button(
-                            onClick = onAccept,
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
                         ) {
-                            Text(stringResource(R.string.terms_accept))
+                            OutlinedButton(
+                                onClick = onDecline,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(R.string.terms_decline))
+                            }
+                            Button(
+                                onClick = onAccept,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(R.string.terms_accept))
+                            }
                         }
                     }
                 }
-                TermsMode.VIEW -> {
+                else -> {
                     Button(
                         onClick = onClose,
                         modifier = Modifier

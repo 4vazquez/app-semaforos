@@ -73,6 +73,7 @@ import com.alan.semaforosmx.ui.map.TrafficLightMap
 import com.alan.semaforosmx.ui.settings.SettingsScreen
 import com.alan.semaforosmx.ui.sync.AquiHaySemaforoButton
 import com.alan.semaforosmx.ui.sync.SyncVerdeButton
+import com.alan.semaforosmx.ui.terms.LegalDocument
 import com.alan.semaforosmx.ui.terms.TermsMode
 import com.alan.semaforosmx.ui.terms.TermsScreen
 import com.alan.semaforosmx.ui.theme.SemaforosMxTheme
@@ -107,7 +108,7 @@ import java.util.Calendar
  */
 class MainActivity : ComponentActivity() {
 
-    private enum class AppScreen { MAP, APORTES, ALERTAS, SETTINGS, TERMS_VIEW }
+    private enum class AppScreen { MAP, APORTES, ALERTAS, SETTINGS, TERMS_VIEW, PRIVACY_VIEW }
 
     /**
      * Contador de onResume: permite reanudar la descarga de una
@@ -254,6 +255,7 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(TermsAcceptance.isAccepted(context))
         }
         var termsText by remember { mutableStateOf("") }
+        var privacyText by remember { mutableStateOf("") }
         var screen by remember { mutableStateOf(AppScreen.MAP) }
         var widgetActive by remember {
             mutableStateOf(
@@ -307,12 +309,16 @@ class MainActivity : ComponentActivity() {
             termsText = withContext(Dispatchers.IO) {
                 runCatching { TermsAcceptance.loadTermsText(context) }.getOrDefault("")
             }
+            privacyText = withContext(Dispatchers.IO) {
+                runCatching { TermsAcceptance.loadPrivacyText(context) }.getOrDefault("")
+            }
         }
 
         if (!termsAccepted) {
             TermsScreen(
-                termsText = termsText,
+                documentText = termsText,
                 mode = TermsMode.ACCEPTANCE,
+                privacyText = privacyText,
                 onAccept = {
                     TermsAcceptance.accept(context)
                     termsAccepted = true
@@ -358,8 +364,20 @@ class MainActivity : ComponentActivity() {
         // Relectura de Términos desde Ajustes: pantalla completa, sin menú.
         if (screen == AppScreen.TERMS_VIEW) {
             TermsScreen(
-                termsText = termsText,
+                documentText = termsText,
                 mode = TermsMode.VIEW,
+                onClose = { screen = AppScreen.SETTINGS }
+            )
+            return
+        }
+
+        // Relectura del Aviso de Privacidad desde Ajustes: igual que los
+        // Términos, pantalla completa sin menú.
+        if (screen == AppScreen.PRIVACY_VIEW) {
+            TermsScreen(
+                documentText = privacyText,
+                mode = TermsMode.VIEW,
+                document = LegalDocument.PRIVACY,
                 onClose = { screen = AppScreen.SETTINGS }
             )
             return
@@ -377,6 +395,7 @@ class MainActivity : ComponentActivity() {
                                     AppScreen.ALERTAS -> R.string.alertas_title
                                     AppScreen.SETTINGS -> R.string.settings
                                     AppScreen.TERMS_VIEW -> R.string.terms_title
+                                    AppScreen.PRIVACY_VIEW -> R.string.privacy_title
                                 }
                             )
                         )
@@ -482,6 +501,7 @@ class MainActivity : ComponentActivity() {
                         ).edit().putBoolean("vibration_enabled", enabled).apply()
                     },
                     onTermsClick = { screen = AppScreen.TERMS_VIEW },
+                    onPrivacyClick = { screen = AppScreen.PRIVACY_VIEW },
                     authState = authState,
                     onSignInClick = {
                         updateScope.launch { AuthManager.signIn(this@MainActivity) }
@@ -513,6 +533,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.padding(padding)
                 )
                 AppScreen.TERMS_VIEW -> Unit // Se maneja arriba (sin menú).
+                AppScreen.PRIVACY_VIEW -> Unit // Se maneja arriba (sin menú).
             }
         }
 
