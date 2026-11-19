@@ -1,7 +1,7 @@
 # TÉRMINOS Y CONDICIONES DE USO — VÍA VERDE
 
 **Última actualización:** 19 de noviembre de 2026
-**Versión:** 1.6 (borrador reforzado para revisión legal antes del lanzamiento)
+**Versión:** 1.7 (borrador reforzado para revisión legal antes del lanzamiento)
 
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como punto de partida. Debe ser revisado y ajustado por un abogado antes del lanzamiento público de la aplicación, ya que en México existen límites legales a las cláusulas de exención de responsabilidad (por ejemplo, no puede excluirse la responsabilidad por dolo o negligencia grave, y la PROFECO puede declarar abusivas ciertas cláusulas en contratos de adhesión).
 
@@ -31,6 +31,7 @@ La App proporciona:
 - El usuario se obliga a conducir con atención, observar directamente los semáforos, las señales de tránsito y las condiciones del camino, y a cumplir en todo momento la Ley de Movilidad y el Reglamento de Tránsito aplicables.
 - El usuario NO deberá manipular su teléfono ni interactuar con la App mientras el vehículo esté en movimiento. La App está diseñada para consultarse de un vistazo cuando el vehículo está detenido.
 - Las alertas de la App son aproximadas y pueden no coincidir con el estado real del semáforo. **El usuario deberá guiarse siempre por el semáforo real, nunca por la App.**
+- **Reducción de distracción, no fomento:** Vía Verde no promueve ni fomenta el uso del teléfono celular durante la conducción. El diseño de sus alertas busca reducir el tiempo que el conductor aparta la vista del camino, no aumentar el uso del dispositivo. El uso del teléfono al manejar sigue siendo responsabilidad exclusiva del usuario y debe ajustarse a las normas de tránsito aplicables.
 - Vía Verde no se hace responsable por accidentes, colisiones, lesiones, daños materiales, multas de tránsito, infracciones o cualquier otro daño o perjuicio que resulte del uso de la App, de la falta de atención del conductor, del incumplimiento de las normas de tránsito o de la confianza depositada en la información mostrada por la App.
 
 ## 4. Exactitud de la información

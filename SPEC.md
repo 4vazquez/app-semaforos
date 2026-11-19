@@ -20,8 +20,9 @@
 > v1.2. App v1.1.2 — LED en degradado: el borde luminoso del widget es
 > intenso en la orilla y se difumina hacia el centro (línea nítida +
 > banda de luz que se apaga hacia adentro). App v1.1.5 — renombrada a
-> «Vía Verde» en toda la app y los documentos (Términos v1.6, Aviso
-> v1.2; el paquete interno com.alan.semaforosmx y el correo
+> «Vía Verde» en toda la app y los documentos (Términos v1.7, Aviso
+> v1.2, con la cláusula de reducción de daño en Términos §3 y en el
+> resumen de la pantalla «Acepto»); el paquete interno
 > adminsemaforosmx@gmail.com no cambian). App v1.1.3 — Términos v1.4
 > y Aviso de Privacidad v1.1: reglas del ranking semanal (§7 Ter),
 > verificación de licencia (dato sensible, se borra tras revisarla),
@@ -71,6 +72,11 @@ documento se construye sobre ese borrador.
 ### Ya existía en el borrador
 - **Nombre, concepto y eslogan**: «Vía Verde — El widget que despierta a
   los distraídos». «Si no ves el verde, Vía Verde te avisa.»
+- **Filosofía de reducción de daño**: no fomentamos mirar el teléfono al
+  conducir; es un hábito que ya existe en los semáforos. Vía Verde
+  minimiza ese daño con alertas breves y periféricas, para que el
+  conductor pase menos segundos en la pantalla y más tiempo viendo la
+  calle. (También en Términos §3.)
 - **Prototipo web** (`index.html`, `script.js`, `style.css`): mapa Leaflet +
   OpenStreetMap centrado en Monterrey (25.6866, −100.3161, zoom 12), widget
   flotante arrastrable con slider de opacidad (0.2–1) y un simulador de
@@ -762,7 +768,7 @@ terceros, sin identificar a usuarios individuales.
   revisión legal**; falta integrarlo dentro de la app y en la ficha de
   Play Store antes del lanzamiento público.
 - **Pendiente para el lanzamiento público:** revisión legal de Términos
-  v1.6 + Aviso de Privacidad v1.2; Aviso de Privacidad en la ficha de
+  v1.7 + Aviso de Privacidad v1.2; Aviso de Privacidad en la ficha de
   Play Store (ya está visible dentro de la app desde v1.1.4, en la
   pantalla «Acepto» y en Ajustes); flujo de eliminación de cuenta y
   datos desde la app (los términos §7 y §7 Bis ya prometen que el

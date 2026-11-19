@@ -6,7 +6,7 @@ import android.content.Context
  * Aceptación de los Términos y Condiciones (primera apertura).
  *
  * - El texto completo vive en `assets/terminos_y_condiciones.md`, copia
- *   exacta de `TERMINOS_Y_CONDICIONES.md` del repo (v1.6, borrador).
+ *   exacta de `TERMINOS_Y_CONDICIONES.md` del repo (v1.7, borrador).
  *   ⚠️ El texto es un BORRADOR: debe revisarlo un abogado antes del
  *   lanzamiento público (ver SPEC.md §10).
  * - El Aviso de Privacidad vive en `assets/aviso_de_privacidad.md`
@@ -23,7 +23,7 @@ import android.content.Context
 object TermsAcceptance {
 
     /** Versión vigente de los términos (debe coincidir con el documento). */
-    const val CURRENT_VERSION = "1.6"
+    const val CURRENT_VERSION = "1.7"
 
     /** Versión vigente del Aviso de Privacidad (informativa, no bloquea). */
     const val PRIVACY_VERSION = "1.2"

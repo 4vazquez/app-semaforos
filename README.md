@@ -136,7 +136,8 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
-- **Renombre a Vía Verde** (v1.1.5): la app, los Términos (v1.6), el
+- **Renombre a Vía Verde** (v1.1.5): la app, los Términos (v1.7, con la
+  cláusula de reducción de daño en §3 y en el resumen de «Acepto»), el
   Aviso de Privacidad (v1.2), la SPEC y el README ahora usan el nombre
   «Vía Verde» (antes «Semáforos MX», decisión de Alan el 2026-11-19).
   El paquete interno `com.alan.semaforosmx`, el correo

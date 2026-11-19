@@ -37,14 +37,14 @@ _Actualizado: 2026-11-19. Basado en la respuesta dada a Alan el 2026-11-19 22:51
 - Total 2 clases: **$5,627.54 MXN**
 
 ### Pasos
-1. Búsqueda previa gratis en MARCia (el buscador que sustituyó a MARCANET). Hecha el 2026-11-19 para "SEMAFOROS MX": sin marca idéntica, pero con antecedentes similares en clase 9 (SEMAPHOROS, SEMÁFORO registradas) y clase 42 (EL SEMAFORO, EVO SEMÁFORO EMPRESARIAL) — riesgo de objeción medio-alto en clase 9. Por eso el nombre cambió a "Vía Verde" (2026-11-19); su búsqueda en MARCia está en curso al actualizar este checklist.
+1. Búsqueda previa gratis en MARCia (el buscador que sustituyó a MARCANET). Hecha el 2026-11-19 para "SEMAFOROS MX": sin marca idéntica, pero con antecedentes similares en clase 9 (SEMAPHOROS, SEMÁFORO registradas) y clase 42 (EL SEMAFORO, EVO SEMÁFORO EMPRESARIAL) — riesgo de objeción medio-alto en clase 9. Por eso el nombre cambió a "Vía Verde" (2026-11-19), verificada LIBRE en clases 9 y 42 el mismo día.
 2. Crear cuenta PASE del IMPI (con CURP, correo y contraseña).
 3. Ubicar clases en ClasNiza / Clasificador Alfaniza del IMPI.
 4. Presentar solicitud por Marca en Línea, generar línea de captura y pagar por clase.
 5. Esperar 4–6 meses sin observaciones; protección por 10 años desde la presentación.
 
 ### Notas honestas
-- "Semáforos MX" era descriptivo y tenía antecedentes muy pegados en las mismas clases; "Vía Verde" es más sugestivo (evoca el verde sin describir el producto), lo que mejora la distintividad — pendiente confirmar disponibilidad en MARCia.
+- "Semáforos MX" era descriptivo y tenía antecedentes muy pegados en las mismas clases; "Vía Verde" es más sugestivo (evoca el verde sin describir el producto), lo que mejora la distintividad. Disponibilidad verificada en MARCia el 2026-11-19: LIBRE en clases 9 y 42 (sin marca idéntica ni compuesta similar; solo existen VIA y VERDE por separado).
 - Si niegan el nombre, el logotipo como diseño sí puede entrar.
 - Hacerlo tú mismo es viable; con despacho, total típico $8,000–$12,000.
 - La protección corre desde la fecha de presentación, no desde la resolución — por eso conviene presentar antes de cualquier anuncio público, no el día del lanzamiento.

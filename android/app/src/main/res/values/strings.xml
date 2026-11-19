@@ -162,6 +162,7 @@
     <string name="terms_title">Términos y Condiciones</string>
     <string name="terms_summary_title">Antes de empezar, lo importante:</string>
     <string name="terms_summary_driver">• Tú eres el único responsable al manejar. La app es una ayuda informativa: nunca sustituye tu atención ni el semáforo real.</string>
+    <string name="terms_summary_harm">• La app no fomenta usar el teléfono manejando: solo reduce los segundos que ya pasas mirándolo.</string>
     <string name="terms_summary_accuracy">• Los tiempos son aproximados y vienen de reportes de otros conductores: pueden ser inexactos. Guíate siempre por el semáforo real.</string>
     <string name="terms_summary_liability">• Vía Verde no se hace responsable por accidentes, daños o multas derivados del uso de la app.</string>
     <string name="terms_summary_data">• Tus reportes se procesan de forma agregada y anonimizada. Los mapas son de OpenStreetMap (ODbL).</string>
@@ -169,7 +170,7 @@
     <string name="terms_read_full">Lee el texto completo a continuación. Al presionar "Acepto" confirmas que lo leíste y estás de acuerdo.</string>
     <string name="terms_accept">Acepto</string>
     <string name="terms_decline">No acepto</string>
-    <string name="terms_version">Versión 1.6 — 19 de noviembre de 2026</string>
+    <string name="terms_version">Versión 1.7 — 19 de noviembre de 2026</string>
     <string name="privacy_title">Aviso de Privacidad</string>
     <string name="privacy_version">Versión 1.2 — 19 de noviembre de 2026</string>
     <string name="privacy_read">Leer el Aviso de Privacidad</string>

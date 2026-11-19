@@ -121,6 +121,8 @@ fun TermsScreen(
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(stringResource(R.string.terms_summary_driver))
                             Spacer(modifier = Modifier.height(6.dp))
+                            Text(stringResource(R.string.terms_summary_harm))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(stringResource(R.string.terms_summary_accuracy))
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(stringResource(R.string.terms_summary_liability))
