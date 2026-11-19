@@ -14,7 +14,10 @@
 > (solo Alan) y palomita verde «Colaborador verificado» para los
 > conductores con licencia de chofer verificada; el usuario común no
 > muestra sello. Solo presentación: los permisos reales se hacen
-> cumplir en Supabase con RLS. App v1.1.0 — login con Google
+> cumplir en Supabase con RLS. Ranking semanal de Colaboradores
+> diseñado (§6.10, SQL `supabase/004_ranking.sql`): top 3 con premios
+> de $300/$200/$100 por semana, opt-in con apodo; la UI llega en
+> v1.2. App v1.1.0 — login con Google
 > (Credential Manager / Google ID) y backend Supabase implementados:
 > sesión cifrada, roles `USER` / `COLLABORATOR` / `ADMIN` en la tabla
 > `users`, puertas en la app según el rol (§4.7, §6.9), esquema SQL con
@@ -521,6 +524,8 @@ del APK que descargan los usuarios).
 | `display_name` | String? | Nombre de la cuenta de Google |
 | `photo_url` | String? | Foto de perfil de Google (si la tiene) |
 | `role` | enum | `USER` (común, con login) / `COLLABORATOR` / `ADMIN` (solo Alan) |
+| `nickname` | String? | Apodo para el ranking semanal (§6.10); único, solo si el usuario quiere aparecer |
+| `show_in_ranking` | boolean | `true` solo si el usuario activó aparecer en el ranking (opt-in, por defecto `false`) |
 | `created_at` | timestamp | Creación de la cuenta |
 
 Un usuario común que inicia sesión con Google pero aún no aporta es
@@ -546,6 +551,68 @@ aportan de forma regular.
    Un rechazo no bloquea el uso de la app: el usuario sigue aportando y
    puede ganar el sin anuncios por cuota, y puede volver a solicitar
    la verificación.
+
+### 6.10 Ranking semanal de Colaboradores (diseño aprobado por Alan el 19 nov 2026)
+
+Los conductores se aburren de su día a día: el ranking les da un motivo
+para aportar seguido, como **reconocimiento**, no como competencia
+formal («sin definir como competencia»).
+
+- **Ciclo semanal:** de lunes 00:00 a domingo 23:59 (America/Monterrey).
+- **Métrica:** semáforos distintos aportados en la semana. Cuentan los
+  mismos aportes que cuentan para la cuota de §6.5: syncs manuales con
+  login y GPS verificado (§6.7: en el lugar, fix fresco, sin mock
+  location). Un semáforo cuenta una sola vez por semana aunque se
+  sincronice varias veces. **Sin tope:** más aportes, más puntos.
+- **La cuota mensual de 20 distintos (§6.5) es independiente:** es lo
+  que conserva el beneficio sin anuncios (Colaborador). El ranking no
+  la sustituye ni la cambia. (Ojo con el nombre: el beneficio que se
+  conserva con 20/mes es el sin anuncios de Colaborador, NO el Plus —
+  Plus es la suscripción de pago que llega después, §9.)
+- **Top 3 y premios:** 1er lugar $300 MXN, 2do $200, 3er $100, en
+  premios (boletos de cine, recargas u otros de valor equivalente, a
+  elegir por el Admin). Total **$600/semana (~$2,400/mes)** como
+  inversión del proyecto, pagada por Alan en el piloto.
+- **Empates:** desempata por mayor confianza (§6.8) y luego por el
+  primer aporte de la semana más temprano.
+- **Visibilidad opt-in:** solo aparecen los usuarios que activaron
+  «aparecer en el ranking» y eligieron un apodo. Sin opt-in no aparece
+  nadie. Lo único visible es el apodo; nunca el nombre real ni el
+  correo.
+- **Cierre y entrega:** el ranking cierra el domingo a las 23:59; el
+  Admin revisa a los 3 ganadores y marca cada premio como entregado. La
+  entrega es manual al principio (Alan contacta al ganador). Todo queda
+  registrado en `weekly_prizes`. Si hay menos de 3 participantes con
+  aportes verificados, solo se premian los lugares con ganador real; si
+  nadie aporta en la semana, no hay premios esa semana.
+- **Anti-trampa:** cuentan solo los aportes verificados (§6.7). El
+  Admin puede descalificar a un usuario de la semana (y del programa si
+  reincide) si detecta farming; la descalificación queda registrada con
+  motivo.
+- **Legal:** es un reconocimiento por mérito (quien más aporta, gana),
+  no un sorteo: no hay azar. Las reglas van en los Términos (pendiente
+  de revisión del abogado, como el resto del documento).
+- **En la app:** Mis aportes muestra el top 3 de la semana en curso y
+  tu lugar (si estás en el top 10 y tienes opt-in). La UI es trabajo
+  de v1.2 (necesita el backend vivo).
+- **Sostenibilidad:** $600/semana lo paga Alan en el piloto; a futuro,
+  patrocinios o ajuste del monto según usuarios activos. El programa
+  puede modificarse o terminarse con aviso en la app.
+
+**Tabla `weekly_prizes` (v1, nueva):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | UUID | PK |
+| `week_start` | date | Lunes de la semana |
+| `user_id` | UUID | Ganador |
+| `place` | int | 1, 2 o 3 |
+| `amount_cents` | int | 30000 / 20000 / 10000 |
+| `prize_description` | text | Qué se entregó (p. ej. «2 boletos de cine») |
+| `status` | enum | `PENDING` / `CONTACTED` / `DELIVERED` / `DISQUALIFIED` |
+| `decided_at` | timestamp | Cuándo se resolvió |
+| `decided_by` | UUID | Admin que lo resolvió |
+| `notes` | text | Motivo de descalificación u otras notas |
 
 ## 7. Detección pasiva de arranque (diseño)
 
@@ -713,7 +780,9 @@ GeoJSON importado a `traffic_lights`) · **Anti-abuso aplicado en el
 servidor** (triggers/funciones: tope diario, saltos, transiciones de
 estado, trust) · **Roles y permisos + login híbrido con Google (§4.7,
 §6.9):** tabla `users`, RLS por rol, panel de admin aparte (solo Alan),
-eliminación de cuenta en la app · Detección pasiva calibrada con pruebas de campo ·
+eliminación de cuenta en la app · **Ranking semanal de Colaboradores
+(§6.10):** top 3 con premios de $300/$200/$100 por semana, opt-in con
+apodo, entrega manual por el Admin · Detección pasiva calibrada con pruebas de campo ·
 Onboarding completo con permisos · AdMob con ID real · Revisión legal de
 los términos + Aviso de Privacidad + eliminación de cuenta en la app ·
 Publicación en Play Store (cuenta de desarrollador de Alan) · **Al

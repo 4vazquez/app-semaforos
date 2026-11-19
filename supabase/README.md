@@ -86,7 +86,8 @@ se borra desde **Authentication → Users** en el panel.
 |---|---|
 | `001_schema.sql` | Tablas, agregación, triggers anti-abuso, RLS, RPCs |
 | `003_verification.sql` | Verificación de Colaborador: solicitudes + bucket privado de licencias + resolución por Admin |
+| `004_ranking.sql` | Ranking semanal: apodo + opt-in, RPC top_collaborators_week, tabla weekly_prizes + registro de premios por Admin |
 | `seed_lights.py` | Genera `002_seed_lights.sql` desde el GeoJSON de OSM |
 | `002_seed_lights.sql` | Generado (no editar a mano; se regenera) |
 
-Ejecuta `001_schema.sql` y luego `003_verification.sql` (en ese orden).
+Ejecuta `001_schema.sql`, luego `003_verification.sql` y `004_ranking.sql` (en ese orden). El seed (`002_seed_lights.sql`) puede correrse en cualquier momento después de `001_schema.sql`.
