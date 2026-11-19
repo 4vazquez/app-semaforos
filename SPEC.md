@@ -525,6 +525,23 @@ no es un rol distinto en la base de datos. El rol `COLLABORATOR` marca
 a los conductores del programa (p. ej. comunidades Uber/DiDi) que
 aportan de forma regular.
 
+**Cómo se gana el rol COLLABORATOR (híbrido, aprobado por Alan el
+18 nov 2026):**
+1. **Beneficio sin anuncios (automático):** cualquier usuario con login
+   que aporte en 20 semáforos distintos en el mes es Colaborador sin
+   anuncios (§6.5). No necesita rol ni verificación.
+2. **Sello de conductor verificado (rol COLLABORATOR):** el usuario
+   sube una foto de su licencia de chofer (tipo C/D en Nuevo León, la
+   categoría del piloto; otras categorías de otros estados después) y
+   el Admin la revisa. Al aprobarla, el rol pasa a `COLLABORATOR`.
+   La foto es un dato sensible: se guarda en un bucket privado de
+   Supabase Storage (solo el dueño y el Admin pueden verla), se revisa
+   una sola vez y se borra tras la verificación; solo queda guardado el
+   estado «verificado», la fecha y el tipo de licencia, nunca la imagen.
+   Un rechazo no bloquea el uso de la app: el usuario sigue aportando y
+   puede ganar el sin anuncios por cuota, y puede volver a solicitar
+   la verificación.
+
 ## 7. Detección pasiva de arranque (diseño)
 
 **Objetivo:** detectar que el coche arrancó sin que el conductor presione
