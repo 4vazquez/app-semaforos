@@ -55,9 +55,9 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   primera apertura + relectura desde Ajustes. Incluye cuentas, roles y
   login con Google (§7 Bis) y el Aviso de Privacidad v1.0
   (`AVISO_DE_PRIVACIDAD.md`). ⚠️ Ambos textos son borradores pendientes
-  de revisión legal antes del lanzamiento público. (La app v0.3.1
-  instalada aún muestra los Términos v1.2; la v1.3 entra en el siguiente
-  build, que volverá a mostrar la pantalla «Acepto» una vez.)
+  de revisión legal antes del lanzamiento público. (La app v0.3.2 ya
+  muestra los Términos v1.3; al actualizar vuelve a mostrar la pantalla
+  «Acepto» una vez.)
 - **Detección pasiva de arranque** (acelerómetro/GPS) conectada al widget:
   el arranque solo cuenta como reporte dentro de la ventana de verde ± 15 s;
   calibración de umbrales en v1.
@@ -72,12 +72,19 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   (adminsemaforosmx@gmail.com) para copiarlo o escribir por correo con el
   asunto precargado; también está nombrado en los Términos §12. Será el
   correo de contacto de la ficha en Google Play.
+- **Widget estable** (v0.3.2): corrige el cierre del servicio del widget
+  al arrancar (orden de `SavedStateRegistry` en `FloatingWidgetService.onCreate`:
+  attach → restore → `ON_CREATE`); la ubicación en segundo plano ahora se
+  pide por separado de la de primer plano (regla de Android 11+, con
+  explicación en español) y el estado del widget persiste al reiniciar la
+  app. Esta versión ya muestra los Términos v1.3, así que vuelve a pedir
+  «Acepto» una vez al actualizar.
 
 ## Roles y login con Google (documentado en v1.3, trabajo de backend en v1)
 
 Aprobado por Alan el 18 nov 2026 (ver `SPEC.md` §4.7 y §6.9,
 `TERMINOS_Y_CONDICIONES.md` §7 Bis y `AVISO_DE_PRIVACIDAD.md`).
-**Nada de esto está aún en la app v0.3.1**, que sigue siendo anónima y
+**Nada de esto está aún en la app v0.3.2**, que sigue siendo anónima y
 local; es trabajo del backend real en v1 (Supabase).
 
 - **Usuario común (sin login):** mapa + alerta del verde (+ Sync verde

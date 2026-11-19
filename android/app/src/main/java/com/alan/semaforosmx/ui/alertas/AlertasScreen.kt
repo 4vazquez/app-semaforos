@@ -48,6 +48,7 @@ import com.alan.semaforosmx.widget.WidgetMode
 fun AlertasScreen(
     userId: String,
     widgetActive: Boolean,
+    hasBackgroundLocation: Boolean = true,
     onToggleWidget: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -88,6 +89,17 @@ fun AlertasScreen(
                             if (widgetActive) R.string.widget_deactivate
                             else R.string.widget_activate
                         )
+                    )
+                }
+                // Sin ubicación en segundo plano el widget no puede
+                // detectar semáforos con la app cerrada: indicar cómo
+                // activarla en Ajustes del sistema (no se re-pregunta).
+                if (!hasBackgroundLocation) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.alertas_background_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

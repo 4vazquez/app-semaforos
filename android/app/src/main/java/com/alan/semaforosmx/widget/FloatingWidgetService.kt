@@ -222,8 +222,15 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     override fun onCreate() {
         super.onCreate()
         savedStateRegistryController.performAttach()
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        // ORDEN CRÍTICO (crash v0.3.1, reportado en POCO X6 Pro 18 nov 2026):
+        // performAttach registra el observador Recreator, y al despachar
+        // ON_CREATE Recreator llama consumeRestoredStateForKey, que exige
+        // que performRestore ya haya corrido. Con el orden anterior
+        // (ON_CREATE antes de performRestore) el servicio se cerraba al
+        // instante en cada arranque y el widget nunca aparecía. El orden
+        // correcto es: attach → restore → ON_CREATE.
         savedStateRegistryController.performRestore(null)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         opacity = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getFloat(PREF_OPACITY, 0.9f)
     }

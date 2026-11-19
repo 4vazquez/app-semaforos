@@ -110,13 +110,41 @@ class MainActivity : ComponentActivity() {
      */
     private var resumeCount by mutableIntStateOf(0)
 
+    /**
+     * Paso 1 del permiso de ubicación: fina/gruesa. Al concederse, se
+     * ofrece el paso 2 (ubicación en segundo plano) con una explicación.
+     * En Android 11+ NO se puede pedir la ubicación en segundo plano en
+     * la misma llamada que la de primer plano: el sistema la ignora.
+     */
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* El mapa funciona sin ubicación; el widget la necesita. */ }
+    ) { results ->
+        // El mapa funciona sin ubicación; el widget la necesita.
+        val foregroundGranted =
+            results[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (foregroundGranted) maybeOfferBackgroundLocation()
+    }
+
+    /**
+     * Paso 2: ubicación en segundo plano («Permitir todo el tiempo»),
+     * pedida POR SEPARADO y solo después de la de primer plano (regla de
+     * Android 11+). Si el usuario la niega, no se insiste: la pantalla
+     * Alertas muestra cómo activarla en Ajustes del sistema.
+     */
+    private val backgroundLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        markBackgroundLocationAsked()
+        showBackgroundLocationRationale = false
+    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* Opcional: solo afecta la notificación del widget. */ }
+
+    /** Muestra el diálogo que explica por qué hace falta «todo el tiempo». */
+    private var showBackgroundLocationRationale by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,18 +174,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestInitialPermissions() {
-        val locationPermissions = mutableListOf(
+        // Paso 1: SOLO ubicación de primer plano. La de segundo plano se
+        // pide después y por separado (ver maybeOfferBackgroundLocation):
+        // en Android 11+, pedirla en la misma llamada se ignora y el
+        // widget quedaría sin GPS con la app cerrada.
+        val missing = listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-        val missing = locationPermissions.filter {
+        ).filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         if (missing.isNotEmpty()) {
             locationPermissionLauncher.launch(missing.toTypedArray())
+        } else {
+            // Primer plano ya concedido (p. ej. instalación anterior):
+            // ofrecer el segundo paso si aún falta.
+            maybeOfferBackgroundLocation()
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
@@ -166,6 +198,27 @@ class MainActivity : ComponentActivity() {
         ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    /**
+     * Paso 2: ofrece la ubicación en segundo plano UNA sola vez (si falta
+     * el permiso y nunca se ha pedido). Muestra el diálogo con la
+     * explicación; el usuario decide si continuar o no.
+     */
+    private fun maybeOfferBackgroundLocation() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) return
+        val prefs = getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("background_location_asked", false)) return
+        showBackgroundLocationRationale = true
+    }
+
+    private fun markBackgroundLocationAsked() {
+        getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
+            .edit().putBoolean("background_location_asked", true).apply()
     }
 
     private fun requestOverlayPermission() {
@@ -196,7 +249,12 @@ class MainActivity : ComponentActivity() {
         }
         var termsText by remember { mutableStateOf("") }
         var screen by remember { mutableStateOf(AppScreen.MAP) }
-        var widgetActive by remember { mutableStateOf(false) }
+        var widgetActive by remember {
+            mutableStateOf(
+                context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
+                    .getBoolean("widget_active", false)
+            )
+        }
         var vibrationEnabled by remember {
             mutableStateOf(
                 context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
@@ -226,6 +284,16 @@ class MainActivity : ComponentActivity() {
                 onDecline = { finish() }
             )
             return
+        }
+
+        // Si el widget estaba activo al cerrar la app (o tras reiniciar el
+        // teléfono / un cierre del servicio), re-arrancarlo: el estado
+        // persiste en preferencias, no solo en memoria. Sin permiso de
+        // superposición no se arranca (Alertas lo vuelve a pedir).
+        LaunchedEffect(Unit) {
+            if (widgetActive && Settings.canDrawOverlays(context)) {
+                FloatingWidgetService.start(context)
+            }
         }
 
         // Revisar actualizaciones una vez al arrancar. El chequeo de red
@@ -340,6 +408,12 @@ class MainActivity : ComponentActivity() {
                 AppScreen.ALERTAS -> AlertasScreen(
                     userId = userId,
                     widgetActive = widgetActive,
+                    hasBackgroundLocation =
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED,
                     onToggleWidget = {
                         if (!hasOverlayPermission()) {
                             onRequestOverlayPermission()
@@ -351,6 +425,9 @@ class MainActivity : ComponentActivity() {
                             FloatingWidgetService.start(context)
                         }
                         widgetActive = !widgetActive
+                        context.getSharedPreferences(
+                            "semaforos_mx_prefs", Context.MODE_PRIVATE
+                        ).edit().putBoolean("widget_active", widgetActive).apply()
                     },
                     modifier = Modifier.padding(padding)
                 )
@@ -380,6 +457,39 @@ class MainActivity : ComponentActivity() {
             onRetry = { release -> startUpdateFlow(updateScope, release) { updateState = it } },
             onGrantPermission = { SelfUpdater.openInstallPermissionSettings(context) }
         )
+
+        // Paso 2 del permiso de ubicación: explicación en español ANTES de
+        // pedir «Permitir todo el tiempo» (Android 11+ exige pedirlo por
+        // separado de la ubicación de primer plano). Se ofrece una sola
+        // vez; si el usuario dice que no, no se insiste.
+        if (showBackgroundLocationRationale) {
+            AlertDialog(
+                onDismissRequest = {
+                    markBackgroundLocationAsked()
+                    showBackgroundLocationRationale = false
+                },
+                title = { Text(stringResource(R.string.background_location_title)) },
+                text = { Text(stringResource(R.string.background_location_body)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showBackgroundLocationRationale = false
+                            backgroundLocationLauncher.launch(
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            )
+                        }
+                    ) { Text(stringResource(R.string.background_location_allow)) }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            markBackgroundLocationAsked()
+                            showBackgroundLocationRationale = false
+                        }
+                    ) { Text(stringResource(R.string.background_location_later)) }
+                }
+            )
+        }
     }
 
     /**
