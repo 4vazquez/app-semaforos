@@ -19,7 +19,12 @@
 > de $300/$200/$100 por semana, opt-in con apodo; la UI llega en
 > v1.2. App v1.1.2 — LED en degradado: el borde luminoso del widget es
 > intenso en la orilla y se difumina hacia el centro (línea nítida +
-> banda de luz que se apaga hacia adentro). App v1.1.0 — login con Google
+> banda de luz que se apaga hacia adentro). App v1.1.3 — Términos v1.4
+> y Aviso de Privacidad v1.1: reglas del ranking semanal (§7 Ter),
+> verificación de licencia (dato sensible, se borra tras revisarla),
+> términos de la suscripción Plus y notificación de brechas (LFPDPPP
+> art. 20). Siguen pendientes de revisión de un abogado antes del
+> lanzamiento público. App v1.1.0 — login con Google
 > (Credential Manager / Google ID) y backend Supabase implementados:
 > sesión cifrada, roles `USER` / `COLLABORATOR` / `ADMIN` en la tabla
 > `users`, puertas en la app según el rol (§4.7, §6.9), esquema SQL con
@@ -93,7 +98,7 @@ documento se construye sobre ese borrador.
 - Monetización en tres niveles: Gratis (con banner), Colaborador (gratis y
   sin anuncios con 20+ actualizaciones en semáforos distintos al mes) y
   Plus (suscripción de pago, solo el flag/stub en el MVP; se lanza después).
-- Términos y Condiciones v1.3: pantalla de aceptación en la primera
+- Términos y Condiciones v1.4: pantalla de aceptación en la primera
   apertura («Acepto» obligatorio) y relectura desde Ajustes. El texto es
   un borrador pendiente de revisión legal antes del lanzamiento público.
   La v1.3 añade cuentas, roles y login con Google (§7 Bis) y el Aviso de
@@ -174,7 +179,7 @@ internacional.
 | 6 | Base de datos colaborativa de tiempos + agregación con confianza (mediana ponderada por trust) | ✅ Modelo + agregación implementados; cliente de backend en stub |
 | 7 | Paquete anti-abuso: verificación GPS, anti-mock, anti-salto, una cuenta por dispositivo, trust, UNVERIFIED, tope diario | ✅ Implementado (cliente; la aplicación en servidor es v1, ver §6.7) |
 | 8 | Monetización en tres niveles: Gratis / Colaborador / Plus (stub) | ✅ Esqueleto (AdMob con ID de prueba; Plus sin flujo de pago) |
-| 9 | Términos y Condiciones v1.3: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal; la app v0.3.1 aún muestra v1.2 hasta el siguiente build) |
+| 9 | Términos y Condiciones v1.4: aceptación en primera apertura + relectura en Ajustes | ✅ Implementado (texto = borrador, pendiente de revisión legal) |
 | 10 | Menú inferior dentro de la app (Mapa / Mis aportes / Alertas / Ajustes) + pantalla «Mis aportes» (progreso X/20, estado Colaborador, trust, historial) + widget por proximidad en segundo plano con dos modos (completo para Colaborador/Plus, solo LED para Gratis) | ✅ Implementado (v0.2.0) |
 
 **Fuera del MVP:** iOS, detección del semáforo por cámara con IA, voz
@@ -185,7 +190,7 @@ internacional.
 
 ### 4.1 Primera ejecución (onboarding)
 1. **Términos y Condiciones (obligatorio):** resumen en lenguaje sencillo
-   de las cláusulas clave + texto completo (v1.3). El usuario debe
+   de las cláusulas clave + texto completo (v1.4). El usuario debe
    presionar **«Acepto»** para usar la app; «No acepto» cierra la app.
    La aceptación se guarda localmente (versión + fecha/hora). Si los
    términos cambian de versión, hay que aceptarlos de nuevo.
@@ -273,7 +278,7 @@ La app muestra un semáforo que fue retirado en la vida real:
 - **Primera apertura:** pantalla de aceptación (ver §4.1, paso 1).
 - **Relectura:** Ajustes → «Términos y Condiciones» reabre el texto
   completo (modo solo lectura, con botón «Cerrar»).
-- El texto es el archivo `TERMINOS_Y_CONDICIONES.md` del repo (v1.3),
+- El texto es el archivo `TERMINOS_Y_CONDICIONES.md` del repo (v1.4),
   copiado verbatim a `assets/terminos_y_condiciones.md` para que la app
   lo muestre. ⚠️ **Es un borrador: debe revisarlo un abogado antes del
   lanzamiento público** (ver §10).
@@ -325,7 +330,7 @@ cuando hay un semáforo cerca.
 | **Detalle de semáforo** (diálogo) | Nombre del cruce, estado (verificado / sin verificar), reportes de retiro acumulados («2 de 3»), acción «Reportar que ya no existe» |
 | **Widget flotante** | Barra vertical compacta (120 dp de ancho, un tercio de la pantalla como máximo, en el borde derecho, arrastrable) o píldora solo-LED (160 × 72 dp, arriba al centro). FULL (Colaborador/Plus): borde LED, cuenta regresiva, botones «Sync verde» y «Aquí hay un semáforo», slider de opacidad. LED_ONLY (Gratis): solo el borde LED con la cuenta regresiva. Aparece a ≤ 150 m de un semáforo verificado, se oculta a > 200 m, y nunca se muestra con la app abierta |
 | **Ajustes** | Vibración al avisar, Términos y Condiciones (reabre el texto), Contacto (correo del equipo para copiar o escribir con asunto precargado), Acerca de (qué datos se recogen + atribución OSM) |
-| **Términos y Condiciones** | Resumen en lenguaje sencillo + texto completo v1.3; en primera apertura, botones «Acepto» / «No acepto»; desde Ajustes, solo lectura |
+| **Términos y Condiciones** | Resumen en lenguaje sencillo + texto completo v1.4; en primera apertura, botones «Acepto» / «No acepto»; desde Ajustes, solo lectura |
 | **Onboarding** | Bienvenida, permisos, aviso de seguridad (después de aceptar términos) |
 
 ## 6. Modelo de datos
@@ -714,14 +719,14 @@ terceros, sin identificar a usuarios individuales.
 - **Contenido del usuario:** al enviar reportes, el usuario otorga a
   Semáforos MX una licencia para usarlos de forma agregada y anonimizada
   como parte del servicio (Términos §6 Ter).
-- **Finalidades del uso de datos (v1.3):** los datos de la cuenta se
+- **Finalidades del uso de datos (v1.4):** los datos de la cuenta se
   tratan solo para las finalidades listadas en el Aviso de Privacidad:
   operar la App, mejorar los tiempos, prevenir fraude y abuso, avisar de
   cambios, estadísticas agregadas y anonimizadas y soporte. Los datos
   personales identificables **no se venden ni se comparten sin
   consentimiento expreso aparte**. No existe una cláusula de uso «a
   conveniencia»: la LFPDPPP exige finalidades específicas.
-- **Términos y Condiciones v1.3** (`TERMINOS_Y_CONDICIONES.md`, copiado a
+- **Términos y Condiciones v1.4** (`TERMINOS_Y_CONDICIONES.md`, copiado a
   `assets/terminos_y_condiciones.md`): el conductor es el único
   responsable; la app es una ayuda informativa, no sustituye la atención
   ni el semáforo real; sin responsabilidad por accidentes, daños o
@@ -742,7 +747,7 @@ terceros, sin identificar a usuarios individuales.
   revisión legal**; falta integrarlo dentro de la app y en la ficha de
   Play Store antes del lanzamiento público.
 - **Pendiente para el lanzamiento público:** revisión legal de Términos
-  v1.3 + Aviso de Privacidad; Aviso de Privacidad visible en la app y en
+  v1.4 + Aviso de Privacidad v1.1; Aviso de Privacidad visible en la app y en
   la ficha de Play Store (Ley Federal de Protección de Datos Personales,
   México); flujo de eliminación de cuenta y datos desde la app (los
   términos §7 y §7 Bis ya prometen que el usuario puede solicitarlo).
@@ -774,7 +779,7 @@ Monterrey con los 1 579 semáforos reales del GeoJSON (rojos/grises) ·
 Botones Sync verde y «Aquí hay un semáforo» · «Ya no existe» con 3
 confirmaciones · Agregación con confianza (mediana ponderada por trust) ·
 Paquete anti-abuso (cliente) · Detección pasiva conectada · Monetización
-en tres niveles (Plus como stub) · Términos v1.3 con aceptación obligatoria.
+en tres niveles (Plus como stub) · Términos v1.4 con aceptación obligatoria.
 
 ### v1 — Beta Monterrey (primer lanzamiento público)
 Backend Supabase real (tablas + PostGIS + función de agregación, con el

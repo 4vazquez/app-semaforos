@@ -1,7 +1,7 @@
 # TÉRMINOS Y CONDICIONES DE USO — SEMÁFOROS MX
 
-**Última actualización:** 18 de noviembre de 2026
-**Versión:** 1.3 (borrador reforzado para revisión legal antes del lanzamiento)
+**Última actualización:** 19 de noviembre de 2026
+**Versión:** 1.4 (borrador reforzado para revisión legal antes del lanzamiento)
 
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como punto de partida. Debe ser revisado y ajustado por un abogado antes del lanzamiento público de la aplicación, ya que en México existen límites legales a las cláusulas de exención de responsabilidad (por ejemplo, no puede excluirse la responsabilidad por dolo o negligencia grave, y la PROFECO puede declarar abusivas ciertas cláusulas en contratos de adhesión).
 
@@ -73,7 +73,7 @@ El usuario se obliga a **indemnizar, defender y mantener indemne** a Semáforos 
 ## 7. Privacidad y datos de ubicación
 
 - La App recopila datos de ubicación del dispositivo para identificar semáforos cercanos y validar reportes.
-- Los reportes se procesan de forma **agregada y anonimizada**; la App no publica rutas individuales ni identifica públicamente a los usuarios que realizan reportes.
+- Los reportes se procesan de forma **agregada y anonimizada**; la App no publica rutas individuales ni identifica públicamente a los usuarios que realizan reportes. La única excepción es el ranking semanal de Colaboradores (§7 Ter): si el usuario activa «aparecer en el ranking» y elige un apodo, la App publica únicamente ese apodo y su conteo de aportes de la semana. Sin esa activación, el usuario no aparece en el ranking.
 - Los datos personales se tratan conforme al Aviso de Privacidad de la App, disponible dentro de la misma.
 - Los datos de la cuenta de Google se tratan conforme a las finalidades listadas en el Aviso de Privacidad: operar la App, mejorar los tiempos, prevenir fraude y abuso, avisar de cambios, estadísticas agregadas y anonimizadas y soporte. Los datos personales identificables no se venden ni se comparten sin consentimiento expreso aparte.
 - El usuario puede ejercer sus derechos ARCO (acceso, rectificación, cancelación y oposición) y revocar su consentimiento desde la App o por correo a adminsemaforosmx@gmail.com.
@@ -85,7 +85,23 @@ El usuario se obliga a **indemnizar, defender y mantener indemne** a Semáforos 
 - Con Google Sign-In, Semáforos MX recibe nombre, correo electrónico, foto de perfil (si la tiene) e identificador de Google. No recibe ni almacena la contraseña de Google del usuario.
 - Roles: (a) **Usuario común**: usa el mapa y las alertas; (b) **Colaborador**: además aporta tiempos y reportes, y ve solo sus propios aportes y su progreso; (c) **Administrador**: únicamente el titular del proyecto, con privilegios totales de moderación, aprobación de semáforos y gestión de cuentas. Los permisos se hacen cumplir en el servidor; eludirlos (app modificada, acceso no autorizado) es causa de suspensión.
 - **El Colaborador no es empleado, socio, asociado, agente ni accionista de Semáforos MX.** Su participación en el programa es voluntaria, sin horario, exclusividad ni subordinación. El único beneficio del Colaborador es el uso de la App sin anuncios mientras cumpla las condiciones vigentes del programa; dicho beneficio no tiene valor en efectivo, no es transferible y no constituye participación alguna en ingresos, utilidades o capital de Semáforos MX, ni derecho a pago, prima o compensación de ningún tipo. Los reportes aportados por el Colaborador se rigen por la licencia de la sección 6 Ter (uso agregado y anonimizado). Semáforos MX podrá modificar o terminar el programa y sus condiciones en cualquier momento, con aviso dentro de la App.
+- **Verificación de conductor (sello «Colaborador verificado»):** para obtener el sello, el usuario puede enviar una foto de su licencia de conducir de chofer vigente. El usuario declara que la licencia es suya, está vigente y no ha sido alterada. La foto se guarda en un repositorio privado, la revisa únicamente el Administrador y **se elimina en cuanto se resuelve la solicitud** (en ningún caso se conserva más de 30 días); solo quedan guardados el estado «verificado», la fecha y el tipo de licencia. Enviar una licencia falsa, alterada o de otra persona es causa de suspensión inmediata de la cuenta. El sello significa únicamente que se revisó una licencia de chofer; no es una verificación de antecedentes ni una garantía sobre la persona.
+- **Plus (suscripción de pago):** Plus es una suscripción mensual opcional que se contrata y se paga exclusivamente a través de Google Play, al precio vigente mostrado en Play al momento de la compra. La suscripción se renueva automáticamente cada mes hasta que el usuario la cancele desde su cuenta de Google Play; al cancelarla, el usuario conserva los beneficios hasta el fin del periodo ya pagado. Los beneficios de Plus son los descritos en la App al momento de la contratación y pueden cambiar con aviso. Los reembolsos se rigen por las políticas de Google Play y la ley aplicable; fuera de esos casos, los pagos no son reembolsables. Si el pago falla o la suscripción termina, los beneficios Plus se pierden al final del periodo pagado, sin afectar el uso gratuito de la App. Plus no otorga ventaja alguna en el ranking semanal (§7 Ter) ni en la verificación de conductor.
 - El usuario puede eliminar su cuenta y sus datos personales desde la App (Ajustes → Eliminar cuenta) o por correo a adminsemaforosmx@gmail.com. La eliminación borra sus datos identificables; sus reportes previos quedan únicamente como datos agregados y anonimizados.
+
+## 7 Ter. Ranking semanal de Colaboradores
+
+Semáforos MX podrá publicar un ranking semanal de Colaboradores como **reconocimiento por mérito**, no como competencia formal ni sorteo:
+
+- **Cómo se gana:** cada semana (de lunes 00:00 a domingo 23:59, hora de Monterrey) se cuentan los semáforos distintos aportados por cada usuario con syncs manuales verificados (los mismos aportes que cuentan para la cuota de Colaborador: con sesión iniciada y GPS verificado). Un semáforo cuenta una sola vez por semana. No hay tope de aportaciones.
+- **Premios:** el 1er lugar recibe un premio por valor de $300 MXN, el 2do de $200 MXN y el 3er de $100 MXN, en especie o vales (por ejemplo, boletos de cine), a elegir por Semáforos MX. Los premios no tienen alternativa en efectivo, no son transferibles y no constituyen pago, salario ni contraprestación laboral.
+- **No es un sorteo ni un juego de azar:** el ranking se decide exclusivamente por el número de aportes verificados (mérito), sin azar y sin compra necesaria. Contratar Plus no da ventaja alguna en el ranking.
+- **Participación:** solo aparecen en el ranking los usuarios que activaron «aparecer en el ranking» y eligieron un apodo; lo único que se publica es el apodo y el conteo de aportes. Participa una sola cuenta por persona; usar varias cuentas para el ranking es causa de descalificación.
+- **Empates:** se resuelven por mayor nivel de confianza y, si persiste, por el primer aporte de la semana más temprano.
+- **Entrega:** el Administrador revisa a los ganadores al cierre de la semana y los contacta por el correo de su cuenta. El ganador tiene **15 días** para responder; si no responde, pierde el premio. Si el usuario elimina su cuenta antes de recibir el premio, también lo pierde. Si hay menos de tres participantes con aportes verificados, solo se premian los lugares con ganador real; si nadie aporta en la semana, no hay premios esa semana.
+- **Descalificación:** Semáforos MX podrá descalificar a un usuario de la semana (y del programa si reincide) si detecta reportes falsos, ubicaciones simuladas, farming (aportes artificiales para subir en el ranking) o cualquier manipulación. La decisión del Administrador es final, sin perjuicio de que el usuario pueda exponer su caso por correo a adminsemaforosmx@gmail.com.
+- **Impuestos:** cada ganador es responsable de los impuestos que en su caso le correspondan por el premio recibido, conforme a la ley aplicable.
+- **Cambios:** Semáforos MX podrá modificar, suspender o terminar el ranking y sus premios en cualquier momento, con aviso dentro de la App, sin responsabilidad alguna por premios de semanas no concluidas.
 
 ## 8. Uso de la cuenta y conducta del usuario
 
@@ -93,6 +109,8 @@ El usuario se compromete a:
 
 - Proporcionar información veraz en sus reportes.
 - No utilizar ubicaciones falsas (GPS simulado), cuentas múltiples para manipular la información, ni cualquier método para alterar los datos de la App.
+- No realizar *farming*: aportes artificiales, recorridos o reportes hechos solo para subir en el ranking semanal o para cumplir la cuota de Colaborador sin conducir realmente.
+- No enviar documentos falsos, alterados o de otra persona para la verificación de conductor, ni suplantar la identidad de otro usuario.
 - No compartir su cuenta con terceros ni intentar acceder a funciones de otro rol (incluido el panel de administración).
 - No utilizar la App para fines ilícitos.
 - No intentar acceder de forma no autorizada a los sistemas de la App, ni realizar ingeniería inversa, scraping automatizado o extracción masiva de datos.
@@ -116,7 +134,7 @@ Estos Términos se rigen por las leyes de los Estados Unidos Mexicanos.
 
 ## 11 Bis. Disposiciones generales
 
-- **Supervivencia:** las secciones 3, 4, 6, 6 Bis, 6 Ter, 7, 9 y 11 continuarán vigentes aun después de que el usuario deje de utilizar la App o de que su cuenta sea cancelada.
+- **Supervivencia:** las secciones 3, 4, 6, 6 Bis, 6 Ter, 7, 7 Ter, 9 y 11 continuarán vigentes aun después de que el usuario deje de utilizar la App o de que su cuenta sea cancelada.
 - **Divisibilidad:** si alguna disposición de estos Términos resulta inválida o inaplicable, las demás disposiciones continuarán en pleno vigor.
 - **Acuerdo completo:** estos Términos, junto con el Aviso de Privacidad, constituyen el acuerdo completo entre el usuario y Semáforos MX respecto del uso de la App.
 - **Cesión:** Semáforos MX podrá ceder o transferir estos Términos, en todo o en parte, sin consentimiento del usuario, por ejemplo en caso de venta, fusión o reestructura de la operación. El usuario no podrá ceder sus derechos derivados de estos Términos.

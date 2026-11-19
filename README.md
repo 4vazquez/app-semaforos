@@ -51,12 +51,12 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   prueba) · Colaborador (gratis y sin anuncios con 20+ actualizaciones en
   semáforos distintos al mes; programa para conductores Uber/DiDi) ·
   Plus (suscripción de pago, solo el flag/stub; se lanza después).
-- **Términos y Condiciones v1.3**: pantalla de aceptación obligatoria en la
+- **Términos y Condiciones v1.4**: pantalla de aceptación obligatoria en la
   primera apertura + relectura desde Ajustes. Incluye cuentas, roles y
   login con Google (§7 Bis) y el Aviso de Privacidad v1.0
   (`AVISO_DE_PRIVACIDAD.md`). ⚠️ Ambos textos son borradores pendientes
   de revisión legal antes del lanzamiento público. (La app v0.3.3 ya
-  muestra los Términos v1.3; al actualizar vuelve a mostrar la pantalla
+  muestra los Términos v1.4; al actualizar vuelve a mostrar la pantalla
   «Acepto» una vez.)
 - **Detección pasiva de arranque** (acelerómetro/GPS) conectada al widget:
   el arranque solo cuenta como reporte dentro de la ventana de verde ± 15 s;
@@ -77,7 +77,7 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   attach → restore → `ON_CREATE`); la ubicación en segundo plano ahora se
   pide por separado de la de primer plano (regla de Android 11+, con
   explicación en español) y el estado del widget persiste al reiniciar la
-  app. Esta versión ya muestra los Términos v1.3, así que vuelve a pedir
+  app. Esta versión ya muestra los Términos v1.4, así que vuelve a pedir
   «Acepto» una vez al actualizar.
 - **Modo prueba** (v0.3.3, solo Admin): simula estar junto a un semáforo
   para probar el widget, el LED y la cuenta regresiva sin manejar. Se
@@ -127,6 +127,15 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   (28 dp en la barra completa, 16 dp en la píldora) que se apaga poco
   a poco hacia adentro. El centro queda libre para el número y los
   botones.
+- **Términos v1.4 + Aviso de Privacidad v1.1** (v1.1.3): reglas del
+  ranking semanal (§7 Ter: mérito, no sorteo; premios $300/$200/$100;
+  15 días para reclamar; descalificación por farming), verificación de
+  licencia de chofer (dato sensible, se borra tras revisarla, máximo
+  30 días), términos de la suscripción Plus (pago por Google Play,
+  renovación automática, cancelación desde Play) y notificación de
+  brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
+  pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
+  la revisión de un abogado antes del lanzamiento público.
 
 ## Roles y login con Google (v1.1: implementado; falta crear el proyecto)
 
@@ -186,11 +195,11 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.2) y las **101 pruebas unitarias
-pasan** (98 de v1.1.1 + 3 nuevas del degradado del LED), corridas
-con `run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de pruebas
-de Gradle se cae en este sandbox porque sus workers se comunican por
-sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.3) y las **101 pruebas unitarias
+pasan** (sin cambios de código respecto a v1.1.2, solo texto legal),
+corridas con `run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de
+pruebas de Gradle se cae en este sandbox porque sus workers se
+comunican por sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y
@@ -312,7 +321,7 @@ unidad real de AdMob. También cambia el ID de aplicación en
 ```
 android/
 ├── app/src/main/assets/semaforos_mty.geojson   # 1 579 semáforos (OSM, ODbL)
-├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.3 (verbatim)
+├── app/src/main/assets/terminos_y_condiciones.md # Términos v1.4 (verbatim)
 ├── app/src/main/java/com/alan/semaforosmx/
 │   ├── MainActivity.kt            # Puerta de términos + menú inferior
 │   ├── SemaforosMxApp.kt          # Inicialización (OSM + AdMob + seed)
