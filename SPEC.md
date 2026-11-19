@@ -9,7 +9,12 @@
 > **Repositorio del borrador:** https://github.com/4vazquez/app-semaforos
 > **Fecha de este documento:** 19 de noviembre de 2026 · **Versión:** 1.4
 >
-> **Cambios en v1.4 (19 nov 2026):** app v1.1.0 — login con Google
+> **Cambios en v1.4 (19 nov 2026):** app v1.1.1 — sello de verificación
+> junto al nombre (§6.9): palomita azul «Propietario» para el Admin
+> (solo Alan) y palomita verde «Colaborador verificado» para los
+> conductores con licencia de chofer verificada; el usuario común no
+> muestra sello. Solo presentación: los permisos reales se hacen
+> cumplir en Supabase con RLS. App v1.1.0 — login con Google
 > (Credential Manager / Google ID) y backend Supabase implementados:
 > sesión cifrada, roles `USER` / `COLLABORATOR` / `ADMIN` en la tabla
 > `users`, puertas en la app según el rol (§4.7, §6.9), esquema SQL con

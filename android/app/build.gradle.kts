@@ -35,8 +35,8 @@ android {
         applicationId = "com.alan.semaforosmx"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.1.0"
+        versionCode = 9
+        versionName = "1.1.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Configuración de Supabase + Google Sign-In (v1.1): se lee de

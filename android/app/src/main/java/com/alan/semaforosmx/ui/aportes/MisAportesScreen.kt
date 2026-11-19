@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alan.semaforosmx.R
+import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.data.model.ContributionHistoryEntry
 import com.alan.semaforosmx.data.model.HistoryKind
 import com.alan.semaforosmx.data.model.TrustLevel
@@ -46,6 +47,7 @@ import com.alan.semaforosmx.data.model.UserContribution
 import com.alan.semaforosmx.data.model.UserTrust
 import com.alan.semaforosmx.data.repository.InMemoryTimingRepository
 import com.alan.semaforosmx.data.repository.RepositoryProvider
+import com.alan.semaforosmx.ui.RoleBadge
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -70,6 +72,7 @@ fun MisAportesScreen(
     repoUserId: String?,
     supabaseConfigured: Boolean = false,
     isSignedIn: Boolean = true,
+    userRole: UserRole? = null,
     onSignInClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -123,7 +126,7 @@ fun MisAportesScreen(
             }
         }
         item {
-            ProgressCard(contribution)
+            ProgressCard(contribution, userRole)
         }
         item {
             TrustCard(trust)
@@ -154,7 +157,7 @@ fun MisAportesScreen(
 
 /** Tarjeta de progreso mensual + estado Colaborador. */
 @Composable
-private fun ProgressCard(contribution: UserContribution) {
+private fun ProgressCard(contribution: UserContribution, userRole: UserRole? = null) {
     val progress = (contribution.updateCount / UserContribution.AD_FREE_THRESHOLD.toFloat())
         .coerceIn(0f, 1f)
     Card(
@@ -169,10 +172,18 @@ private fun ProgressCard(contribution: UserContribution) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                text = stringResource(R.string.aportes_progress_title),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.aportes_progress_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (userRole != null) {
+                    RoleBadge(userRole)
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
             LinearProgressIndicator(
                 progress = { progress },

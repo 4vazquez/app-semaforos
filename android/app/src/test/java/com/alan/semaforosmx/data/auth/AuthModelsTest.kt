@@ -124,4 +124,21 @@ class AuthModelsTest {
         assertTrue(collaborator.isSignedIn)
         assertFalse(collaborator.isAdmin)
     }
+
+    // --- Sello de verificación (v1.1.1) ---
+
+    @Test
+    fun `Admin muestra la palomita azul de propietario`() {
+        assertEquals(VerifiedBadge.OWNER, UserRole.ADMIN.verifiedBadge())
+    }
+
+    @Test
+    fun `Colaborador muestra la palomita verde`() {
+        assertEquals(VerifiedBadge.COLLABORATOR, UserRole.COLLABORATOR.verifiedBadge())
+    }
+
+    @Test
+    fun `Usuario común no muestra sello`() {
+        assertEquals(VerifiedBadge.NONE, UserRole.USER.verifiedBadge())
+    }
 }

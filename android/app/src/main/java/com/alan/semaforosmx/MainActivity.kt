@@ -443,6 +443,7 @@ class MainActivity : ComponentActivity() {
                     repoUserId = repoUserId,
                     supabaseConfigured = RepositoryProvider.useSupabase,
                     isSignedIn = authState.isSignedIn,
+                    userRole = authState.user?.role,
                     onSignInClick = { screen = AppScreen.SETTINGS },
                     modifier = Modifier.padding(padding)
                 )

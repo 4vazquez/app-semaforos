@@ -121,6 +121,10 @@
     <string name="role_user">Usuario</string>
     <string name="role_collaborator">Colaborador</string>
     <string name="role_admin">Administrador</string>
+    <string name="badge_owner">Propietario</string>
+    <string name="badge_owner_desc">Propietario verificado</string>
+    <string name="badge_collaborator">Colaborador verificado</string>
+    <string name="badge_collaborator_desc">Colaborador verificado</string>
     <string name="login_required_toast">Inicia sesión para aportar</string>
     <string name="aportes_login_title">Inicia sesión para ver tus aportes</string>
     <string name="aportes_login_body">Tus aportes, tu progreso hacia Colaborador y tu confianza viven en tu cuenta. Inicia sesión con Google para verlos aquí.</string>

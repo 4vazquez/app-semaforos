@@ -44,6 +44,7 @@ import com.alan.semaforosmx.BuildConfig
 import com.alan.semaforosmx.R
 import com.alan.semaforosmx.data.auth.AuthState
 import com.alan.semaforosmx.data.auth.UserRole
+import com.alan.semaforosmx.ui.RoleBadge
 import com.alan.semaforosmx.ui.contact.ContactEmail
 
 /**
@@ -141,10 +142,16 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 val user = authState.user
                 if (user != null) {
-                    Text(
-                        text = user.displayName ?: user.email,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = user.displayName ?: user.email,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        RoleBadge(user.role)
+                    }
                     Text(
                         text = user.email,
                         style = MaterialTheme.typography.bodyMedium,

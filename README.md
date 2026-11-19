@@ -115,6 +115,12 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   `local.properties`). ⚠️ El SQL no se ha ejecutado todavía contra un
   proyecto real de Supabase: la primera ejecución en el SQL Editor es
   la prueba de fuego.
+- **Sello de verificación** (v1.1.1): palomita azul «Propietario» junto
+  al nombre del Admin (solo Alan) y palomita verde «Colaborador
+  verificado» para los conductores con licencia de chofer verificada,
+  visibles en Ajustes (tarjeta de Cuenta) y en Mis aportes. El usuario
+  común no muestra sello. Es solo presentación: los permisos reales se
+  hacen cumplir en Supabase con RLS.
 
 ## Roles y login con Google (v1.1: implementado; falta crear el proyecto)
 
@@ -174,8 +180,11 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.0) y las **95 pruebas unitarias
-pasan** (85 de v1.0.0 + 10 nuevas de autenticación y roles). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.1) y las **98 pruebas unitarias
+pasan** (95 de v1.1.0 + 3 nuevas del sello de verificación), corridas
+con `run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de pruebas
+de Gradle se cae en este sandbox porque sus workers se comunican por
+sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

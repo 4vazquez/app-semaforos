@@ -31,6 +31,29 @@ enum class UserRole {
     }
 }
 
+/**
+ * Sello de verificación que se muestra junto al nombre (v1.1.1, SPEC §6.9).
+ * Es solo presentación: la separación real de permisos se hace cumplir
+ * en Supabase con RLS, no con este sello.
+ */
+enum class VerifiedBadge {
+    /** Sin sello (usuario común). */
+    NONE,
+
+    /** Palomita verde: conductor con licencia de chofer verificada. */
+    COLLABORATOR,
+
+    /** Palomita azul: propietario de la app (solo Alan). */
+    OWNER
+}
+
+/** ¿Qué sello muestra este rol junto al nombre? */
+fun UserRole.verifiedBadge(): VerifiedBadge = when (this) {
+    UserRole.ADMIN -> VerifiedBadge.OWNER
+    UserRole.COLLABORATOR -> VerifiedBadge.COLLABORATOR
+    UserRole.USER -> VerifiedBadge.NONE
+}
+
 /** Usuario autenticado (fila de `users` + datos de Google). */
 data class AppUser(
     /** UUID de Supabase Auth (`auth.users.id`). */
