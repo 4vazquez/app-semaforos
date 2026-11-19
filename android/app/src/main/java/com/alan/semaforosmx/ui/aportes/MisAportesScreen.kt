@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -66,21 +67,29 @@ import java.util.Locale
  */
 @Composable
 fun MisAportesScreen(
-    userId: String,
+    repoUserId: String?,
+    supabaseConfigured: Boolean = false,
+    isSignedIn: Boolean = true,
+    onSignInClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Sin login (con Supabase) no hay aportes que mostrar: cada quien ve
+    // solo los suyos (SPEC §6.9). Se invita a iniciar sesión.
+    val needsLogin = supabaseConfigured && !isSignedIn
+    val effectiveUserId = repoUserId ?: ""
     var contribution by remember {
-        mutableStateOf(UserContribution(userId, InMemoryTimingRepository.currentMonth()))
+        mutableStateOf(UserContribution(effectiveUserId, InMemoryTimingRepository.currentMonth()))
     }
-    var trust by remember { mutableStateOf(UserTrust(userId)) }
+    var trust by remember { mutableStateOf(UserTrust(effectiveUserId)) }
     var history by remember { mutableStateOf<List<ContributionHistoryEntry>>(emptyList()) }
 
-    LaunchedEffect(userId) {
+    LaunchedEffect(repoUserId) {
+        val uid = repoUserId ?: return@LaunchedEffect
         val repo = RepositoryProvider.repository
         val month = InMemoryTimingRepository.currentMonth()
-        contribution = repo.contributionFor(userId, month)
-        trust = repo.userTrust(userId)
-        history = repo.contributionHistory(userId)
+        contribution = repo.contributionFor(uid, month)
+        trust = repo.userTrust(uid)
+        history = repo.contributionHistory(uid)
     }
 
     LazyColumn(
@@ -89,6 +98,30 @@ fun MisAportesScreen(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        if (needsLogin) {
+            item {
+                Card(
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(
+                            text = stringResource(R.string.aportes_login_title),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.aportes_login_body),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(onClick = onSignInClick) {
+                            Text(text = stringResource(R.string.account_sign_in))
+                        }
+                    }
+                }
+            }
+        }
         item {
             ProgressCard(contribution)
         }

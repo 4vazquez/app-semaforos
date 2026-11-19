@@ -47,10 +47,16 @@ import retrofit2.http.Query
  * inserta los reportes y calcula los conteos en el cliente. La agregación
  * oficial (mediana ponderada por confianza) también vive en la base de
  * datos en v1; `light_timings` ya trae el resultado agregado.
+ *
+ * Autenticación (v1.1): el interceptor usa el JWT del usuario cuando hay
+ * sesión ([tokenProvider]) y la clave anónima cuando no. RLS decide qué
+ * ve cada uno: sin login solo se leen los datos públicos (semáforos no
+ * retirados, tiempos agregados) y los syncs anónimos del Mapa.
  */
 class SupabaseTimingRepository(
     supabaseUrl: String,
-    supabaseAnonKey: String
+    supabaseAnonKey: String,
+    private val tokenProvider: () -> String? = { null }
 ) : TimingRepository {
 
     private val api: SupabaseApi
@@ -61,7 +67,7 @@ class SupabaseTimingRepository(
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .addHeader("apikey", supabaseAnonKey)
-                    .addHeader("Authorization", "Bearer $supabaseAnonKey")
+                    .addHeader("Authorization", "Bearer ${tokenProvider() ?: supabaseAnonKey}")
                     .build()
                 chain.proceed(request)
             }
@@ -204,11 +210,11 @@ class SupabaseTimingRepository(
         month: String,
         lightId: String
     ): UserContribution {
-        val current = api.contributionFor("eq.$userId", "eq.$month").firstOrNull()
-        val lightIds = (current?.lightIds.orEmpty() + lightId).distinct()
-        val updated = UserContribution(userId, month, updateCount = lightIds.size)
-        api.upsertContribution(ContributionRow(userId, month, lightIds))
-        return updated
+        // La cuota la acredita el servidor: el trigger after_timing_report
+        // agrega el semáforo a user_contributions al insertar el reporte
+        // (el cliente no tiene permiso de escritura en esa tabla, por RLS).
+        // Aquí solo se re-lee el estado actual.
+        return contributionFor(userId, month)
     }
 
     override suspend fun userTrust(userId: String): UserTrust {

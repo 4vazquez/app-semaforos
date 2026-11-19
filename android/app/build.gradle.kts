@@ -35,9 +35,30 @@ android {
         applicationId = "com.alan.semaforosmx"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.0.0"
+        versionCode = 8
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Configuración de Supabase + Google Sign-In (v1.1): se lee de
+        // android/local.properties (nunca se sube a git). Sin estos
+        // valores la app funciona en modo local anónimo.
+        val localProps = Properties()
+        val localPropsFile = rootProject.file("local.properties")
+        if (localPropsFile.exists()) {
+            localPropsFile.inputStream().use { localProps.load(it) }
+        }
+        buildConfigField(
+            "String", "SUPABASE_URL",
+            "\"${localProps.getProperty("SUPABASE_URL", "")}\""
+        )
+        buildConfigField(
+            "String", "SUPABASE_ANON_KEY",
+            "\"${localProps.getProperty("SUPABASE_ANON_KEY", "")}\""
+        )
+        buildConfigField(
+            "String", "GOOGLE_SERVER_CLIENT_ID",
+            "\"${localProps.getProperty("GOOGLE_SERVER_CLIENT_ID", "")}\""
+        )
     }
 
     signingConfigs {
@@ -142,6 +163,14 @@ dependencies {
 
     // Anuncios: banner AdMob (ID de prueba en el MVP).
     implementation("com.google.android.gms:play-services-ads:23.4.0")
+
+    // Login con Google (v1.1): Credential Manager + Google ID.
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    // Sesión cifrada en el teléfono (v1.1).
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Tests
     testImplementation("junit:junit:4.13.2")

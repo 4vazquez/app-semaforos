@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +53,9 @@ import androidx.core.content.ContextCompat
 import com.alan.semaforosmx.ads.AdsManager
 import com.alan.semaforosmx.ads.BannerAd
 import com.alan.semaforosmx.data.UserIdentity
+import com.alan.semaforosmx.data.auth.AuthManager
+import com.alan.semaforosmx.data.auth.AuthState
+import com.alan.semaforosmx.data.auth.RoleGate
 import com.alan.semaforosmx.data.legal.TermsAcceptance
 import com.alan.semaforosmx.data.model.LightStatus
 import com.alan.semaforosmx.data.model.NewLightStatus
@@ -277,11 +281,27 @@ class MainActivity : ComponentActivity() {
                     .getBoolean(TEST_MODE_PREF_KEY, false)
             )
         }
-        val userId = remember { UserIdentity.get(context) }
+        // Sesión de Google/Supabase (v1.1): sin login, el mapa y la alerta
+        // funcionan igual; aportar exige login cuando hay Supabase.
+        val authState by AuthManager.authState.collectAsState()
+        // ID para el repositorio: con Supabase es el ID de la cuenta de
+        // Google (null sin login: syncs anónimos del Mapa); en modo local
+        // es el ID anónimo del dispositivo.
+        val repoUserId: String? = if (RepositoryProvider.useSupabase) {
+            authState.user?.id
+        } else {
+            UserIdentity.get(context)
+        }
 
         // Estado del actualizador propio (solo build sideload).
         var updateState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Hidden) }
         val updateScope = rememberCoroutineScope()
+
+        // Puerta de correcciones del mapa: sin login, avisar e ir a Ajustes.
+        val onRequireLogin: () -> Unit = {
+            updateScope.launch { showToast(R.string.login_required_toast) }
+            screen = AppScreen.SETTINGS
+        }
 
         LaunchedEffect(Unit) {
             termsText = withContext(Dispatchers.IO) {
@@ -414,15 +434,20 @@ class MainActivity : ComponentActivity() {
         ) { padding ->
             when (screen) {
                 AppScreen.MAP -> MapTabContent(
-                    userId = userId,
+                    repoUserId = repoUserId,
+                    authState = authState,
+                    onRequireLogin = onRequireLogin,
                     modifier = Modifier.padding(padding)
                 )
                 AppScreen.APORTES -> MisAportesScreen(
-                    userId = userId,
+                    repoUserId = repoUserId,
+                    supabaseConfigured = RepositoryProvider.useSupabase,
+                    isSignedIn = authState.isSignedIn,
+                    onSignInClick = { screen = AppScreen.SETTINGS },
                     modifier = Modifier.padding(padding)
                 )
                 AppScreen.ALERTAS -> AlertasScreen(
-                    userId = userId,
+                    userId = repoUserId,
                     widgetActive = widgetActive,
                     hasBackgroundLocation =
                         Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
@@ -456,6 +481,20 @@ class MainActivity : ComponentActivity() {
                         ).edit().putBoolean("vibration_enabled", enabled).apply()
                     },
                     onTermsClick = { screen = AppScreen.TERMS_VIEW },
+                    authState = authState,
+                    onSignInClick = {
+                        updateScope.launch { AuthManager.signIn(this@MainActivity) }
+                    },
+                    onSignOutClick = { AuthManager.signOut() },
+                    onDeleteAccountClick = {
+                        updateScope.launch {
+                            val ok = AuthManager.deleteAccount()
+                            showToast(
+                                if (ok) R.string.account_deleted
+                                else R.string.account_delete_failed
+                            )
+                        }
+                    },
                     devUnlocked = devUnlocked,
                     onDevUnlock = {
                         devUnlocked = true
@@ -571,7 +610,9 @@ class MainActivity : ComponentActivity() {
      */
     @Composable
     private fun MapTabContent(
-        userId: String,
+        repoUserId: String?,
+        authState: AuthState,
+        onRequireLogin: () -> Unit,
         modifier: Modifier = Modifier
     ) {
         val context = this
@@ -584,20 +625,32 @@ class MainActivity : ComponentActivity() {
         var selectedRemovalCount by remember { mutableIntStateOf(0) }
         var selectedAlreadyReported by remember { mutableStateOf(false) }
 
+        // Corregir el mapa (agregar / reportar retiro) exige login con
+        // Supabase; el sync desde el Mapa no (SPEC §4.7).
+        val canCorrect = RoleGate.canCorrectMap(
+            authState.user, RepositoryProvider.useSupabase
+        )
+
         suspend fun refresh() {
             val cityLights = withContext(Dispatchers.IO) {
                 RepositoryProvider.repository.lightsInCity("Monterrey")
             }
-            val current = withContext(Dispatchers.IO) {
-                RepositoryProvider.repository.contributionFor(
-                    userId, InMemoryTimingRepository.currentMonth()
-                )
+            val current = if (repoUserId != null) {
+                withContext(Dispatchers.IO) {
+                    RepositoryProvider.repository.contributionFor(
+                        repoUserId, InMemoryTimingRepository.currentMonth()
+                    )
+                }
+            } else {
+                UserContribution("", InMemoryTimingRepository.currentMonth())
             }
             lights = cityLights
             contribution = current
         }
 
         LaunchedEffect(Unit) { refresh() }
+        // Al iniciar sesión, el ID cambia (dispositivo → cuenta): refrescar.
+        LaunchedEffect(repoUserId) { refresh() }
 
         // Al abrir el detalle de un semáforo, cargar sus reportes de retiro.
         LaunchedEffect(selectedLight) {
@@ -605,8 +658,12 @@ class MainActivity : ComponentActivity() {
             selectedRemovalCount = withContext(Dispatchers.IO) {
                 RepositoryProvider.repository.removalCount(light.id)
             }
-            selectedAlreadyReported = withContext(Dispatchers.IO) {
-                RepositoryProvider.repository.hasReportedRemoval(light.id, userId)
+            selectedAlreadyReported = if (repoUserId != null) {
+                withContext(Dispatchers.IO) {
+                    RepositoryProvider.repository.hasReportedRemoval(light.id, repoUserId)
+                }
+            } else {
+                false
             }
         }
 
@@ -617,25 +674,29 @@ class MainActivity : ComponentActivity() {
             TrafficLightMap(
                 lights = lights,
                 onMapLongPress = { lat, lon ->
-                    scope.launch {
-                        val canAdd = withContext(Dispatchers.IO) {
-                            RepositoryProvider.repository.canSubmitNewLight(userId)
-                        }
-                        if (!canAdd) {
-                            showToast(R.string.daily_cap_reached)
-                            return@launch
-                        }
-                        withContext(Dispatchers.IO) {
-                            RepositoryProvider.repository.addLight(
-                                TrafficLight(
-                                    latitude = lat,
-                                    longitude = lon,
-                                    reportedBy = userId
+                    if (!canCorrect || repoUserId == null) {
+                        onRequireLogin()
+                    } else {
+                        scope.launch {
+                            val canAdd = withContext(Dispatchers.IO) {
+                                RepositoryProvider.repository.canSubmitNewLight(repoUserId)
+                            }
+                            if (!canAdd) {
+                                showToast(R.string.daily_cap_reached)
+                                return@launch
+                            }
+                            withContext(Dispatchers.IO) {
+                                RepositoryProvider.repository.addLight(
+                                    TrafficLight(
+                                        latitude = lat,
+                                        longitude = lon,
+                                        reportedBy = repoUserId
+                                    )
                                 )
-                            )
+                            }
+                            refresh()
+                            showToast(R.string.light_added)
                         }
-                        refresh()
-                        showToast(R.string.light_added)
                     }
                 },
                 onMarkerClick = { light -> selectedLight = light },
@@ -672,12 +733,16 @@ class MainActivity : ComponentActivity() {
                 ) {
                     SyncVerdeButton(
                         onSync = {
-                            scope.launch { submitSyncFromApp(userId) { refresh() } }
+                            scope.launch { submitSyncFromApp(repoUserId) { refresh() } }
                         }
                     )
                     AquiHaySemaforoButton(
                         onReport = {
-                            scope.launch { submitAquiHaySemaforo(userId) { refresh() } }
+                            if (!canCorrect || repoUserId == null) {
+                                onRequireLogin()
+                            } else {
+                                scope.launch { submitAquiHaySemaforo(repoUserId) { refresh() } }
+                            }
                         }
                     )
                 }
@@ -687,7 +752,11 @@ class MainActivity : ComponentActivity() {
                 }
                 TextButton(
                     onClick = {
-                        scope.launch { submitYaNoExiste(userId, null) { refresh() } }
+                        if (!canCorrect || repoUserId == null) {
+                            onRequireLogin()
+                        } else {
+                            scope.launch { submitYaNoExiste(repoUserId, null) { refresh() } }
+                        }
                     }
                 ) {
                     Text(stringResource(R.string.ya_no_existe))
@@ -740,7 +809,11 @@ class MainActivity : ComponentActivity() {
                         enabled = !selectedAlreadyReported,
                         onClick = {
                             selectedLight = null
-                            scope.launch { submitYaNoExiste(userId, light) { refresh() } }
+                            if (!canCorrect || repoUserId == null) {
+                                onRequireLogin()
+                            } else {
+                                scope.launch { submitYaNoExiste(repoUserId, light) { refresh() } }
+                            }
                         }
                     ) {
                         Text(stringResource(R.string.report_removed))
@@ -778,9 +851,11 @@ class MainActivity : ComponentActivity() {
     /**
      * Sync verde desde la app: fix GPS fresco, semáforo más cercano (40 m),
      * verificación de proximidad y registro del reporte. Solo cuenta para
-     * la cuota si el reporte fue aceptado.
+     * la cuota si el reporte fue aceptado. Sin login ([userId] null, solo
+     * con Supabase), el reporte es anónimo: alimenta la agregación pero
+     * no acredita cuota (SPEC §4.7).
      */
-    private suspend fun submitSyncFromApp(userId: String, onDone: suspend () -> Unit) {
+    private suspend fun submitSyncFromApp(userId: String?, onDone: suspend () -> Unit) {
         val location = LocationHelper.getFreshLocation(this)
         if (location == null) {
             showToast(R.string.no_gps_fix)
@@ -812,9 +887,11 @@ class MainActivity : ComponentActivity() {
                 )
             )
             if (!acceptedReport) return@withContext SyncResult.Rejected
-            repo.recordContribution(
-                userId, InMemoryTimingRepository.currentMonth(), nearestLight.id
-            )
+            if (userId != null) {
+                repo.recordContribution(
+                    userId, InMemoryTimingRepository.currentMonth(), nearestLight.id
+                )
+            }
             SyncResult.Accepted
         }
         when (result) {

@@ -98,18 +98,33 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   Supabase NO están en esta versión**: su implementación quedó pendiente
   (ver «Roles y login» abajo) — la app v1.0.0 sigue siendo anónima y
   local, igual que v0.3.3 en ese aspecto.
+- **Login con Google + backend Supabase** (v1.1.0): inicio de sesión con
+  Google (Credential Manager / Google ID, sin SDK de Supabase: la app
+  canjea el ID token contra la API REST de GoTrue con el Retrofit que
+  ya traía), sesión cifrada en el teléfono, roles `USER` / `COLLABORATOR`
+  / `ADMIN` leídos de la tabla `users`, y puertas en la app según el
+  rol (sin login: mapa + alerta + Sync desde el Mapa; con login: sync
+  desde el widget, agregar y reportar semáforos, ver los aportes propios;
+  Admin: Modo prueba sin desbloquear nada). El esquema completo vive en
+  `supabase/001_schema.sql` (7 tablas, agregación en SQL, triggers
+  anti-abuso, RLS por rol, RPC `lights_near` con PostGIS y borrado de
+  cuenta) con seed de 1 579 semáforos (`seed_lights.py`). La app sin
+  configurar sigue funcionando en modo local anónimo; para activar el
+  backend, ver `supabase/README.md` (crear el proyecto, correr el SQL,
+  activar el proveedor Google y poner URL + claves en
+  `local.properties`). ⚠️ El SQL no se ha ejecutado todavía contra un
+  proyecto real de Supabase: la primera ejecución en el SQL Editor es
+  la prueba de fuego.
 
-## Roles y login con Google (documentado en v1.3, trabajo de backend en v1)
+## Roles y login con Google (v1.1: implementado; falta crear el proyecto)
 
 Aprobado por Alan el 18 nov 2026 (ver `SPEC.md` §4.7 y §6.9,
 `TERMINOS_Y_CONDICIONES.md` §7 Bis y `AVISO_DE_PRIVACIDAD.md`).
-**Nada de esto está aún en la app v1.0.0**, que sigue siendo anónima y
-local; es trabajo del backend real en v1 (Supabase). Su implementación
-quedó pendiente tras el intento de la noche del 18–19 nov 2026 (los
-trabajos de login y backend no pudieron completarse); cuando se retome
-harán falta: crear el proyecto Supabase y correr el SQL del esquema,
-crear el cliente OAuth de Google (Android + Web) y poner el client ID
-en `local.properties` (ver `SPEC.md` §4.7/§6.9 para el diseño).
+Implementado en v1.1.0 (noche del 18–19 nov 2026): el código de login y
+el esquema Supabase están en el repo. Para activarlo faltan los pasos
+de cuenta de Alan: crear el proyecto Supabase y correr el SQL del
+esquema, crear el cliente OAuth de Google (Android + Web) y poner el
+client ID en `local.properties` (ver `supabase/README.md`).
 
 - **Usuario común (sin login):** mapa + alerta del verde (+ Sync verde
   desde la pestaña Mapa, que alimenta la agregación pero no la cuota).
@@ -159,8 +174,8 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-23 MB, `com.alan.semaforosmx` v1.0.0) y las **85 pruebas unitarias
-pasan** (74 de v0.3.3 + 11 nuevas del selector de ubicación del mapa). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.0) y las **95 pruebas unitarias
+pasan** (85 de v1.0.0 + 10 nuevas de autenticación y roles). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

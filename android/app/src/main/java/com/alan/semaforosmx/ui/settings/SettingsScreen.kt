@@ -15,18 +15,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,10 +42,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.alan.semaforosmx.BuildConfig
 import com.alan.semaforosmx.R
+import com.alan.semaforosmx.data.auth.AuthState
+import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.ui.contact.ContactEmail
 
 /**
  * Contenido de Ajustes (una pestaña del menú inferior):
+ * - Cuenta (v1.1): inicio de sesión con Google, rol, cierre de sesión
+ *   y eliminación de cuenta.
  * - Vibración al avisar del verde (interruptor).
  * - Términos y Condiciones (reabre el texto completo).
  * - Contacto: correo del equipo (tocar para copiar) + botón «Escríbenos»
@@ -49,6 +57,7 @@ import com.alan.semaforosmx.ui.contact.ContactEmail
  * - Acerca de (qué es la app + atribución de OpenStreetMap).
  * - Versión de la app: 7 toques desbloquean las opciones de desarrollador
  *   (estilo Android). Solo tras el desbloqueo aparece el Modo prueba.
+ *   Con login, el Admin ve el Modo prueba sin desbloquear nada.
  *
  * Sin Scaffold ni barra superior propios: la barra superior y el menú
  * inferior los pone la actividad (el menú solo existe dentro de la app).
@@ -61,6 +70,10 @@ fun SettingsScreen(
     vibrationEnabled: Boolean,
     onVibrationChange: (Boolean) -> Unit,
     onTermsClick: () -> Unit,
+    authState: AuthState,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
     devUnlocked: Boolean,
     onDevUnlock: () -> Unit,
     testModeEnabled: Boolean,
@@ -72,6 +85,12 @@ fun SettingsScreen(
 
     /** Toques seguidos en la versión (7 desbloquean las opciones de desarrollador). */
     var versionTaps by remember { mutableIntStateOf(0) }
+
+    /** Confirmación de eliminación de cuenta. */
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    /** El Modo prueba lo ve el Admin con login o quien desbloqueó las opciones. */
+    val showDevOptions = devUnlocked || authState.isAdmin
 
     /** Copia el correo de contacto y confirma con un aviso. */
     fun copyEmail() {
@@ -108,6 +127,99 @@ fun SettingsScreen(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Cuenta: inicio de sesión con Google (v1.1). Sin login, el mapa
+        // y la alerta funcionan igual; para aportar hay que iniciar sesión.
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.account_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val user = authState.user
+                if (user != null) {
+                    Text(
+                        text = user.displayName ?: user.email,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = user.email,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(
+                            when (user.role) {
+                                UserRole.ADMIN -> R.string.role_admin
+                                UserRole.COLLABORATOR -> R.string.role_collaborator
+                                UserRole.USER -> R.string.role_user
+                            }
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onSignOutClick) {
+                            Text(text = stringResource(R.string.account_sign_out))
+                        }
+                        TextButton(onClick = { showDeleteDialog = true }) {
+                            Text(
+                                text = stringResource(R.string.account_delete),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.account_body),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    if (authState.loginAvailable) {
+                        Button(
+                            onClick = onSignInClick,
+                            enabled = !authState.isLoading
+                        ) {
+                            if (authState.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            Text(text = stringResource(R.string.account_sign_in))
+                        }
+                        authState.error?.let { error ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(
+                                    when (error) {
+                                        "google_sign_in_failed" ->
+                                            R.string.account_error_google
+                                        "supabase_sign_in_failed" ->
+                                            R.string.account_error_supabase
+                                        else -> R.string.account_error_generic
+                                    }
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.account_not_configured),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
         // Preferencias: vibración + Términos y Condiciones.
         Card(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -214,9 +326,7 @@ fun SettingsScreen(
 
         // Versión de la app: 7 toques seguidos desbloquean las opciones de
         // desarrollador (estilo «opciones de desarrollador» de Android).
-        // Sin login todavía, es la única forma de distinguir al Admin: en
-        // v1, con login de Google y roles, el Modo prueba se limitará al
-        // rol Admin y este desbloqueo desaparecerá.
+        // El Admin con login ve el Modo prueba sin desbloquear nada.
         Card(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             modifier = Modifier.fillMaxWidth()
@@ -264,8 +374,9 @@ fun SettingsScreen(
                     )
                 }
 
-                // Opciones de desarrollador: solo visibles tras el desbloqueo.
-                if (devUnlocked) {
+                // Opciones de desarrollador: solo visibles tras el desbloqueo
+                // o para el Admin con login.
+                if (showDevOptions) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
                     Text(
                         text = stringResource(R.string.dev_options_title),
@@ -297,5 +408,33 @@ fun SettingsScreen(
 
         // Espacio final para que la última tarjeta no quede pegada al menú.
         Spacer(modifier = Modifier.height(8.dp))
+    }
+
+    // Confirmación de eliminación de cuenta (Play lo exige): se borran
+    // los datos personales; los reportes quedan anonimizados.
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.account_delete_title)) },
+            text = { Text(stringResource(R.string.account_delete_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteAccountClick()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.account_delete_confirm),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.account_delete_cancel))
+                }
+            }
+        )
     }
 }

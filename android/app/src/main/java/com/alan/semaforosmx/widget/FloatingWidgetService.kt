@@ -38,6 +38,7 @@ import com.alan.semaforosmx.MainActivity
 import com.alan.semaforosmx.R
 import com.alan.semaforosmx.ads.AdsManager
 import com.alan.semaforosmx.data.UserIdentity
+import com.alan.semaforosmx.data.auth.AuthManager
 import com.alan.semaforosmx.data.aggregation.TimingAggregator
 import com.alan.semaforosmx.data.model.AntiAbuse
 import com.alan.semaforosmx.data.model.DayType
@@ -229,8 +230,28 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         MovementDetector(this) { startedAtMillis -> onVehicleStarted(startedAtMillis) }
     }
 
-    /** ID anónimo del usuario, ligado al dispositivo (ver UserIdentity). */
-    private val userId: String by lazy { UserIdentity.get(this) }
+    /**
+     * ID de usuario para los reportes, resuelto EN CADA USO (no en lazy):
+     * con Supabase es el ID de la cuenta de Google si hay sesión, o null
+     * si no (los reportes anónimos van con user_id nulo, como exige RLS);
+     * en modo local es el ID anónimo del dispositivo.
+     */
+    private fun currentUserId(): String? =
+        if (RepositoryProvider.useSupabase) AuthManager.cachedUserId()
+        else UserIdentity.get(this)
+
+    /** ¿El sync desde el widget exige login y no hay sesión? (SPEC §4.7.) */
+    private fun loginRequired(): Boolean =
+        RepositoryProvider.useSupabase && !AuthManager.isSignedInCached()
+
+    /** Avisa que hay que iniciar sesión y abre la app (Ajustes tiene el botón). */
+    private fun promptLogin() {
+        showServiceToast(R.string.login_required_toast)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
+    }
 
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     override val savedStateRegistry: SavedStateRegistry
@@ -433,22 +454,36 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
      * es raro y el tamaño cambia de todas formas).
      */
     private suspend fun refreshWidgetMode() {
+        // Sin login (con Supabase) no hay cuota que acreditar: solo LED.
+        if (loginRequired()) {
+            if (widgetMode != WidgetMode.LED_ONLY) {
+                widgetMode = WidgetMode.LED_ONLY
+                updateOverlaySize(WidgetMode.LED_ONLY)
+            }
+            return
+        }
+        val uid = currentUserId() ?: return
         val contribution = withContext(Dispatchers.IO) {
             RepositoryProvider.repository.contributionFor(
-                userId, InMemoryTimingRepository.currentMonth()
+                uid, InMemoryTimingRepository.currentMonth()
             )
         }
         val newMode = AdsManager.widgetMode(contribution)
         if (newMode == widgetMode) return
         widgetMode = newMode
+        updateOverlaySize(newMode)
+    }
+
+    /** Ajusta el tamaño y la posición de la ventana del overlay al modo. */
+    private fun updateOverlaySize(mode: WidgetMode) {
         val view = overlayView ?: return
         val params = overlayParams ?: return
         val density = resources.displayMetrics.density
-        val (widthDp, heightDp) = widgetWindowSizeDp(newMode)
+        val (widthDp, heightDp) = widgetWindowSizeDp(mode)
         params.width = (widthDp * density).toInt()
         params.height = (heightDp * density).toInt()
         val screenWidthPx = resources.displayMetrics.widthPixels
-        val (xDp, yDp) = widgetWindowPositionDp(newMode, screenWidthPx, density)
+        val (xDp, yDp) = widgetWindowPositionDp(mode, screenWidthPx, density)
         params.x = (xDp * density).toInt()
         params.y = (yDp * density).toInt()
         windowManager?.updateViewLayout(view, params)
@@ -734,6 +769,11 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             showServiceToast(R.string.test_mode_no_save)
             return
         }
+        // Sync desde el widget exige login con Supabase (SPEC §4.7).
+        if (loginRequired()) {
+            promptLogin()
+            return
+        }
         scope.launch {
             val light = nearestLight
             val location = lastLocation
@@ -743,6 +783,11 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             }
             if (location == null) {
                 showServiceToast(R.string.no_gps_fix)
+                return@launch
+            }
+            val uid = currentUserId()
+            if (uid == null) {
+                promptLogin()
                 return@launch
             }
             val check = GpsVerification.check(
@@ -766,12 +811,12 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                         dayType = InMemoryTimingRepository.currentDayType(),
                         source = ReportSource.MANUAL_SYNC,
                         gpsAccuracyMeters = location.accuracy,
-                        userId = userId
+                        userId = uid
                     )
                 )
                 if (ok) {
                     repo.recordContribution(
-                        userId, InMemoryTimingRepository.currentMonth(), light.id
+                        uid, InMemoryTimingRepository.currentMonth(), light.id
                     )
                 }
                 ok
@@ -801,10 +846,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             showServiceToast(R.string.test_mode_no_save)
             return
         }
+        // Agregar semáforos exige login con Supabase (SPEC §4.7).
+        if (loginRequired()) {
+            promptLogin()
+            return
+        }
         scope.launch {
             val location = LocationHelper.getFreshLocation(this@FloatingWidgetService)
             if (location == null) {
                 showServiceToast(R.string.no_gps_fix)
+                return@launch
+            }
+            val uid = currentUserId()
+            if (uid == null) {
+                promptLogin()
                 return@launch
             }
             val check = GpsVerification.check(location, null, null)
@@ -819,14 +874,14 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             val outcome = withContext(Dispatchers.IO) {
                 val repo = RepositoryProvider.repository
                 val result = repo.reportNewLightAt(
-                    location.latitude, location.longitude, userId, location.accuracy
+                    location.latitude, location.longitude, uid, location.accuracy
                 )
                 if ((result.status == NewLightStatus.CREATED ||
                         result.status == NewLightStatus.CONFIRMED_EXISTING) &&
                     result.light != null
                 ) {
                     repo.recordContribution(
-                        userId, InMemoryTimingRepository.currentMonth(), result.light.id
+                        uid, InMemoryTimingRepository.currentMonth(), result.light.id
                     )
                 }
                 result
@@ -885,7 +940,9 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     dayType = InMemoryTimingRepository.currentDayType(),
                     source = ReportSource.PASSIVE,
                     gpsAccuracyMeters = lastLocation?.accuracy ?: 50f,
-                    userId = userId
+                    // Anónimo sin login (null): RLS lo acepta y alimenta
+                    // la agregación sin acreditar cuota.
+                    userId = currentUserId()
                 )
             )
             if (accepted) lastPassiveReport = light.id to startedAtMillis

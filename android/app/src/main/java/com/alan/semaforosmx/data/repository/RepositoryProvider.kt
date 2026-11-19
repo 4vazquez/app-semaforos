@@ -2,35 +2,36 @@ package com.alan.semaforosmx.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.alan.semaforosmx.BuildConfig
 import com.alan.semaforosmx.data.GeoJsonLightsLoader
+import com.alan.semaforosmx.data.auth.AuthManager
 
 /**
  * Proveedor del repositorio activo.
  *
- * MVP: [InMemoryTimingRepository] (sin servidor), sembrado con los
- * 1 579 semáforos reales de Monterrey desde el GeoJSON de OpenStreetMap.
- *
- * Para activar Supabase en v1:
- * 1. Crear el proyecto en supabase.com y las tablas del SPEC.md §6.
- * 2. Poner la URL y la clave anónima en `local.properties`:
- *    SUPABASE_URL=https://xxxxx.supabase.co
- *    SUPABASE_ANON_KEY=eyJhbGciOi...
- * 3. Cambiar [USE_SUPABASE] a true.
- * 4. Importar el GeoJSON a la tabla `traffic_lights` (el `id` de cada
- *    semáforo es el ID del nodo de OSM, estable entre exportaciones).
+ * Modo local (sin configurar): [InMemoryTimingRepository], sembrado con
+ * los 1 579 semáforos reales de Monterrey desde el GeoJSON de
+ * OpenStreetMap. Modo Supabase (v1.1): si `local.properties` trae
+ * SUPABASE_URL y SUPABASE_ANON_KEY, se usa [SupabaseTimingRepository]
+ * con el JWT del usuario cuando hay sesión (RLS decide qué ve cada
+ * uno). Ver `supabase/README.md` para levantar el proyecto.
  */
 object RepositoryProvider {
 
     private const val TAG = "RepositoryProvider"
-    private const val USE_SUPABASE = false
 
-    // Se leen de BuildConfig cuando se configuren en local.properties (v1).
-    private const val SUPABASE_URL = ""
-    private const val SUPABASE_ANON_KEY = ""
+    /** ¿La app está conectada a Supabase? (URL + clave en local.properties). */
+    val useSupabase: Boolean
+        get() = BuildConfig.SUPABASE_URL.isNotBlank() &&
+            BuildConfig.SUPABASE_ANON_KEY.isNotBlank()
 
     val repository: TimingRepository by lazy {
-        if (USE_SUPABASE) {
-            SupabaseTimingRepository(SUPABASE_URL, SUPABASE_ANON_KEY)
+        if (useSupabase) {
+            SupabaseTimingRepository(
+                BuildConfig.SUPABASE_URL,
+                BuildConfig.SUPABASE_ANON_KEY,
+                tokenProvider = { AuthManager.cachedAccessToken() }
+            )
         } else {
             InMemoryTimingRepository()
         }

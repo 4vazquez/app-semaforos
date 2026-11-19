@@ -7,11 +7,20 @@
 > **Idea original:** Alan Vázquez · **Borrador inicial:** noviembre de 2025
 > (prototipo web con asistencia de GPT-5) ·
 > **Repositorio del borrador:** https://github.com/4vazquez/app-semaforos
-> **Fecha de este documento:** 19 de noviembre de 2026 · **Versión:** 1.3
+> **Fecha de este documento:** 19 de noviembre de 2026 · **Versión:** 1.4
+>
+> **Cambios en v1.4 (19 nov 2026):** app v1.1.0 — login con Google
+> (Credential Manager / Google ID) y backend Supabase implementados:
+> sesión cifrada, roles `USER` / `COLLABORATOR` / `ADMIN` en la tabla
+> `users`, puertas en la app según el rol (§4.7, §6.9), esquema SQL con
+> RLS y triggers anti-abuso en `supabase/001_schema.sql`, seed de
+> 1 579 semáforos. Pendiente: crear el proyecto Supabase y el cliente
+> OAuth de Google (ver `supabase/README.md`); sin esa configuración la
+> app sigue en modo local anónimo.
 >
 > **Cambios en v1.3 (19 nov 2026):** app v1.0.0 — logo nuevo y renovación
 > visual (esquema «semáforo» claro/oscuro), botón «Mi ubicación» en el
-> mapa. Los roles y el login con Google y el backend Supabase siguen
+> mapa. Los roles y el login con Google y el backend Supabase seguían
 > pendientes de implementación: la app v1.0.0 sigue siendo anónima y
 > local, sin cuentas.
 >

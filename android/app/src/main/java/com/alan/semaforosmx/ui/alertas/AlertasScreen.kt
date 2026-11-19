@@ -47,7 +47,7 @@ import com.alan.semaforosmx.widget.WidgetMode
  */
 @Composable
 fun AlertasScreen(
-    userId: String,
+    userId: String?,
     widgetActive: Boolean,
     hasBackgroundLocation: Boolean = true,
     onToggleWidget: () -> Unit,
@@ -56,8 +56,13 @@ fun AlertasScreen(
     var mode by remember { mutableStateOf(WidgetMode.LED_ONLY) }
 
     LaunchedEffect(userId) {
+        // Sin login (Supabase) no hay cuota: el widget es solo LED.
+        val uid = userId ?: run {
+            mode = WidgetMode.LED_ONLY
+            return@LaunchedEffect
+        }
         val contribution = RepositoryProvider.repository.contributionFor(
-            userId, InMemoryTimingRepository.currentMonth()
+            uid, InMemoryTimingRepository.currentMonth()
         )
         mode = AdsManager.widgetMode(contribution)
     }
