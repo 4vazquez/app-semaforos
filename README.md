@@ -121,6 +121,12 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   visibles en Ajustes (tarjeta de Cuenta) y en Mis aportes. El usuario
   común no muestra sello. Es solo presentación: los permisos reales se
   hacen cumplir en Supabase con RLS.
+- **LED en degradado** (v1.1.2): el borde luminoso del widget ahora es
+  intenso en la orilla y se difumina en degradado hacia el centro, con
+  una línea nítida de color en el borde exterior y una banda de luz
+  (28 dp en la barra completa, 16 dp en la píldora) que se apaga poco
+  a poco hacia adentro. El centro queda libre para el número y los
+  botones.
 
 ## Roles y login con Google (v1.1: implementado; falta crear el proyecto)
 
@@ -180,8 +186,8 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.1) y las **98 pruebas unitarias
-pasan** (95 de v1.1.0 + 3 nuevas del sello de verificación), corridas
+24.6 MB, `com.alan.semaforosmx` v1.1.2) y las **101 pruebas unitarias
+pasan** (98 de v1.1.1 + 3 nuevas del degradado del LED), corridas
 con `run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de pruebas
 de Gradle se cae en este sandbox porque sus workers se comunican por
 sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden

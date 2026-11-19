@@ -28,4 +28,5 @@ java -cp "$CP" org.junit.runner.JUnitCore \
   com.alan.semaforosmx.widget.WidgetModeTest \
   com.alan.semaforosmx.ui.map.MapLocationPickerTest \
   com.alan.semaforosmx.widget.TestModeTest \
-  com.alan.semaforosmx.data.auth.AuthModelsTest
+  com.alan.semaforosmx.data.auth.AuthModelsTest \
+  com.alan.semaforosmx.widget.LedBorderTest

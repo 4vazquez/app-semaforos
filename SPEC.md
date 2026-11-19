@@ -17,7 +17,9 @@
 > cumplir en Supabase con RLS. Ranking semanal de Colaboradores
 > diseñado (§6.10, SQL `supabase/004_ranking.sql`): top 3 con premios
 > de $300/$200/$100 por semana, opt-in con apodo; la UI llega en
-> v1.2. App v1.1.0 — login con Google
+> v1.2. App v1.1.2 — LED en degradado: el borde luminoso del widget es
+> intenso en la orilla y se difumina hacia el centro (línea nítida +
+> banda de luz que se apaga hacia adentro). App v1.1.0 — login con Google
 > (Credential Manager / Google ID) y backend Supabase implementados:
 > sesión cifrada, roles `USER` / `COLLABORATOR` / `ADMIN` en la tabla
 > `users`, puertas en la app según el rol (§4.7, §6.9), esquema SQL con
