@@ -7,11 +7,16 @@ import java.io.BufferedReader
 
 /**
  * Carga la base semilla de semáforos desde el GeoJSON exportado de
- * OpenStreetMap (overpass-turbo, 2025-11-16).
+ * OpenStreetMap (overpass-turbo, 2025-11-16; actualizada con Overpass
+ * el 2026-11-19).
  *
- * Fuente: `export (1).geojson` del borrador de Alan
- * (https://github.com/4vazquez/app-semaforos) — 1 579 semáforos del área
- * metropolitana de Monterrey (lat 25.57–25.83, lon −100.50 a −100.00).
+ * Fuente original: `export (1).geojson` del borrador de Alan
+ * (https://github.com/4vazquez/app-semaforos) — 1 579 semáforos del
+ * área metropolitana de Monterrey (lat 25.57–25.83, lon −100.50 a
+ * −100.00). Actualización 2026-11-19: consulta fresca a Overpass
+ * (1 607 nodos en OSM): +31 semáforos nuevos, coordenadas refrescadas
+ * para los existentes y 3 nodos ya ausentes en OSM conservados.
+ * Total: 1 610 semáforos.
  *
  * Licencia de los datos: OpenStreetMap, ODbL
  * (© OpenStreetMap contributors). La atribución se muestra en el mapa

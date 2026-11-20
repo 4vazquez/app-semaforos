@@ -136,6 +136,11 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Mapa actualizado con OSM fresco** (v1.1.8): consulta Overpass del
+  2026-11-19 sobre el área metropolitana de Monterrey. La base semilla
+  pasó de 1 579 a **1 610 semáforos** (+31 nuevos detectados en OSM
+  desde nov 2025, coordenadas refrescadas para los existentes; 3 nodos
+  ya ausentes en OSM se conservaron).
 - **Flujo de dos pasos para semáforos nuevos** (v1.1.7): en el widget,
   «Aquí hay un semáforo» ya no crea el semáforo de inmediato. Deja el
   widget en modo «LISTO PARA SYNC» con leyenda visible («Presiona SYNC
@@ -225,12 +230,11 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.7) y las **106 pruebas unitarias
-pasan** (flujo de dos pasos «listo para sync» para semáforos nuevos en
-el widget, con `PendingNewLightTracker`), corridas con
-`run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de pruebas de
-Gradle se cae en este sandbox porque sus workers se comunican por
-sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.8) y las **106 pruebas unitarias
+pasan** (base semilla actualizada a 1 610 semáforos con datos frescos
+de OSM), corridas con `run_tests_sandbox.sh` (JUnitCore directo: el
+ejecutor de pruebas de Gradle se cae en este sandbox porque sus
+workers se comunican por sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

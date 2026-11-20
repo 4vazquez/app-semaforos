@@ -24,7 +24,10 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.7 — flujo de dos pasos para semáforos nuevos en
+> cambian). App v1.1.8 — mapa de semáforos actualizado con datos
+> frescos de OpenStreetMap (consulta Overpass 2026-11-19): 1 610
+> semáforos en la base semilla (+31 nuevos, coordenadas refrescadas).
+> App v1.1.7 — flujo de dos pasos para semáforos nuevos en
 > el widget: «Aquí hay un semáforo» deja el widget en «LISTO PARA
 > SYNC» (leyenda visible, botón SYNC VERDE latiendo, botón CANCELAR;
 > se cancela solo a los 5 min) y el semáforo se crea recién al
