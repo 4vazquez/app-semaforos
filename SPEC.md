@@ -24,7 +24,10 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.9 — 2 semáforos nuevos verificados en Google
+> cambian). App v1.1.10 — 9 semáforos nuevos verificados en Google
+> Street View en la zona norte (Av. Aztlán, Av. Solidaridad y Av.
+> Rodrigo Gómez) agregados a la base semilla (1 621 en total).
+> App v1.1.9 — 2 semáforos nuevos verificados en Google
 > Street View (Av. Cumbres Elite / Paseo de los Leones y Carr. a
 > Colombia / Fidel Velázquez) agregados a la base semilla (1 612 en
 > total). App v1.1.8 — mapa de semáforos actualizado con datos

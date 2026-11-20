@@ -136,6 +136,11 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **9 semáforos nuevos en la zona norte** (v1.1.10): verificados en
+  Google Street View el 2026-11-20 en Av. Aztlán (4: No Reelección,
+  Las Rocas, Cabezada, Julio A. Roca), Av. Solidaridad (3: bajo el
+  metro, pórtico, OXXO) y Av. Rodrigo Gómez (2). Base semilla:
+  **1 621 semáforos**.
 - **2 semáforos nuevos verificados en Street View** (v1.1.9): Av.
   Cumbres Elite / Paseo de los Leones (pórtico) y Carr. a Colombia /
   Fidel Velázquez, verificados visualmente en Google Street View el
@@ -234,11 +239,12 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (20 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.9) y las **106 pruebas unitarias
-pasan** (base semilla con 1 612 semáforos, incluidos 2 verificados en
-Street View), corridas con `run_tests_sandbox.sh` (JUnitCore directo:
-el ejecutor de pruebas de Gradle se cae en este sandbox porque sus
-workers se comunican por sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.10) y las **106 pruebas unitarias
+pasan** (base semilla con 1 621 semáforos, incluidos 9 verificados en
+Street View en la zona norte), corridas con `run_tests_sandbox.sh`
+(JUnitCore directo: el ejecutor de pruebas de Gradle se cae en este
+sandbox porque sus workers se comunican por sockets TCP y Java no
+puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y
