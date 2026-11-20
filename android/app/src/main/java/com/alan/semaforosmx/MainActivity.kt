@@ -144,6 +144,7 @@ class MainActivity : ComponentActivity() {
     ) {
         markBackgroundLocationAsked()
         showBackgroundLocationRationale = false
+        backgroundLocationFlowDone = true
     }
 
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -153,14 +154,28 @@ class MainActivity : ComponentActivity() {
     /** Muestra el diálogo que explica por qué hace falta «todo el tiempo». */
     private var showBackgroundLocationRationale by mutableStateOf(false)
 
+    /**
+     * El flujo de ubicación en segundo plano (diálogo + resultado del
+     * sistema) terminó. Lo usa el flujo de permisos de primera ejecución
+     * para secuenciar: primero ubicación en segundo plano, después
+     * superposición.
+     */
+    private var backgroundLocationFlowDone by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestInitialPermissions()
+        // Los permisos se piden desde el inicio, pero DESPUÉS de aceptar
+        // los Términos (decisión de Alan, 2026-11-20): en una instalación
+        // nueva los pide onTermsAccepted; aquí solo si ya se aceptaron.
+        if (TermsAcceptance.isAccepted(this)) {
+            requestInitialPermissions()
+        }
         setContent {
             SemaforosMxTheme {
                 AppRoot(
                     onRequestOverlayPermission = { requestOverlayPermission() },
-                    hasOverlayPermission = { Settings.canDrawOverlays(this) }
+                    hasOverlayPermission = { Settings.canDrawOverlays(this) },
+                    onTermsAccepted = { requestInitialPermissions() }
                 )
             }
         }
@@ -248,7 +263,8 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun AppRoot(
         onRequestOverlayPermission: () -> Unit,
-        hasOverlayPermission: () -> Boolean
+        hasOverlayPermission: () -> Boolean,
+        onTermsAccepted: () -> Unit
     ) {
         val context = this
         var termsAccepted by remember {
@@ -322,6 +338,9 @@ class MainActivity : ComponentActivity() {
                 onAccept = {
                     TermsAcceptance.accept(context)
                     termsAccepted = true
+                    // Permisos primordiales desde el inicio (Alan,
+                    // 2026-11-20): justo después de aceptar los Términos.
+                    onTermsAccepted()
                 },
                 onDecline = { finish() }
             )
@@ -579,6 +598,7 @@ class MainActivity : ComponentActivity() {
                 onDismissRequest = {
                     markBackgroundLocationAsked()
                     showBackgroundLocationRationale = false
+                    backgroundLocationFlowDone = true
                 },
                 title = { Text(stringResource(R.string.background_location_title)) },
                 text = { Text(stringResource(R.string.background_location_body)) },
@@ -597,6 +617,7 @@ class MainActivity : ComponentActivity() {
                         onClick = {
                             markBackgroundLocationAsked()
                             showBackgroundLocationRationale = false
+                            backgroundLocationFlowDone = true
                         }
                     ) { Text(stringResource(R.string.background_location_later)) }
                 }

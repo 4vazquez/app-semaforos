@@ -136,6 +136,11 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Permisos primordiales desde el inicio** (v1.1.12, decisión de Alan
+  2026-11-20): justo después de aceptar los Términos, la app pide en
+  orden la ubicación en segundo plano («Permitir todo el tiempo») y la
+  superposición, una sola vez. Los permisos ya no quedan escondidos en
+  Alertas; esa pantalla queda solo como respaldo.
 - **Widget activado por defecto** (v1.1.11, decisión de Alan
   2026-11-20): el widget va encendido sin preguntarle al usuario — es
   la razón de ser de la app. El permiso de superposición se pide
@@ -245,9 +250,10 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (20 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.11) y las **106 pruebas unitarias
+24.6 MB, `com.alan.semaforosmx` v1.1.12) y las **106 pruebas unitarias
 pasan** (base semilla con 1 621 semáforos, incluidos 9 verificados en
-Street View en la zona norte; widget activado por defecto), corridas con
+Street View en la zona norte; widget activado por defecto; permisos
+primordiales pedidos desde el inicio), corridas con
 `run_tests_sandbox.sh`
 (JUnitCore directo: el ejecutor de pruebas de Gradle se cae en este
 sandbox porque sus workers se comunican por sockets TCP y Java no
