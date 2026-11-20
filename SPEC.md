@@ -24,7 +24,12 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.12 — permisos primordiales pedidos desde el inicio
+> cambian). App v1.1.13 — las leyendas de confirmación del widget
+> («Sync registrado, gracias», «Semáforo agregado…», «Este semáforo ya
+> se envió a revisión, ¡manda otro!») ahora se muestran DENTRO del
+> widget: los Toast desde segundo plano están bloqueados en Android 11+
+> y el conductor nunca las veía (reportado por Alan, 2026-11-20). App
+> v1.1.12 — permisos primordiales pedidos desde el inicio
 > (decisión de Alan, 2026-11-20): justo después de aceptar los Términos
 > se pide la ubicación en segundo plano y luego la superposición, en
 > orden y una sola vez; los permisos ya no quedan escondidos en Alertas.

@@ -1,5 +1,6 @@
 package com.alan.semaforosmx.widget
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -27,7 +28,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,6 +75,12 @@ import com.alan.semaforosmx.R
  * SYNC VERDE late para llamar la atención y el segundo botón pasa a
  * «CANCELAR». El semáforo se crea recién al presionar SYNC VERDE cuando
  * cambia a verde.
+ *
+ * Leyenda transitoria ([statusMessageResId]): confirmaciones y errores
+ * («Sync registrado, gracias», «Semáforo agregado…», «Este semáforo ya se
+ * envió a revisión, ¡manda otro!») mostradas DENTRO del widget. Los Toast
+ * desde segundo plano están bloqueados en Android 11+, así que el widget
+ * es el único lugar donde el conductor las puede ver.
  */
 @Composable
 fun WidgetOverlay(
@@ -87,7 +96,9 @@ fun WidgetOverlay(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     isTestMode: Boolean = false,
-    readyToSync: Boolean = false
+    readyToSync: Boolean = false,
+    statusMessageResId: Int? = null,
+    statusIsError: Boolean = false
 ) {
     when (mode) {
         WidgetMode.FULL -> FullWidgetOverlay(
@@ -102,7 +113,9 @@ fun WidgetOverlay(
             onClose = onClose,
             modifier = modifier,
             isTestMode = isTestMode,
-            readyToSync = readyToSync
+            readyToSync = readyToSync,
+            statusMessageResId = statusMessageResId,
+            statusIsError = statusIsError
         )
         WidgetMode.LED_ONLY -> LedOnlyWidgetOverlay(
             ledState = ledState,
@@ -146,7 +159,9 @@ private fun FullWidgetOverlay(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     isTestMode: Boolean = false,
-    readyToSync: Boolean = false
+    readyToSync: Boolean = false,
+    statusMessageResId: Int? = null,
+    statusIsError: Boolean = false
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         LedBorder(
@@ -190,6 +205,15 @@ private fun FullWidgetOverlay(
                         tint = Color.White
                     )
                 }
+            }
+
+            // Leyenda transitoria (confirmación/error) dentro del widget:
+            // los Toast desde segundo plano están bloqueados en Android 11+.
+            if (statusMessageResId != null) {
+                StatusLegend(
+                    resId = statusMessageResId,
+                    isError = statusIsError
+                )
             }
 
             // Botones apilados: grandes, de un toque, sin mirar.
@@ -270,6 +294,49 @@ private fun FullWidgetOverlay(
                     .padding(6.dp)
             )
         }
+    }
+}
+
+/**
+ * Leyenda transitoria dentro del widget: confirmaciones («Sync
+ * registrado, gracias», «Semáforo agregado…») en verde brillante y
+ * errores («Reporte no registrado…») en rojo brillante. Llamativa pero
+ * compacta y no invasiva: aparece ~1.5 s con un leve «pop» y se limpia
+ * sola (decisión de Alan, 2026-11-20).
+ */
+@Composable
+private fun StatusLegend(
+    resId: Int,
+    isError: Boolean,
+    modifier: Modifier = Modifier
+) {
+    // «Pop» de entrada: entra un poco más grande y se asienta, para que
+    // llame la atención sin ocupar más espacio ni estorbar.
+    val scale = remember { Animatable(0.85f) }
+    LaunchedEffect(resId) {
+        scale.snapTo(0.85f)
+        scale.animateTo(1f, animationSpec = tween(durationMillis = 160))
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .fillMaxWidth()
+            .scale(scale.value)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                (if (isError) Color(0xFFD50000) else Color(0xFF00C853))
+                    .copy(alpha = 0.95f)
+            )
+            .padding(horizontal = 6.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = stringResource(resId),
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

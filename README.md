@@ -136,6 +136,11 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Leyendas visibles dentro del widget** (v1.1.13): las confirmaciones
+  («Sync registrado, gracias», «Semáforo agregado…», «Este semáforo ya
+  se envió a revisión, ¡manda otro!») se muestran como leyenda
+  transitoria dentro del propio widget. Los Toast desde segundo plano
+  están bloqueados en Android 11+, por eso el conductor nunca las veía.
 - **Permisos primordiales desde el inicio** (v1.1.12, decisión de Alan
   2026-11-20): justo después de aceptar los Términos, la app pide en
   orden la ubicación en segundo plano («Permitir todo el tiempo») y la
@@ -250,11 +255,11 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (20 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.12) y las **106 pruebas unitarias
+24.6 MB, `com.alan.semaforosmx` v1.1.13) y las **106 pruebas unitarias
 pasan** (base semilla con 1 621 semáforos, incluidos 9 verificados en
 Street View en la zona norte; widget activado por defecto; permisos
-primordiales pedidos desde el inicio), corridas con
-`run_tests_sandbox.sh`
+primordiales pedidos desde el inicio; leyendas de confirmación dentro
+del widget), corridas con `run_tests_sandbox.sh`
 (JUnitCore directo: el ejecutor de pruebas de Gradle se cae en este
 sandbox porque sus workers se comunican por sockets TCP y Java no
 puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden

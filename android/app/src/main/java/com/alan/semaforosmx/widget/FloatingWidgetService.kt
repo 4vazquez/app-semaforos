@@ -115,6 +115,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         private const val PREF_OPACITY = "widget_opacity"
         private const val PREF_VIBRATION = "vibration_enabled"
 
+        /** Cuánto dura visible la leyenda transitoria del widget (ms).
+         *  Decisión de Alan (2026-11-20): 1–2 s cuando mucho. */
+        private const val STATUS_MESSAGE_MILLIS = 1500L
+
+        /** Mensajes del widget que son errores (leyenda roja, no verde). */
+        private val ERROR_STATUS_RES_IDS = setOf(
+            R.string.no_gps_fix,
+            R.string.gps_mock,
+            R.string.gps_stale,
+            R.string.gps_inaccurate,
+            R.string.must_be_near_light,
+            R.string.report_rejected
+        )
+
         /** Radio de detección de semáforos cercanos (metros). */
         const val DETECTION_RADIUS_METERS = 40.0
 
@@ -198,6 +212,15 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private val pendingNewLightTracker = PendingNewLightTracker()
     private var readyToSync by mutableStateOf(false)
     private var readyTimeoutJob: Job? = null
+    /**
+     * Leyenda transitoria DENTRO del widget (confirmaciones y errores).
+     * Reemplaza a los Toast para las acciones del widget: en Android 11+
+     * los Toast desde segundo plano están bloqueados y el conductor nunca
+     * los veía (reportado por Alan, 2026-11-20).
+     */
+    private var statusMessageResId by mutableStateOf<Int?>(null)
+    private var statusIsError by mutableStateOf(false)
+    private var statusMessageJob: Job? = null
     /** Inicio del ciclo de prueba actual (ms); el LED cicla cada 30 s. */
     private var testCycleStartMillis: Long = 0L
     /** Ubicación simulada (~30 m del semáforo de prueba). */
@@ -386,6 +409,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     mode = widgetMode,
                     isTestMode = isTestMode,
                     readyToSync = readyToSync,
+                    statusMessageResId = statusMessageResId,
+                    statusIsError = statusIsError,
                     onOpacityChange = { value ->
                         opacity = value
                         getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -757,6 +782,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     /** Toast desde el servicio (corre en el hilo principal del scope). */
     private fun showServiceToast(resId: Int) {
         Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
+        // Los Toast desde segundo plano están bloqueados en Android 11+:
+        // la confirmación visible va DENTRO del widget (leyenda).
+        showWidgetStatus(resId)
+    }
+
+    /** Muestra una leyenda transitoria dentro del widget (se limpia sola). */
+    private fun showWidgetStatus(resId: Int) {
+        statusMessageResId = resId
+        statusIsError = resId in ERROR_STATUS_RES_IDS
+        statusMessageJob?.cancel()
+        statusMessageJob = scope.launch {
+            delay(STATUS_MESSAGE_MILLIS)
+            statusMessageResId = null
+        }
     }
 
     /**
