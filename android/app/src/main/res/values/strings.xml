@@ -135,6 +135,11 @@
     <string name="continue_button">Continuar</string>
     <string name="add_light">Agregar semáforo aquí</string>
     <string name="light_added">Semáforo agregado. Necesita reportes para tener confianza.</string>
+    <string name="ready_to_sync_title">¡LISTO, GRACIAS A TI!</string>
+    <string name="ready_to_sync_hint">El semáforo se sincroniza cuando presiones SYNC VERDE al cambiar a verde</string>
+    <string name="cancel_new_light">CANCELAR</string>
+    <string name="new_light_cancelled">Reporte cancelado: no se creó ningún semáforo</string>
+    <string name="ready_sync_timeout">Se canceló el reporte: no se presionó SYNC VERDE a tiempo</string>
 
     <!-- Correcciones de mapa: "Aquí hay un semáforo" / "Ya no existe". -->
     <string name="aqui_hay_hint">¿El semáforo no está en el mapa? Presiona el botón naranja</string>

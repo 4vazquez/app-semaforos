@@ -24,7 +24,12 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.6 — confirmación visible en el widget al reportar
+> cambian). App v1.1.7 — flujo de dos pasos para semáforos nuevos en
+> el widget: «Aquí hay un semáforo» deja el widget en «LISTO PARA
+> SYNC» (leyenda visible, botón SYNC VERDE latiendo, botón CANCELAR;
+> se cancela solo a los 5 min) y el semáforo se crea recién al
+> presionar SYNC VERDE cuando cambia a verde, registrando el sync en
+> ese instante. App v1.1.6 — confirmación visible en el widget al reportar
 > («Aquí hay un semáforo» y «Sync verde» muestran aviso; antes solo
 > parpadeaba el LED). App v1.1.3 — Términos v1.4
 > y Aviso de Privacidad v1.1: reglas del ranking semanal (§7 Ter),

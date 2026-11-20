@@ -26,6 +26,7 @@ java -cp "$CP" org.junit.runner.JUnitCore \
   com.alan.semaforosmx.update.ReleaseParsingTest \
   com.alan.semaforosmx.update.VersionTest \
   com.alan.semaforosmx.widget.WidgetModeTest \
+  com.alan.semaforosmx.widget.PendingNewLightTrackerTest \
   com.alan.semaforosmx.ui.map.MapLocationPickerTest \
   com.alan.semaforosmx.widget.TestModeTest \
   com.alan.semaforosmx.data.auth.AuthModelsTest \

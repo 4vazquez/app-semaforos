@@ -187,6 +187,17 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     /** Modo prueba activo: ubicación y tiempos simulados, sin guardar nada. */
     private var isTestMode by mutableStateOf(false)
+
+    /**
+     * Semáforo nuevo «armado» desde el widget (flujo de dos pasos):
+     * el conductor presiona «Aquí hay un semáforo» detenido en rojo, el
+     * widget muestra «LISTO PARA SYNC» y el semáforo solo se crea cuando
+     * presiona «Sync verde» al cambiar a verde. Ver
+     * [PendingNewLightTracker].
+     */
+    private val pendingNewLightTracker = PendingNewLightTracker()
+    private var readyToSync by mutableStateOf(false)
+    private var readyTimeoutJob: Job? = null
     /** Inicio del ciclo de prueba actual (ms); el LED cicla cada 30 s. */
     private var testCycleStartMillis: Long = 0L
     /** Ubicación simulada (~30 m del semáforo de prueba). */
@@ -374,6 +385,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     opacity = opacity,
                     mode = widgetMode,
                     isTestMode = isTestMode,
+                    readyToSync = readyToSync,
                     onOpacityChange = { value ->
                         opacity = value
                         getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -415,6 +427,11 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     /** Quita el overlay de la pantalla (el servicio sigue vigilando). */
     private fun detachOverlay() {
+        // Si había un reporte armado («listo para sync»), se cancela en
+        // silencio: el conductor se alejó o abrió la app sin sincronizar.
+        if (pendingNewLightTracker.isArmed) {
+            cancelPendingNewLight(showToast = false)
+        }
         overlayView?.let { windowManager?.removeView(it) }
         overlayView = null
         overlayParams = null
@@ -769,6 +786,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             showServiceToast(R.string.test_mode_no_save)
             return
         }
+        // Hay un semáforo nuevo armado («listo para sync»): este toque en
+        // SYNC VERDE es el momento del cambio a verde — crea el semáforo
+        // en la ubicación guardada y registra el sync.
+        pendingNewLightTracker.current?.let { pending ->
+            onPendingSyncVerdePressed(pending)
+            return
+        }
         // Sync desde el widget exige login con Supabase (SPEC §4.7).
         if (loginRequired()) {
             promptLogin()
@@ -838,14 +862,22 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     }
 
     /**
-     * El conductor presionó "Aquí hay un semáforo": está detenido en un
-     * semáforo que la app no conoce. Se crea en la ubicación GPS actual
-     * (fix fresco obligatorio) y se registra el sync de verde.
+     * El conductor presionó «Aquí hay un semáforo»: está detenido en rojo
+     * en un semáforo que la app no conoce. Flujo de dos pasos: NO se crea
+     * el semáforo todavía — el widget queda en modo «listo para sync»
+     * (leyenda visible) y el semáforo se crea recién cuando el conductor
+     * presiona «Sync verde» al cambiar a verde (ver [onSyncVerdePressed]).
+     * Si ya estaba armado, este botón cancela el reporte pendiente.
      */
     private fun onAquiHaySemaforoPressed() {
         // En modo prueba los botones no guardan nada (ver onSyncVerdePressed).
         if (isTestMode) {
             showServiceToast(R.string.test_mode_no_save)
+            return
+        }
+        // Segundo toque mientras está armado = cancelar el reporte.
+        if (pendingNewLightTracker.isArmed) {
+            cancelPendingNewLight(showToast = true)
             return
         }
         // Agregar semáforos exige login con Supabase (SPEC §4.7).
@@ -873,10 +905,68 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 showServiceToast(R.string.report_rejected)
                 return@launch
             }
+            // Armar el reporte: se guarda la ubicación GPS actual y el
+            // widget muestra la leyenda «LISTO PARA SYNC». El semáforo se
+            // crea al presionar SYNC VERDE cuando cambie a verde.
+            val armed = pendingNewLightTracker.arm(
+                location.latitude, location.longitude, location.accuracy,
+                System.currentTimeMillis()
+            )
+            if (!armed) return@launch
+            readyToSync = true
+            scheduleReadyTimeout(pendingNewLightTracker.current)
+        }
+    }
+
+    /**
+     * Cancela el reporte armado (sin crear el semáforo). Si [showToast],
+     * avisa al conductor; al ocultar el widget se cancela en silencio.
+     */
+    private fun cancelPendingNewLight(showToast: Boolean) {
+        pendingNewLightTracker.cancel()
+        readyToSync = false
+        readyTimeoutJob?.cancel()
+        readyTimeoutJob = null
+        if (showToast) showServiceToast(R.string.new_light_cancelled)
+    }
+
+    /**
+     * Si el conductor no presiona SYNC VERDE en [READY_TIMEOUT], el
+     * reporte armado se cancela solo (no se crea ningún semáforo).
+     */
+    private fun scheduleReadyTimeout(armed: PendingNewLight?) {
+        readyTimeoutJob?.cancel()
+        readyTimeoutJob = scope.launch {
+            delay(PendingNewLightTracker.DEFAULT_TIMEOUT_MILLIS)
+            if (armed != null && pendingNewLightTracker.current == armed) {
+                cancelPendingNewLight(showToast = true)
+                showServiceToast(R.string.ready_sync_timeout)
+            }
+        }
+    }
+
+    /**
+     * El conductor presionó SYNC VERDE con un semáforo nuevo armado:
+     * crea el semáforo en la ubicación guardada y registra el sync de
+     * verde en este instante (el momento del cambio a verde).
+     */
+    private fun onPendingSyncVerdePressed(pending: PendingNewLight) {
+        scope.launch {
+            val uid = currentUserId()
+            if (uid == null) {
+                cancelPendingNewLight(showToast = false)
+                promptLogin()
+                return@launch
+            }
+            if (isSuspiciousJump()) {
+                cancelPendingNewLight(showToast = false)
+                showServiceToast(R.string.report_rejected)
+                return@launch
+            }
             val outcome = withContext(Dispatchers.IO) {
                 val repo = RepositoryProvider.repository
                 val result = repo.reportNewLightAt(
-                    location.latitude, location.longitude, uid, location.accuracy
+                    pending.latitude, pending.longitude, uid, pending.accuracyMeters
                 )
                 if ((result.status == NewLightStatus.CREATED ||
                         result.status == NewLightStatus.CONFIRMED_EXISTING) &&
@@ -888,14 +978,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 }
                 result
             }
+            cancelPendingNewLight(showToast = false)
             when (outcome.status) {
                 NewLightStatus.CREATED -> {
                     // El aporte puede haber completado la cuota Colaborador.
                     refreshWidgetMode()
                     ledState = LedState.GREEN
                     showCountdown = false
-                    // Confirmación visible: sin esto el conductor no sabe
-                    // si el reporte quedó registrado (solo veía el LED).
                     showServiceToast(R.string.light_added)
                 }
                 NewLightStatus.CONFIRMED_EXISTING -> {

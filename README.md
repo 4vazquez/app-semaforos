@@ -136,6 +136,15 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Flujo de dos pasos para semáforos nuevos** (v1.1.7): en el widget,
+  «Aquí hay un semáforo» ya no crea el semáforo de inmediato. Deja el
+  widget en modo «LISTO PARA SYNC» con leyenda visible («Presiona SYNC
+  VERDE cuando cambie a verde»), botón SYNC VERDE latiendo y botón
+  CANCELAR; se cancela solo a los 5 minutos. El semáforo se crea recién
+  al presionar SYNC VERDE en el cambio a verde, registrando el sync en
+  ese instante. Así el reporte de tiempo queda en el verde, no en el
+  rojo, y el conductor siempre ve confirmación de que el reporte quedó
+  armado.
 - **Confirmación visible en el widget** (v1.1.6): al presionar «Aquí hay
   un semáforo» o «Sync verde» desde el widget, la app ahora muestra un
   aviso de confirmación («Semáforo agregado…» / «Reporte registrado»),
@@ -216,12 +225,12 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.6) y las **101 pruebas unitarias
-pasan** (confirmación visible en el widget para «Aquí hay un semáforo»
-y «Sync verde»), corridas con `run_tests_sandbox.sh` (JUnitCore
-directo: el ejecutor de pruebas de Gradle se cae en este sandbox
-porque sus workers se comunican por sockets TCP y Java no puede
-abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.7) y las **106 pruebas unitarias
+pasan** (flujo de dos pasos «listo para sync» para semáforos nuevos en
+el widget, con `PendingNewLightTracker`), corridas con
+`run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de pruebas de
+Gradle se cae en este sandbox porque sus workers se comunican por
+sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

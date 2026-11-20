@@ -1,5 +1,10 @@
 package com.alan.semaforosmx.widget
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +27,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -58,6 +65,13 @@ import com.alan.semaforosmx.R
  * En modo prueba ([TestModeSimulator]) el widget lleva la marca «PRUEBA»
  * en la esquina y los botones están desactivados: nada de lo simulado se
  * guarda como aporte real.
+ *
+ * Modo «listo para sync» ([readyToSync]): el conductor está detenido en
+ * rojo en un semáforo que la app no conoce y ya presionó «Aquí hay un
+ * semáforo». El widget muestra la leyenda «LISTO PARA SYNC», el botón
+ * SYNC VERDE late para llamar la atención y el segundo botón pasa a
+ * «CANCELAR». El semáforo se crea recién al presionar SYNC VERDE cuando
+ * cambia a verde.
  */
 @Composable
 fun WidgetOverlay(
@@ -72,7 +86,8 @@ fun WidgetOverlay(
     onDrag: (Offset) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    isTestMode: Boolean = false
+    isTestMode: Boolean = false,
+    readyToSync: Boolean = false
 ) {
     when (mode) {
         WidgetMode.FULL -> FullWidgetOverlay(
@@ -86,7 +101,8 @@ fun WidgetOverlay(
             onDrag = onDrag,
             onClose = onClose,
             modifier = modifier,
-            isTestMode = isTestMode
+            isTestMode = isTestMode,
+            readyToSync = readyToSync
         )
         WidgetMode.LED_ONLY -> LedOnlyWidgetOverlay(
             ledState = ledState,
@@ -129,7 +145,8 @@ private fun FullWidgetOverlay(
     onDrag: (Offset) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    isTestMode: Boolean = false
+    isTestMode: Boolean = false,
+    readyToSync: Boolean = false
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         LedBorder(
@@ -178,57 +195,69 @@ private fun FullWidgetOverlay(
             // Botones apilados: grandes, de un toque, sin mirar.
             // En modo prueba están desactivados (además de la guarda del
             // servicio): nada de lo simulado se guarda.
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onSyncVerde,
-                    enabled = !isTestMode,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2E7D32),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.size(96.dp)
+            //
+            // Modo «listo para sync»: leyenda visible + SYNC VERDE latiendo
+            // (el semáforo se crea al presionarlo cuando cambie a verde) y
+            // el segundo botón pasa a CANCELAR. El slider de opacidad se
+            // oculta: detenido en rojo no hace falta y libera espacio.
+            if (readyToSync) {
+                ReadyToSyncContent(
+                    onSyncVerde = onSyncVerde,
+                    onCancel = onAquiHaySemaforo
+                )
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Button(
+                        onClick = onSyncVerde,
+                        enabled = !isTestMode,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2E7D32),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.size(96.dp)
+                    ) {
+                        Text(
+                            text = "SYNC\nVERDE",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Button(
+                        onClick = onAquiHaySemaforo,
+                        enabled = !isTestMode,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE65100),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.size(96.dp)
+                    ) {
+                        Text(
+                            text = "AQUÍ HAY\nSEMÁFORO",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Opacidad manual de los botones (solo Colaborador/Plus).
                     Text(
-                        text = "SYNC\nVERDE",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        text = "Opacidad",
+                        color = Color.White,
+                        fontSize = 11.sp
+                    )
+                    Slider(
+                        value = opacity,
+                        onValueChange = onOpacityChange,
+                        valueRange = 0.2f..1f,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-                Button(
-                    onClick = onAquiHaySemaforo,
-                    enabled = !isTestMode,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE65100),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.size(96.dp)
-                ) {
-                    Text(
-                        text = "AQUÍ HAY\nSEMÁFORO",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Opacidad manual de los botones (solo Colaborador/Plus).
-                Text(
-                    text = "Opacidad",
-                    color = Color.White,
-                    fontSize = 11.sp
-                )
-                Slider(
-                    value = opacity,
-                    onValueChange = onOpacityChange,
-                    valueRange = 0.2f..1f,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
 
@@ -239,6 +268,94 @@ private fun FullWidgetOverlay(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(6.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Contenido del widget en modo «listo para sync»: leyenda visible para
+ * que el conductor sepa que el reporte quedó armado, botón SYNC VERDE
+ * latiendo (se presiona cuando el semáforo cambie a verde) y botón
+ * CANCELAR para abortar sin crear nada.
+ */
+@Composable
+private fun ReadyToSyncContent(
+    onSyncVerde: () -> Unit,
+    onCancel: () -> Unit
+) {
+    // El botón SYNC VERDE late suavemente para llamar la atención sin
+    // mirar la pantalla: el conductor está detenido en rojo.
+    val transition = rememberInfiniteTransition(label = "readySyncPulse")
+    val scale by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 700),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "readySyncScale"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Leyenda de confirmación: el reporte quedó armado.
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF2E7D32).copy(alpha = 0.85f))
+                .padding(horizontal = 6.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.ready_to_sync_title),
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = stringResource(R.string.ready_to_sync_hint),
+                color = Color.White,
+                fontSize = 10.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Button(
+            onClick = onSyncVerde,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2E7D32),
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .size(96.dp)
+                .scale(scale)
+        ) {
+            Text(
+                text = "SYNC\nVERDE",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Button(
+            onClick = onCancel,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF616161),
+                contentColor = Color.White
+            ),
+            modifier = Modifier.size(96.dp, 40.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.cancel_new_light),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
             )
         }
     }
