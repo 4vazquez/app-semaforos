@@ -832,6 +832,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             // contó; en caso de rechazo el LED no miente).
             ledState = LedState.GREEN
             showCountdown = false
+            // Confirmación visible del sync (igual que en el Mapa).
+            showServiceToast(R.string.sync_recorded)
         }
     }
 
@@ -887,12 +889,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 result
             }
             when (outcome.status) {
-                NewLightStatus.CREATED,
-                NewLightStatus.CONFIRMED_EXISTING -> {
+                NewLightStatus.CREATED -> {
                     // El aporte puede haber completado la cuota Colaborador.
                     refreshWidgetMode()
                     ledState = LedState.GREEN
                     showCountdown = false
+                    // Confirmación visible: sin esto el conductor no sabe
+                    // si el reporte quedó registrado (solo veía el LED).
+                    showServiceToast(R.string.light_added)
+                }
+                NewLightStatus.CONFIRMED_EXISTING -> {
+                    refreshWidgetMode()
+                    ledState = LedState.GREEN
+                    showCountdown = false
+                    showServiceToast(R.string.light_confirmed)
                 }
                 NewLightStatus.ALREADY_REPORTED ->
                     showServiceToast(R.string.already_reported)

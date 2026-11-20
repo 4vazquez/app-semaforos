@@ -136,6 +136,11 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Confirmación visible en el widget** (v1.1.6): al presionar «Aquí hay
+  un semáforo» o «Sync verde» desde el widget, la app ahora muestra un
+  aviso de confirmación («Semáforo agregado…» / «Reporte registrado»),
+  igual que en el Mapa. Antes solo parpadeaba el LED y el conductor no
+  sabía si el reporte había quedado registrado.
 - **Renombre a Vía Verde** (v1.1.5): la app, los Términos (v1.7, con la
   cláusula de reducción de daño en §3 y en el resumen de «Acepto»), el
   Aviso de Privacidad (v1.2), la SPEC y el README ahora usan el nombre
@@ -211,11 +216,12 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (19 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.5) y las **101 pruebas unitarias
-pasan** (solo cambio de nombre en textos, sin cambios de lógica),
-corridas con `run_tests_sandbox.sh` (JUnitCore directo: el ejecutor de
-pruebas de Gradle se cae en este sandbox porque sus workers se
-comunican por sockets TCP y Java no puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
+24.6 MB, `com.alan.semaforosmx` v1.1.6) y las **101 pruebas unitarias
+pasan** (confirmación visible en el widget para «Aquí hay un semáforo»
+y «Sync verde»), corridas con `run_tests_sandbox.sh` (JUnitCore
+directo: el ejecutor de pruebas de Gradle se cae en este sandbox
+porque sus workers se comunican por sockets TCP y Java no puede
+abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden
 abrir sockets TCP (ni siquiera loopback), así que Gradle no puede usar su
 daemon ni descargar dependencias; la compilación aquí se hizo con un repo
 Maven local pre-descargado (`~/maven-repo`, vía `~/maven_resolve.py`) y

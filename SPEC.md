@@ -23,7 +23,10 @@
 > «Vía Verde» en toda la app y los documentos (Términos v1.7, Aviso
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
-> adminsemaforosmx@gmail.com no cambian). App v1.1.3 — Términos v1.4
+> com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
+> cambian). App v1.1.6 — confirmación visible en el widget al reportar
+> («Aquí hay un semáforo» y «Sync verde» muestran aviso; antes solo
+> parpadeaba el LED). App v1.1.3 — Términos v1.4
 > y Aviso de Privacidad v1.1: reglas del ranking semanal (§7 Ter),
 > verificación de licencia (dato sensible, se borra tras revisarla),
 > términos de la suscripción Plus y notificación de brechas (LFPDPPP
