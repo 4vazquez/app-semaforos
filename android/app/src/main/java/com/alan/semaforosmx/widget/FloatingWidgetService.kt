@@ -39,6 +39,7 @@ import com.alan.semaforosmx.R
 import com.alan.semaforosmx.ads.AdsManager
 import com.alan.semaforosmx.data.UserIdentity
 import com.alan.semaforosmx.data.auth.AuthManager
+import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.data.aggregation.TimingAggregator
 import com.alan.semaforosmx.data.model.AntiAbuse
 import com.alan.semaforosmx.data.model.DayType
@@ -273,6 +274,15 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private fun currentUserId(): String? =
         if (RepositoryProvider.useSupabase) AuthManager.cachedUserId()
         else UserIdentity.get(this)
+
+    /**
+     * ¿El usuario actual es ADMIN (solo Alan)? Privilegios totales:
+     * puede probar con ubicación simulada (fake GPS) — se saltan la
+     * verificación GPS y la detección de saltos sospechosos.
+     */
+    private fun isAdmin(): Boolean =
+        RepositoryProvider.useSupabase &&
+            AuthManager.cachedUserRole() == UserRole.ADMIN
 
     /** ¿El sync desde el widget exige login y no hay sesión? (SPEC §4.7.) */
     private fun loginRequired(): Boolean =
@@ -854,13 +864,14 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 return@launch
             }
             val check = GpsVerification.check(
-                location, light.latitude, light.longitude
+                location, light.latitude, light.longitude,
+                bypassAntiAbuse = isAdmin()
             )
             if (check != GpsVerification.Check.OK) {
                 showServiceToast(GpsVerification.messageRes(check))
                 return@launch
             }
-            if (isSuspiciousJump()) {
+            if (!isAdmin() && isSuspiciousJump()) {
                 showServiceToast(R.string.report_rejected)
                 return@launch
             }
@@ -935,12 +946,14 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 promptLogin()
                 return@launch
             }
-            val check = GpsVerification.check(location, null, null)
+            val check = GpsVerification.check(
+                location, null, null, bypassAntiAbuse = isAdmin()
+            )
             if (check != GpsVerification.Check.OK) {
                 showServiceToast(GpsVerification.messageRes(check))
                 return@launch
             }
-            if (isSuspiciousJump()) {
+            if (!isAdmin() && isSuspiciousJump()) {
                 showServiceToast(R.string.report_rejected)
                 return@launch
             }
@@ -997,7 +1010,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 promptLogin()
                 return@launch
             }
-            if (isSuspiciousJump()) {
+            if (!isAdmin() && isSuspiciousJump()) {
                 cancelPendingNewLight(showToast = false)
                 showServiceToast(R.string.report_rejected)
                 return@launch

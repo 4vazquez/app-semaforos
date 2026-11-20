@@ -107,9 +107,13 @@ object GpsVerification {
     fun check(
         location: Location?,
         lightLatitude: Double?,
-        lightLongitude: Double?
+        lightLongitude: Double?,
+        bypassAntiAbuse: Boolean = false
     ): Check {
         if (location == null) return Check.NO_LOCATION
+        // Privilegios totales del ADMIN (solo Alan): puede probar con
+        // ubicación simulada (fake GPS) desde cualquier parte.
+        if (bypassAntiAbuse) return Check.OK
         if (isMock(location)) return Check.MOCK
         if (!isFresh(location)) return Check.STALE
         if (!isAccurateEnough(location)) return Check.INACCURATE

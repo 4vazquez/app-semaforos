@@ -56,6 +56,7 @@ import com.alan.semaforosmx.data.UserIdentity
 import com.alan.semaforosmx.data.auth.AuthManager
 import com.alan.semaforosmx.data.auth.AuthState
 import com.alan.semaforosmx.data.auth.RoleGate
+import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.data.legal.TermsAcceptance
 import com.alan.semaforosmx.data.model.LightStatus
 import com.alan.semaforosmx.data.model.NewLightStatus
@@ -934,7 +935,8 @@ class MainActivity : ComponentActivity() {
                 it.distanceToMeters(location.latitude, location.longitude)
             } ?: return@withContext SyncResult.NoLight
             val check = GpsVerification.check(
-                location, nearestLight.latitude, nearestLight.longitude
+                location, nearestLight.latitude, nearestLight.longitude,
+                bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN
             )
             if (check != GpsVerification.Check.OK) {
                 return@withContext SyncResult.CheckFailed(check)
@@ -981,7 +983,10 @@ class MainActivity : ComponentActivity() {
             showToast(R.string.no_gps_fix)
             return
         }
-        val check = GpsVerification.check(location, null, null)
+        val check = GpsVerification.check(
+            location, null, null,
+            bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN
+        )
         if (check != GpsVerification.Check.OK) {
             showToast(messageFor(check))
             return
@@ -1037,7 +1042,10 @@ class MainActivity : ComponentActivity() {
             showToast(R.string.no_light_nearby)
             return
         }
-        val check = GpsVerification.check(location, light.latitude, light.longitude)
+        val check = GpsVerification.check(
+            location, light.latitude, light.longitude,
+            bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN
+        )
         if (check != GpsVerification.Check.OK) {
             showToast(messageFor(check))
             return

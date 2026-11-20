@@ -24,7 +24,11 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.13 — las leyendas de confirmación del widget
+> cambian). App v1.1.14 — privilegios ADMIN de ubicación simulada:
+> el rol ADMIN (solo Alan) se salta la verificación GPS anti-abuso
+> (mock, frescura, precisión, distancia) y la detección de saltos
+> sospechosos, para probar con fake GPS. App v1.1.13 — las leyendas
+> de confirmación del widget
 > («Sync registrado, gracias», «Semáforo agregado…», «Este semáforo ya
 > se envió a revisión, ¡manda otro!») ahora se muestran DENTRO del
 > widget: los Toast desde segundo plano están bloqueados en Android 11+
