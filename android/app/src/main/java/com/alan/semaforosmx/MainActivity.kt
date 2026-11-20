@@ -260,7 +260,7 @@ class MainActivity : ComponentActivity() {
         var widgetActive by remember {
             mutableStateOf(
                 context.getSharedPreferences("semaforos_mx_prefs", Context.MODE_PRIVATE)
-                    .getBoolean("widget_active", false)
+                    .getBoolean("widget_active", true)
             )
         }
         var vibrationEnabled by remember {
@@ -328,11 +328,32 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        // Si el widget estaba activo al cerrar la app (o tras reiniciar el
-        // teléfono / un cierre del servicio), re-arrancarlo: el estado
-        // persiste en preferencias, no solo en memoria. Sin permiso de
-        // superposición no se arranca (Alertas lo vuelve a pedir).
+        // El widget va ACTIVADO POR DEFECTO (decisión de Alan, 2026-11-20):
+        // es la razón de ser de la app, no se le pregunta al usuario si lo
+        // quiere. Si el widget estaba activo al cerrar la app (o tras
+        // reiniciar el teléfono / un cierre del servicio), re-arrancarlo:
+        // el estado persiste en preferencias, no solo en memoria. Sin
+        // permiso de superposición se pide automáticamente UNA sola vez
+        // (Alertas lo vuelve a pedir después).
         LaunchedEffect(Unit) {
+            if (!widgetActive) return@LaunchedEffect
+            if (Settings.canDrawOverlays(context)) {
+                FloatingWidgetService.start(context)
+            } else {
+                val prefs = context.getSharedPreferences(
+                    "semaforos_mx_prefs", Context.MODE_PRIVATE
+                )
+                if (!prefs.getBoolean("overlay_auto_asked", false)) {
+                    prefs.edit().putBoolean("overlay_auto_asked", true).apply()
+                    onRequestOverlayPermission()
+                }
+            }
+        }
+
+        // Al volver a la app (p. ej. de la pantalla de permisos del
+        // sistema), si el widget va activado y ya hay permiso, arrancar
+        // el servicio: así el usuario no tiene que tocar nada más.
+        LaunchedEffect(resumeCount) {
             if (widgetActive && Settings.canDrawOverlays(context)) {
                 FloatingWidgetService.start(context)
             }

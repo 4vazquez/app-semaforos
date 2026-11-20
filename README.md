@@ -136,6 +136,12 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Widget activado por defecto** (v1.1.11, decisión de Alan
+  2026-11-20): el widget va encendido sin preguntarle al usuario — es
+  la razón de ser de la app. El permiso de superposición se pide
+  automáticamente una sola vez tras aceptar los Términos, y el servicio
+  re-arranca al volver a la app. El interruptor en Alertas queda solo
+  para quien quiera apagarlo.
 - **9 semáforos nuevos en la zona norte** (v1.1.10): verificados en
   Google Street View el 2026-11-20 en Av. Aztlán (4: No Reelección,
   Las Rocas, Cabezada, Julio A. Roca), Av. Solidaridad (3: bajo el
@@ -239,9 +245,10 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (20 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.10) y las **106 pruebas unitarias
+24.6 MB, `com.alan.semaforosmx` v1.1.11) y las **106 pruebas unitarias
 pasan** (base semilla con 1 621 semáforos, incluidos 9 verificados en
-Street View en la zona norte), corridas con `run_tests_sandbox.sh`
+Street View en la zona norte; widget activado por defecto), corridas con
+`run_tests_sandbox.sh`
 (JUnitCore directo: el ejecutor de pruebas de Gradle se cae en este
 sandbox porque sus workers se comunican por sockets TCP y Java no
 puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden

@@ -24,7 +24,11 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.10 — 9 semáforos nuevos verificados en Google
+> cambian). App v1.1.11 — el widget va ACTIVADO POR DEFECTO (decisión
+> de Alan, 2026-11-20): es la razón de ser de la app, no se le pregunta
+> al usuario; el permiso de superposición se pide automáticamente una
+> sola vez tras aceptar los Términos y el servicio re-arranca al volver
+> a la app. App v1.1.10 — 9 semáforos nuevos verificados en Google
 > Street View en la zona norte (Av. Aztlán, Av. Solidaridad y Av.
 > Rodrigo Gómez) agregados a la base semilla (1 621 en total).
 > App v1.1.9 — 2 semáforos nuevos verificados en Google

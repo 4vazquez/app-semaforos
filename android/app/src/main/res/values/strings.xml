@@ -64,7 +64,7 @@
     <!-- Alertas (pantalla de control del widget). -->
     <string name="alertas_title">Alertas</string>
     <string name="alertas_widget_title">Widget en segundo plano</string>
-    <string name="alertas_widget_body">El widget aparece solo cuando hay un semáforo cerca y se oculta cuando te alejas. Mientras la app está abierta usas el menú; el widget trabaja cuando está cerrada.</string>
+    <string name="alertas_widget_body">El widget va activado por defecto: aparece solo cuando hay un semáforo cerca y se oculta cuando te alejas. Mientras la app está abierta usas el menú; el widget trabaja cuando está cerrada.</string>
     <string name="background_location_title">Ubicación todo el tiempo</string>
     <string name="background_location_body">Para avisarte del verde cuando la app está cerrada, el widget necesita tu ubicación en segundo plano. En la siguiente pantalla elige «Permitir todo el tiempo». Sin eso, el widget no puede detectar semáforos.</string>
     <string name="background_location_allow">Continuar</string>
