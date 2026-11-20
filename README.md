@@ -136,6 +136,12 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   brechas de seguridad (LFPDPPP art. 20). La app vuelve a mostrar la
   pantalla «Acepto» una vez al instalar esta versión. Sigue pendiente
   la revisión de un abogado antes del lanzamiento público.
+- **Mi vehículo en el mapa** (v1.1.15): la flechita genérica de «Mi
+  ubicación» se reemplaza por una miniatura de vehículo en vista
+  cenital (sedán, pickup, SUV o tráiler; verde Vía Verde, estilo
+  propio — nada de copiar a Google/Waze) que gira con el rumbo GPS.
+  El usuario lo escoge en **Ajustes → Mi vehículo**; la elección se
+  guarda en el dispositivo.
 - **Privilegios ADMIN de ubicación simulada** (v1.1.14): el rol ADMIN
   (solo Alan, «privilegios totales») se salta la verificación GPS
   anti-abuso (mock, frescura, precisión, distancia al semáforo) y la
@@ -261,12 +267,12 @@ mapa, anti-abuso y matemática GPS):
 ```
 
 **Estado verificado (20 nov 2026):** el APK compila (`app-debug.apk`,
-24.6 MB, `com.alan.semaforosmx` v1.1.14) y las **106 pruebas unitarias
+24.6 MB, `com.alan.semaforosmx` v1.1.15) y las **106 pruebas unitarias
 pasan** (base semilla con 1 621 semáforos, incluidos 9 verificados en
 Street View en la zona norte; widget activado por defecto; permisos
 primordiales pedidos desde el inicio; leyendas de confirmación dentro
-del widget; bypass ADMIN de verificación GPS), corridas con
-`run_tests_sandbox.sh`
+del widget; bypass ADMIN de verificación GPS; miniatura de vehículo
+elegible en Ajustes), corridas con `run_tests_sandbox.sh`
 (JUnitCore directo: el ejecutor de pruebas de Gradle se cae en este
 sandbox porque sus workers se comunican por sockets TCP y Java no
 puede abrirlos aquí). Nota del entorno: en este sandbox los procesos Java no pueden

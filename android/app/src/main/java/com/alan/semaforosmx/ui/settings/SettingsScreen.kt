@@ -4,6 +4,9 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -35,10 +39,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alan.semaforosmx.BuildConfig
 import com.alan.semaforosmx.R
@@ -46,6 +56,9 @@ import com.alan.semaforosmx.data.auth.AuthState
 import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.ui.RoleBadge
 import com.alan.semaforosmx.ui.contact.ContactEmail
+import com.alan.semaforosmx.ui.map.VehicleIcons
+import com.alan.semaforosmx.ui.map.VehiclePrefs
+import com.alan.semaforosmx.ui.map.VehicleType
 
 /**
  * Contenido de Ajustes (una pestaña del menú inferior):
@@ -91,6 +104,16 @@ fun SettingsScreen(
 
     /** Confirmación de eliminación de cuenta. */
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    /** Vehículo elegido para la miniatura de «Mi ubicación» en el mapa. */
+    var vehicleType by remember { mutableStateOf(VehiclePrefs.load(context)) }
+
+    /** Íconos de los vehículos (se dibujan una sola vez por composición). */
+    val vehicleIcons = remember {
+        VehicleType.entries.associateWith {
+            VehicleIcons.createIconBitmap(context, it).asImageBitmap()
+        }
+    }
 
     /** El Modo prueba lo ve el Admin con login o quien desbloqueó las opciones. */
     val showDevOptions = devUnlocked || authState.isAdmin
@@ -223,6 +246,43 @@ fun SettingsScreen(
                             text = stringResource(R.string.account_not_configured),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        // Mi vehículo: miniatura en el mapa (decisión de Alan, 2026-11-20).
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.settings_vehicle_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_vehicle_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    VehicleType.entries.forEach { type ->
+                        VehicleOption(
+                            type = type,
+                            selected = type == vehicleType,
+                            icon = vehicleIcons[type],
+                            onClick = {
+                                vehicleType = type
+                                VehiclePrefs.save(context, type)
+                            },
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -468,6 +528,57 @@ fun SettingsScreen(
                     Text(stringResource(R.string.account_delete_cancel))
                 }
             }
+        )
+    }
+}
+
+/** Opción del selector de vehículo: ícono cenital + etiqueta. */
+@Composable
+private fun VehicleOption(
+    type: VehicleType,
+    selected: Boolean,
+    icon: ImageBitmap?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(12.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(shape)
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+                shape = shape
+            )
+            .clickable(onClick = onClick)
+            .background(
+                if (selected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                }
+            )
+            .padding(vertical = 10.dp, horizontal = 4.dp)
+    ) {
+        if (icon != null) {
+            Image(
+                bitmap = icon,
+                contentDescription = stringResource(type.labelRes),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.height(56.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stringResource(type.labelRes),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            textAlign = TextAlign.Center
         )
     }
 }

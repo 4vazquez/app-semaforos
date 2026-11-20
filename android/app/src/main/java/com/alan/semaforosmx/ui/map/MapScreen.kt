@@ -48,8 +48,6 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import kotlin.coroutines.resume
 
 /** Zoom al centrar en el usuario: nivel de calle. */
@@ -74,9 +72,11 @@ private const val FRESH_FIX_TIMEOUT_MS = 12_000L
  * - Toque en un marcador: abre el detalle del semáforo (con la acción
  *   «Ya no existe» si el semáforo fue retirado en la vida real).
  * - Toque prolongado: agregar un semáforo nuevo en esa ubicación.
- * - Mi ubicación: punto azul (solo con permiso de ubicación) + botón
- *   flotante abajo a la derecha, estilo Google Maps, que centra el mapa
- *   en la posición actual con animación (zoom 17).
+ * - Mi ubicación: miniatura de vehículo (sedán/pickup/SUV/tráiler,
+ *   elegida en Ajustes) que gira con el rumbo GPS — reemplaza la
+ *   flechita genérica (decisión de Alan, 2026-11-20) + botón flotante
+ *   abajo a la derecha, estilo Google Maps, que centra el mapa en la
+ *   posición actual con animación (zoom 17).
  */
 @Composable
 fun TrafficLightMap(
@@ -94,11 +94,14 @@ fun TrafficLightMap(
 
     DisposableEffect(Unit) {
         mapView.onResume()
-        // onResume() reintenta activar el overlay de ubicación aunque no
-        // haya permiso (osmdroid lo traga y solo registra un error en el
-        // log); se sincroniza aquí para dejarlo en el estado correcto.
+        // onResume() reintenta activar el rastreo de ubicación aunque no
+        // haya permiso (el listener lo traga y solo registra un error en
+        // el log); se sincroniza aquí para dejarlo en el estado correcto.
         syncLocationOverlay(mapView)
-        onDispose { mapView.onPause() }
+        onDispose {
+            mapView.onPause()
+            (mapView.tag as? UserVehicleTracker)?.dispose()
+        }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -174,18 +177,13 @@ private fun hasLocationPermission(context: Context): Boolean =
         ) == PackageManager.PERMISSION_GRANTED
 
 /**
- * Activa el punto azul de «Mi ubicación» solo con permiso de ubicación.
- * Sin permiso el overlay queda inactivo (no se pide nada desde el mapa:
- * MainActivity es quien pide los permisos).
+ * Sincroniza el marcador de «Mi ubicación» (miniatura de vehículo):
+ * activo solo con permiso de ubicación. Sin permiso el marcador queda
+ * oculto (no se pide nada desde el mapa: MainActivity es quien pide
+ * los permisos). Se corre en cada recomposición.
  */
 private fun syncLocationOverlay(mapView: MapView) {
-    val overlay = mapView.overlays.filterIsInstance<MyLocationNewOverlay>()
-        .firstOrNull() ?: return
-    if (hasLocationPermission(mapView.context)) {
-        if (!overlay.isMyLocationEnabled) overlay.enableMyLocation()
-    } else {
-        if (overlay.isMyLocationEnabled) overlay.disableMyLocation()
-    }
+    (mapView.tag as? UserVehicleTracker)?.sync()
 }
 
 /**
@@ -304,15 +302,15 @@ private fun createMapView(
             })
         )
 
-        // Mi ubicación: punto azul. Solo se activa con permiso
-        // (MainActivity pide los permisos al arrancar); sin permiso el
-        // overlay queda inactivo hasta que se conceda (ver
+        // Mi ubicación: miniatura de vehículo (sedán/pickup/SUV/tráiler,
+        // elegida en Ajustes) que gira con el rumbo GPS. Reemplaza la
+        // flechita genérica (decisión de Alan, 2026-11-20). Solo se
+        // activa con permiso (MainActivity pide los permisos al
+        // arrancar); sin permiso el marcador queda oculto (ver
         // syncLocationOverlay, que se corre en cada recomposición).
-        val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), this)
-        if (hasLocationPermission(context)) {
-            locationOverlay.enableMyLocation()
-        }
-        overlays.add(locationOverlay)
+        val tracker = UserVehicleTracker(this, context)
+        setTag(tracker)
+        overlays.add(tracker.marker)
     }
 }
 
@@ -321,8 +319,10 @@ private fun refreshMarkers(
     lights: List<TrafficLight>,
     onMarkerClick: (TrafficLight) -> Unit
 ) {
-    // Quitar marcadores viejos (conservar los demás overlays).
-    mapView.overlays.removeAll { it is Marker }
+    // Quitar marcadores viejos (conservar los demás overlays, incluido
+    // el marcador del vehículo del usuario).
+    val userMarker = (mapView.tag as? UserVehicleTracker)?.marker
+    mapView.overlays.removeAll { it is Marker && it !== userMarker }
     val redIcon = ContextCompat.getDrawable(mapView.context, R.drawable.ic_marker_red)
     val greyIcon = ContextCompat.getDrawable(mapView.context, R.drawable.ic_marker_grey)
     lights.forEach { light ->
@@ -344,4 +344,104 @@ private fun refreshMarkers(
         mapView.overlays.add(marker)
     }
     mapView.invalidate()
+}
+
+/**
+ * Rastrea la ubicación del usuario y la dibuja en el mapa como una
+ * miniatura de vehículo (sedán/pickup/SUV/tráiler, elegida en Ajustes)
+ * que gira con el rumbo GPS. Reemplaza la flechita genérica de
+ * MyLocationNewOverlay (decisión de Alan, 2026-11-20: nada de copiar
+ * a Google/Waze; el usuario escoge su vehículo).
+ */
+private class UserVehicleTracker(
+    private val mapView: MapView,
+    private val context: Context
+) {
+    val marker = Marker(mapView).apply {
+        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+        setVisible(false)
+    }
+
+    private var listener: LocationListener? = null
+    private var lastBearing = 0f
+    private var currentType: VehicleType? = null
+
+    /** Sincroniza permiso, ícono y visibilidad. Barato: corre en cada recomposición. */
+    fun sync() {
+        if (hasLocationPermission(context)) {
+            if (listener == null) startListening()
+        } else {
+            stopListening()
+            marker.setVisible(false)
+        }
+        val type = VehiclePrefs.load(context)
+        if (type != currentType) {
+            currentType = type
+            marker.icon = VehicleIcons.createIcon(context, type)
+        }
+        // El marcador del usuario siempre al frente.
+        mapView.overlays.remove(marker)
+        mapView.overlays.add(marker)
+        mapView.invalidate()
+    }
+
+    fun dispose() {
+        stopListening()
+        mapView.overlays.remove(marker)
+    }
+
+    @SuppressLint("MissingPermission") // sync() verifica el permiso antes.
+    private fun startListening() {
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val l = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                marker.position = GeoPoint(location.latitude, location.longitude)
+                // Gira solo con rumbo GPS confiable (en movimiento);
+                // detenido conserva la última orientación.
+                if (location.hasBearing() && location.speed >= 1f) {
+                    lastBearing = smoothBearing(lastBearing, location.bearing)
+                }
+                marker.rotation = lastBearing
+                marker.setVisible(true)
+                mapView.invalidate()
+            }
+
+            override fun onProviderDisabled(provider: String) = Unit
+
+            override fun onProviderEnabled(provider: String) = Unit
+
+            @Deprecated("Deprecated in Java")
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+        }
+        listener = l
+        try {
+            val providers = listOf(
+                LocationManager.GPS_PROVIDER,
+                LocationManager.NETWORK_PROVIDER
+            ).filter {
+                runCatching { manager.isProviderEnabled(it) }.getOrDefault(false)
+            }
+            for (provider in providers) {
+                manager.requestLocationUpdates(
+                    provider, 1000L, 0f, l, Looper.getMainLooper()
+                )
+            }
+        } catch (_: SecurityException) {
+            // Sin permiso: el marcador queda oculto.
+        }
+    }
+
+    private fun stopListening() {
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        listener?.let { runCatching { manager.removeUpdates(it) } }
+        listener = null
+    }
+}
+
+/** Suaviza el rumbo tomando el camino angular más corto (grados, 0=N). */
+private fun smoothBearing(from: Float, to: Float): Float {
+    var diff = (to - from) % 360f
+    if (diff > 180f) diff -= 360f
+    if (diff < -180f) diff += 360f
+    return (from + diff * 0.5f + 360f) % 360f
 }

@@ -96,6 +96,13 @@
     <string name="dev_options_title">Opciones de desarrollador</string>
     <string name="dev_options_unlocked">Opciones de desarrollador activadas</string>
     <string name="dev_options_taps_left">Te faltan %1$d toques para activar las opciones de desarrollador</string>
+    <!-- Ajustes: Mi vehículo (miniatura en el mapa) -->
+    <string name="settings_vehicle_title">Mi vehículo</string>
+    <string name="settings_vehicle_body">Elige cómo se ve tu auto en el mapa.</string>
+    <string name="vehicle_sedan">Sedán</string>
+    <string name="vehicle_pickup">Pickup</string>
+    <string name="vehicle_suv">SUV</string>
+    <string name="vehicle_trailer">Tráiler</string>
     <string name="test_mode_title">Modo prueba</string>
     <string name="test_mode_body">Simula que estás junto a un semáforo para probar el widget sin manejar: el LED cicla cada 30 s entre espera, alerta y verde, con cuenta regresiva. Nada de lo que hagas en modo prueba se guarda como aporte real. Activa el widget en Alertas y cierra la app para verlo (mientras la app está abierta el widget no se muestra).</string>
     <string name="test_mode_badge">PRUEBA</string>

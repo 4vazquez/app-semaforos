@@ -24,7 +24,12 @@
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
 > com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
-> cambian). App v1.1.14 — privilegios ADMIN de ubicación simulada:
+> cambian). App v1.1.15 — miniatura de vehículo en «Mi ubicación»:
+> sedán/pickup/SUV/tráiler en vista cenital (estilo propio, verde Vía
+> Verde; nada de copiar la flechita de Google/Waze), el usuario lo
+> escoge en Ajustes → Mi vehículo y el marcador gira con el rumbo
+> GPS. Reemplaza a MyLocationNewOverlay. App v1.1.14 — privilegios
+> ADMIN de ubicación simulada:
 > el rol ADMIN (solo Alan) se salta la verificación GPS anti-abuso
 > (mock, frescura, precisión, distancia) y la detección de saltos
 > sospechosos, para probar con fake GPS. App v1.1.13 — las leyendas
