@@ -26,7 +26,7 @@ object TermsAcceptance {
     const val CURRENT_VERSION = "1.7"
 
     /** Versión vigente del Aviso de Privacidad (informativa, no bloquea). */
-    const val PRIVACY_VERSION = "1.2"
+    const val PRIVACY_VERSION = "1.3"
 
     private const val PREFS = "semaforos_mx_prefs"
     private const val KEY_TERMS_VERSION = "terms_accepted_version"

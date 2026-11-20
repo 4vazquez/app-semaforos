@@ -949,6 +949,8 @@ class MainActivity : ComponentActivity() {
                     dayType = InMemoryTimingRepository.currentDayType(),
                     source = ReportSource.MANUAL_SYNC,
                     gpsAccuracyMeters = location.accuracy,
+                    latitude = location.latitude,
+                    longitude = location.longitude,
                     userId = userId
                 )
             )

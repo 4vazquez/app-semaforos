@@ -494,9 +494,11 @@ usuarios distintos**. Nunca se borra: queda para auditoría y restauración.
 
 El mapa y los tiempos los construye la comunidad, así que la app asume que
 alguien intentará farmear recompensas o ensuciar los datos. Reglas
-aprobadas por Alan (todas implementadas en el cliente del MVP; **en v1 se
-replican en el servidor con triggers/funciones, porque un tope solo en el
-cliente se salta con una app modificada**):
+aprobadas por Alan (implementadas en el cliente del MVP; **desde la
+migración 006 la validación GPS también corre del lado servidor** —
+distancia ≤ 150 m, precisión ≤ 100 m y salto imposible > 250 km/h,
+con exención para el ADMIN — porque un tope solo en el cliente se
+salta con una app modificada):
 
 | # | Regla | Implementación |
 |---|-------|----------------|
@@ -665,6 +667,10 @@ formal («sin definir como competencia»).
 - **Sostenibilidad:** $600/semana lo paga Alan en el piloto; a futuro,
   patrocinios o ajuste del monto según usuarios activos. El programa
   puede modificarse o terminarse con aviso en la app.
+- **Beta (decisión de Alan, 20 nov 2026):** el ranking y los premios
+  quedan en **beta cerrada**: nadie tiene acceso por defecto y solo
+  entrarán usuarios **por invitación** cuando Alan lo decida. Sin
+  invitaciones no hay ranking activo ni premios.
 
 **Tabla `weekly_prizes` (v1, nueva):**
 

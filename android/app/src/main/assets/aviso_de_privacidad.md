@@ -1,6 +1,6 @@
 # AVISO DE PRIVACIDAD — VÍA VERDE
 
-> **Versión:** 1.2 — 19 de noviembre de 2026.
+> **Versión:** 1.3 — 20 de noviembre de 2026.
 > Responsable de contacto: adminsemaforosmx@gmail.com
 >
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como
@@ -11,10 +11,13 @@
 
 ## 1. Responsable del tratamiento
 
-**Vía Verde** (proyecto en fase piloto/beta, con sede en Monterrey,
-Nuevo León, México) es responsable del tratamiento de sus datos
-personales. Contacto para privacidad, derechos ARCO y eliminación de
-cuenta: **adminsemaforosmx@gmail.com**.
+El responsable del tratamiento es **Alan Vazquez**, persona física con
+domicilio en Monterrey, Nuevo León, México, operando el proyecto
+Vía Verde en fase piloto/beta. (El domicilio completo para
+notificaciones y la transición a persona moral quedan sujetos a
+revisión legal antes del lanzamiento público.) Contacto para
+privacidad, derechos ARCO y eliminación de cuenta:
+**adminsemaforosmx@gmail.com**.
 
 ## 2. Datos personales que recabamos
 
@@ -28,10 +31,14 @@ recibir la alerta del verde— no requiere cuenta):
 
 **De todos los usuarios, para operar la App:**
 
-- Ubicación aproximada del dispositivo (GPS), solo para detectar
+- Ubicación del dispositivo (GPS preciso), solo para detectar
   semáforos cercanos y validar que un reporte se hizo estando en el
-  cruce (≤ 100 m, fix fresco y preciso). Los reportes guardan el
-  semáforo, no la ubicación exacta del usuario.
+  cruce (≤ 100 m, fix fresco y preciso). Esto incluye la ubicación
+  en segundo plano cuando el widget está activo, para detectar
+  semáforos cercanos sin abrir la App; el usuario puede desactivarla
+  desde los permisos del sistema. Los reportes guardan las
+  coordenadas del fix GPS usado en la validación (para verificación
+  antifraude del lado servidor) junto con su precisión.
 - Identificador del dispositivo (hash, no el ID crudo) y datos de uso
   de la App (reportes de tiempos, semáforos agregados o reportados como
   retirados, progreso de Colaborador, nivel de confianza).
@@ -95,9 +102,12 @@ proveedores necesarios para operar el servicio, bajo sus propios avisos
 de privacidad:
 
 - **Google Sign-In** (inicio de sesión con Google).
-- **Supabase** (base de datos y backend del servicio, en su caso en v1).
-  Las fotos de licencias se guardan en un repositorio privado de
-  Supabase al que solo accede el Administrador.
+- **Supabase** (base de datos y backend del servicio). La
+  infraestructura corre en servidores de Amazon Web Services en
+  Virginia, Estados Unidos (región US East): al usar el servicio,
+  sus datos se transfieren a EE.UU. bajo las medidas de seguridad
+  del proveedor. Las fotos de licencias se guardan en un repositorio
+  privado de Supabase al que solo accede el Administrador.
 - **Google Play / AdMob** (pagos de suscripciones y anuncios, en su caso).
 
 Los tiempos publicados de los semáforos son medianas ponderadas de
@@ -106,8 +116,9 @@ agregados.
 
 ## 5. Retención
 
-- Los reportes crudos se conservan **90 días**; los tiempos agregados,
-  indefinidamente (son datos anonimizados, sin identidad).
+- Los reportes crudos (incluidas las coordenadas GPS de validación)
+  se conservan **90 días**; los tiempos agregados, indefinidamente
+  (son datos anonimizados, sin identidad).
 - La foto de la licencia de conducir se elimina en cuanto se resuelve
   la solicitud de verificación y en ningún caso se conserva más de
   **30 días**. Solo quedan guardados el estado «verificado», la fecha y
@@ -157,5 +168,5 @@ cambios implica su aceptación.
 
 ---
 
-*Versión 1.1 — 19 de noviembre de 2026. Documento pendiente de revisión
+*Versión 1.3 — 20 de noviembre de 2026. Documento pendiente de revisión
 legal antes del lanzamiento público.*

@@ -82,6 +82,10 @@ data class TimingReport(
     val source: ReportSource,
     /** Precisión del GPS en metros al momento del reporte. */
     val gpsAccuracyMeters: Float,
+    /** Coordenadas del fix GPS al momento del reporte (validación
+     *  del lado servidor, migración 006). Null en modo local. */
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val userId: String? = null
 )
 

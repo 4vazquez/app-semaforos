@@ -130,6 +130,8 @@ class SupabaseTimingRepository(
                     dayType = InMemoryTimingRepository.currentDayType(),
                     source = ReportSource.MANUAL_SYNC,
                     gpsAccuracyMeters = gpsAccuracyMeters,
+                    latitude = latitude,
+                    longitude = longitude,
                     userId = userId
                 )
             )
@@ -154,6 +156,8 @@ class SupabaseTimingRepository(
                 dayType = InMemoryTimingRepository.currentDayType(),
                 source = ReportSource.MANUAL_SYNC,
                 gpsAccuracyMeters = gpsAccuracyMeters,
+                latitude = latitude,
+                longitude = longitude,
                 userId = userId
             )
         )
@@ -386,6 +390,8 @@ class SupabaseTimingRepository(
         @Json(name = "day_type") val dayType: String,
         val source: String,
         @Json(name = "gps_accuracy_m") val gpsAccuracyMeters: Float,
+        @Json(name = "latitude") val latitude: Double? = null,
+        @Json(name = "longitude") val longitude: Double? = null,
         @Json(name = "user_id") val userId: String?
     ) {
         fun toDomain(): TimingReport = TimingReport(
@@ -397,6 +403,8 @@ class SupabaseTimingRepository(
             dayType = DayType.valueOf(dayType),
             source = com.alan.semaforosmx.data.model.ReportSource.valueOf(source),
             gpsAccuracyMeters = gpsAccuracyMeters,
+            latitude = latitude,
+            longitude = longitude,
             userId = userId
         )
 
@@ -415,6 +423,8 @@ class SupabaseTimingRepository(
                     dayType = r.dayType.name,
                     source = r.source.name,
                     gpsAccuracyMeters = r.gpsAccuracyMeters,
+                    latitude = r.latitude,
+                    longitude = r.longitude,
                     userId = r.userId
                 )
             }

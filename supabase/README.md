@@ -91,5 +91,6 @@ se borra desde **Authentication → Users** en el panel.
 | `seed_lights.py` | Genera `002_seed_lights.sql` desde el GeoJSON de OSM |
 | `002_seed_lights.sql` | Generado (no editar a mano; se regenera) |
 | `005_seed_trigger_fix.sql` | Parche del trigger anti-abuso para bases migradas con el 001 original (las instalaciones nuevas ya traen el fix en 001 y no lo necesitan) |
+| `006_gps_validation.sql` | Validación de GPS del lado servidor: columnas lat/long en `timing_reports` + trigger que rechaza syncs lejos del semáforo (> 150 m), imprecisos (> 100 m) o con saltos imposibles |
 
-Ejecuta `001_schema.sql`, luego `003_verification.sql` y `004_ranking.sql` (en ese orden). El seed (`002_seed_lights.sql`) puede correrse en cualquier momento después de `001_schema.sql`. Si la base ya corrió el 001 original (sin el bypass de semilla), corre primero `005_seed_trigger_fix.sql` y luego el seed.
+Ejecuta `001_schema.sql`, luego `003_verification.sql` y `004_ranking.sql` (en ese orden). El seed (`002_seed_lights.sql`) puede correrse en cualquier momento después de `001_schema.sql`. Si la base ya corrió el 001 original (sin el bypass de semilla), corre primero `005_seed_trigger_fix.sql` y luego el seed. `006_gps_validation.sql` se corre después de `001_schema.sql` y **antes** de usar la app con backend (la app nueva envía las columnas de coordenadas).

@@ -885,6 +885,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                         dayType = InMemoryTimingRepository.currentDayType(),
                         source = ReportSource.MANUAL_SYNC,
                         gpsAccuracyMeters = location.accuracy,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
                         userId = uid
                     )
                 )
@@ -1091,6 +1093,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     dayType = InMemoryTimingRepository.currentDayType(),
                     source = ReportSource.PASSIVE,
                     gpsAccuracyMeters = lastLocation?.accuracy ?: 50f,
+                    latitude = lastLocation?.latitude,
+                    longitude = lastLocation?.longitude,
                     // Anónimo sin login (null): RLS lo acepta y alimenta
                     // la agregación sin acreditar cuota.
                     userId = currentUserId()
