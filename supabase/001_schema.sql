@@ -197,8 +197,13 @@ begin
   v_volume := least(1.0, v_count::real / 20.0);
   v_spread := 1.0 - least(1.0, coalesce(v_mad, 10.0)::real / 10.0);
   -- Frescura: vida media 14 días sobre la edad mediana de los reportes.
-  select power(0.5, extract(epoch from (now() - percentile_cont(0.5)
-      within group (order by reported_at))) / (14 * 86400))
+  -- (percentile_cont no acepta timestamptz como clave de orden: se ordena
+  -- por epoch en segundos y la frescura se calcula contra now() en epoch.)
+  select power(0.5::double precision,
+      (extract(epoch from now())
+       - percentile_cont(0.5) within group
+         (order by extract(epoch from reported_at)::double precision))
+      / (14 * 86400))
   into v_fresh
   from public.timing_reports
   where light_id = p_light_id
