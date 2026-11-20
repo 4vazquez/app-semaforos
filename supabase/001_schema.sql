@@ -335,6 +335,15 @@ declare
   v_today_count int;
   v_near text;
 begin
+  -- Inserciones de semilla/admin (reported_by nulo, p. ej. el seed OSM
+  -- corrido desde el SQL Editor) pasan sin las reglas anti-abuso de
+  -- usuario: conservan su status VERIFIED y no se les aplica el dedup
+  -- de 30 m. Los envíos de usuarios siempre traen reported_by = auth.uid()
+  -- (lo exige la política RLS lights_insert_login), así que este bypass
+  -- nunca aplica a un alta de usuario.
+  if new.reported_by is null then
+    return new;
+  end if;
   if new.status <> 'UNVERIFIED' and not public.is_admin() then
     new.status := 'UNVERIFIED';
   end if;

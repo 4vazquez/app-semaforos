@@ -6,9 +6,10 @@ compartidos entre usuarios necesitan este proyecto.
 
 ## 1. Crear el proyecto
 
-1. Entra a [supabase.com](https://supabase.com) con la cuenta de Google
-   del negocio (`adminsemaforosmx@gmail.com`) → **New project**.
-2. Nombre: `semaforos-mx`. Región: la más cercana (US East).
+1. Entra a [supabase.com](https://supabase.com) con **Continue with
+   GitHub** (cuenta `4vazquez`) → **New project**.
+2. Nombre: `via-verde`. Región: **US East (N. Virginia)**.
+   Proyecto actual: `deyradlhuasjrgmuhgyr` (creado 2026-11-20).
 3. Guarda la **Database password** en un lugar seguro (la pedirá el
    panel para algunas acciones).
 4. En **Project Settings → API** copia:
@@ -24,7 +25,7 @@ En el **SQL Editor** del proyecto, ejecuta en orden:
    ```bash
    python3 supabase/seed_lights.py
    ```
-   Eso crea `002_seed_lights.sql` (1 579 semáforos de Monterrey,
+   Eso crea `002_seed_lights.sql` (1 621 semáforos de Monterrey,
    VERIFIED). Pégalo en el SQL Editor y ejecútalo.
 
 ## 3. Activar el login con Google
@@ -89,5 +90,6 @@ se borra desde **Authentication → Users** en el panel.
 | `004_ranking.sql` | Ranking semanal: apodo + opt-in, RPC top_collaborators_week, tabla weekly_prizes + registro de premios por Admin |
 | `seed_lights.py` | Genera `002_seed_lights.sql` desde el GeoJSON de OSM |
 | `002_seed_lights.sql` | Generado (no editar a mano; se regenera) |
+| `005_seed_trigger_fix.sql` | Parche del trigger anti-abuso para bases migradas con el 001 original (las instalaciones nuevas ya traen el fix en 001 y no lo necesitan) |
 
-Ejecuta `001_schema.sql`, luego `003_verification.sql` y `004_ranking.sql` (en ese orden). El seed (`002_seed_lights.sql`) puede correrse en cualquier momento después de `001_schema.sql`.
+Ejecuta `001_schema.sql`, luego `003_verification.sql` y `004_ranking.sql` (en ese orden). El seed (`002_seed_lights.sql`) puede correrse en cualquier momento después de `001_schema.sql`. Si la base ya corrió el 001 original (sin el bypass de semilla), corre primero `005_seed_trigger_fix.sql` y luego el seed.
