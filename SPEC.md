@@ -23,7 +23,7 @@
 > «Vía Verde» en toda la app y los documentos (Términos v1.7, Aviso
 > v1.2, con la cláusula de reducción de daño en Términos §3 y en el
 > resumen de la pantalla «Acepto»); el paquete interno
-> com.alan.semaforosmx y el correo adminsemaforosmx@gmail.com no
+> com.alan.semaforosmx y el correo adminviaverdemx@gmail.com no
 > cambian). App v1.1.15 — miniatura de vehículo en «Mi ubicación»:
 > sedán/pickup/SUV/tráiler en vista cenital (estilo propio, verde Vía
 > Verde; nada de copiar la flechita de Google/Waze), el usuario lo
@@ -336,7 +336,7 @@ La app muestra un semáforo que fue retirado en la vida real:
   lo muestre. ⚠️ **Es un borrador: debe revisarlo un abogado antes del
   lanzamiento público** (ver §10).
 - El §12 nombra el correo de contacto del equipo
-  (adminsemaforosmx@gmail.com), publicado también en Ajustes → Contacto.
+  (adminviaverdemx@gmail.com), publicado también en Ajustes → Contacto.
 
 ### 4.7 Login híbrido con Google (v1, aprobado por Alan el 18 nov 2026)
 
@@ -806,7 +806,7 @@ terceros, sin identificar a usuarios individuales.
   por dolo o negligencia grave, y PROFECO puede declarar abusivas
   ciertas cláusulas en contratos de adhesión).
 - **Aviso de Privacidad v1.0** (`AVISO_DE_PRIVACIDAD.md`, 18 nov 2026):
-  responsable y contacto (adminsemaforosmx@gmail.com), datos recabados,
+  responsable y contacto (adminviaverdemx@gmail.com), datos recabados,
   finalidades, transferencias (solo procesadores del servicio: Google
   Sign-In, Supabase, Play/AdMob), retención de 90 días, derechos ARCO y
   eliminación de cuenta. ⚠️ **También es un borrador pendiente de

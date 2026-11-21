@@ -1,7 +1,7 @@
 # AVISO DE PRIVACIDAD — VÍA VERDE
 
 > **Versión:** 1.3 — 20 de noviembre de 2026.
-> Responsable de contacto: adminsemaforosmx@gmail.com
+> Responsable de contacto: adminviaverdemx@gmail.com
 >
 > ⚠️ **NOTA IMPORTANTE:** Este documento es un borrador elaborado como
 > punto de partida. Debe ser revisado y ajustado por un abogado antes
@@ -17,7 +17,7 @@ Vía Verde en fase piloto/beta. (El domicilio completo para
 notificaciones y la transición a persona moral quedan sujetos a
 revisión legal antes del lanzamiento público.) Contacto para
 privacidad, derechos ARCO y eliminación de cuenta:
-**adminsemaforosmx@gmail.com**.
+**adminviaverdemx@gmail.com**.
 
 ## 2. Datos personales que recabamos
 
@@ -91,7 +91,7 @@ procesa Google Play, no la App.
     datos agregados no identifican a ningún usuario individual.
 
 Si el usuario no desea que sus datos se usen para la finalidad
-secundaria, puede manifestarlo por correo a adminsemaforosmx@gmail.com;
+secundaria, puede manifestarlo por correo a adminviaverdemx@gmail.com;
 esto no afecta el uso del servicio.
 
 ## 4. Transferencias y encargados
@@ -143,14 +143,14 @@ artículo 20 de la LFPDPPP.
 
 El usuario puede ejercer sus derechos de **Acceso, Rectificación,
 Cancelación y Oposición (ARCO)**, así como revocar su consentimiento,
-por correo a **adminsemaforosmx@gmail.com** o desde la App. Responderemos
+por correo a **adminviaverdemx@gmail.com** o desde la App. Responderemos
 en los plazos que marca la Ley Federal de Protección de Datos Personales
 en Posesión de los Particulares (LFPDPPP).
 
 ## 7. Eliminación de cuenta
 
 El usuario puede borrar su cuenta y sus datos personales desde la App
-(Ajustes → Eliminar cuenta) o por correo a adminsemaforosmx@gmail.com.
+(Ajustes → Eliminar cuenta) o por correo a adminviaverdemx@gmail.com.
 Al borrarla se eliminan nombre, correo, foto e identificador de Google.
 Sus reportes previos quedan únicamente como datos agregados y
 anonimizados, sin forma de identificarlo.

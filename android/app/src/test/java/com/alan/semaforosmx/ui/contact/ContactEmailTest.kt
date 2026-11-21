@@ -13,13 +13,13 @@ class ContactEmailTest {
 
     @Test
     fun `la direccion es la cuenta del negocio`() {
-        assertEquals("adminsemaforosmx@gmail.com", ContactEmail.ADDRESS)
+        assertEquals("adminviaverdemx@gmail.com", ContactEmail.ADDRESS)
     }
 
     @Test
     fun `mailto lleva el asunto precargado codificado`() {
         assertEquals(
-            "mailto:adminsemaforosmx@gmail.com" +
+            "mailto:adminviaverdemx@gmail.com" +
                 "?subject=V%C3%ADa%20Verde%20%E2%80%94%20Contacto",
             ContactEmail.mailtoUriString()
         )

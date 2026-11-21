@@ -6,7 +6,7 @@ import java.net.URLEncoder
  * Canal de contacto del equipo de Vía Verde.
  *
  * - La dirección es la cuenta de Google del negocio, creada para la app
- *   (adminsemaforosmx@gmail.com). Es también la dirección que se usará
+ *   (adminviaverdemx@gmail.com). Es también la dirección que se usará
  *   como contacto en la ficha de Google Play cuando se publique.
  * - Se muestra en Ajustes → Contacto, con acciones para copiarla o
  *   escribir por correo (ver SettingsScreen), y está nombrada en los
@@ -18,7 +18,7 @@ import java.net.URLEncoder
 object ContactEmail {
 
     /** Dirección de contacto del equipo (cuenta del negocio). */
-    const val ADDRESS = "adminsemaforosmx@gmail.com"
+    const val ADDRESS = "adminviaverdemx@gmail.com"
 
     /** Asunto precargado al escribir desde la app. */
     const val SUBJECT = "Vía Verde — Contacto"

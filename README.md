@@ -69,7 +69,7 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   auto-actualizarse desde fuera; ahí la maneja Play con la In-App Updates
   API). Ver `SPEC.md` §13 y «Publicar una nueva versión» abajo.
 - **Contacto** (v0.3.1): Ajustes → Contacto muestra el correo del equipo
-  (adminsemaforosmx@gmail.com) para copiarlo o escribir por correo con el
+  (adminviaverdemx@gmail.com) para copiarlo o escribir por correo con el
   asunto precargado; también está nombrado en los Términos §12. Será el
   correo de contacto de la ficha en Google Play.
 - **Widget estable** (v0.3.2): corrige el cierre del servicio del widget
@@ -197,7 +197,7 @@ La especificación completa del producto está en [`SPEC.md`](SPEC.md).
   Aviso de Privacidad (v1.2), la SPEC y el README ahora usan el nombre
   «Vía Verde» (antes «Semáforos MX», decisión de Alan el 2026-11-19).
   El paquete interno `com.alan.semaforosmx`, el correo
-  adminsemaforosmx@gmail.com y el repo de GitHub no cambian (son
+  adminviaverdemx@gmail.com y el repo de GitHub no cambian (son
   identificadores técnicos, no visibles para el usuario). La app vuelve
   a mostrar la pantalla «Acepto» una vez al instalar esta versión.
 - **Aviso de Privacidad en la app + Términos v1.5** (v1.1.4): el Aviso
