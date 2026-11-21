@@ -281,6 +281,9 @@ object AuthManager {
     /** Rol guardado, o null si no hay sesión. */
     fun cachedUserRole(): UserRole? = readCachedUser()?.role
 
+    /** Nombre visible guardado (para la mensajería ligera), o null. */
+    fun cachedDisplayName(): String? = readCachedUser()?.displayName
+
     // --- Persistencia ----------------------------------------------------
 
     private fun saveSession(session: AuthSession, user: AppUser) {

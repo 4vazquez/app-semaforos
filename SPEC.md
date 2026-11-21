@@ -750,11 +750,17 @@ Tres niveles:
    se re-evalúa cada 30 s y tras cada aporte: al llegar a los 20, el
    widget pasa a completo sin reiniciar nada.
 3. **Plus (suscripción de pago, se lanza DESPUÉS con buena base de
-   usuarios):** para usuarios regulares que no contribuyen — sin anuncios
-   + extras (alertas personalizadas, estadísticas de manejo). **En el MVP
-   no hay flujo de pago:** solo existe el flag `AdsManager.isPlusUser()`
-   (stub, siempre false) al que la integración de Google Play Billing se
-   conectará en v1+.
+   usuarios):** para usuarios regulares que no contribuyen — **sin
+   anuncios + ubicación simulada (fake GPS) como beneficio Plus**
+   (definición de Alan, 2026-11-21). La ubicación simulada es
+   **detectable por la app**: los reportes (syncs, semáforos agregados
+   o retiros) hechos con ubicación simulada **NO cuentan** para la
+   cuota de Colaborador (20/mes) ni para el ranking semanal, y se
+   marcan como tales. El fake GPS es para uso personal del suscriptor
+   (pruebas, privacidad), no para aportar datos al sistema.
+   **En el MVP no hay flujo de pago:** solo existe el flag
+   `AdsManager.isPlusUser()` (stub, siempre false) al que la
+   integración de Google Play Billing se conectará en v1+.
 
 **Futuro (fuera del MVP):** la base de datos de tiempos de semáforos
 agregada y anonimizada es el activo de mayor valor (ciudades, logística,
@@ -867,7 +873,24 @@ maneja Play con la In-App Updates API (flexible/inmediata)** — ver §13.
 Alertas por voz («verde») · Detección por cámara con IA (opcional, solo
 con el teléfono en soporte) · Estadísticas del conductor (tiempo ahorrado)
 · Programa formal con comunidades de Uber/DiDi · Ciudades adicionales de
-México (CDMX, Guadalajara) · **Android Auto (idea de Alan):** que el
+México (CDMX, Guadalajara) · **Mensajería ligera por semáforo (idea de
+Alan, 2026-11-21; implementada en código el mismo día, pendiente de
+activar con el backend):** en un semáforo, un usuario puede preguntar
+«¿Ahí hay algo?» y los demás usuarios presentes en ese semáforo
+responden con **opciones predefinidas** (Tráfico / Choque / Mercado
+sobre ruedas / Obra / Nada, todo tranquilo). Sin texto libre, sin feed:
+solo pregunta + respuestas de un toque, visibles únicamente para
+quienes están en ese semáforo (≤ 150 m), con apodo (sin identidad real)
+y expiración rápida (30 min). Solo disponible **parado** (velocidad
+0) en el widget para no fomentar textear manejando; en el mapa se
+accede tocando el semáforo. Las respuestas NO cuentan para la cuota
+de Colaborador ni para el ranking (evita farming). Implementación:
+modelos `LightMessages.kt`, repositorios en memoria + Supabase
+(tablas `light_questions`/`light_answers`, migración 008 con RLS),
+`LightChatCard` en el widget (panel que crece al abrirse) y en el
+detalle del semáforo del mapa; Términos §7 Quater (v1.9). Distinto
+del feed Bipper rechazado: aquí no hay publicaciones ni pantalla
+invadida, solo Q&A efímero y acotado al semáforo. **Android Auto (idea de Alan):** que el
 contorno de la pantalla del coche parpadee el color del semáforo 2–3
 segundos antes de que cambie a verde, para que el conductor se ponga
 alerta. Restricción de la plataforma: Android Auto NO permite overlays

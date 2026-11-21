@@ -202,4 +202,14 @@
     <string name="update_permission_body">Para instalar la actualización, Android te pedirá permitir la instalación desde esta app. Es un permiso normal para apps que se actualizan fuera de Google Play.</string>
     <string name="update_permission_steps">Toca «Ir a ajustes», activa «Permitir desde esta fuente» y vuelve aquí para actualizar.</string>
     <string name="update_permission_button">Ir a ajustes</string>
+
+    <!-- Mensajería ligera por semáforo («¿Ahí hay algo?»). -->
+    <string name="chat_ask_button">¿Ahí hay algo?</string>
+    <string name="chat_asked_by">Preguntó %1$s</string>
+    <string name="chat_answers_count">%1$d respuestas</string>
+    <string name="chat_no_answers">Sin respuestas todavía</string>
+    <string name="chat_your_answer">Tu respuesta: %1$s</string>
+    <string name="chat_need_login">Inicia sesión para preguntar y responder</string>
+    <string name="chat_expired">La pregunta expiró</string>
+    <string name="chat_only_stopped">Solo puedes preguntar y responder detenido</string>
 </resources>

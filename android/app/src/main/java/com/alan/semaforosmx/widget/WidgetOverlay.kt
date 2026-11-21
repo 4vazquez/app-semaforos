@@ -44,6 +44,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alan.semaforosmx.R
+import com.alan.semaforosmx.data.model.AnswerOption
+import com.alan.semaforosmx.data.model.LightChat
+import com.alan.semaforosmx.ui.chat.LightChatCard
 
 /**
  * Contenido del widget flotante (overlay).
@@ -98,7 +101,14 @@ fun WidgetOverlay(
     isTestMode: Boolean = false,
     readyToSync: Boolean = false,
     statusMessageResId: Int? = null,
-    statusIsError: Boolean = false
+    statusIsError: Boolean = false,
+    showAskButton: Boolean = false,
+    chatOpen: Boolean = false,
+    lightChat: LightChat? = null,
+    chatUserId: String? = null,
+    onAsk: () -> Unit = {},
+    onAnswer: (AnswerOption) -> Unit = {},
+    onCloseChat: () -> Unit = {}
 ) {
     when (mode) {
         WidgetMode.FULL -> FullWidgetOverlay(
@@ -115,7 +125,14 @@ fun WidgetOverlay(
             isTestMode = isTestMode,
             readyToSync = readyToSync,
             statusMessageResId = statusMessageResId,
-            statusIsError = statusIsError
+            statusIsError = statusIsError,
+            showAskButton = showAskButton,
+            chatOpen = chatOpen,
+            lightChat = lightChat,
+            chatUserId = chatUserId,
+            onAsk = onAsk,
+            onAnswer = onAnswer,
+            onCloseChat = onCloseChat
         )
         WidgetMode.LED_ONLY -> LedOnlyWidgetOverlay(
             ledState = ledState,
@@ -161,7 +178,14 @@ private fun FullWidgetOverlay(
     isTestMode: Boolean = false,
     readyToSync: Boolean = false,
     statusMessageResId: Int? = null,
-    statusIsError: Boolean = false
+    statusIsError: Boolean = false,
+    showAskButton: Boolean = false,
+    chatOpen: Boolean = false,
+    lightChat: LightChat? = null,
+    chatUserId: String? = null,
+    onAsk: () -> Unit = {},
+    onAnswer: (AnswerOption) -> Unit = {},
+    onCloseChat: () -> Unit = {}
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         LedBorder(
@@ -216,15 +240,39 @@ private fun FullWidgetOverlay(
                 )
             }
 
-            // Botones apilados: grandes, de un toque, sin mirar.
-            // En modo prueba están desactivados (además de la guarda del
-            // servicio): nada de lo simulado se guarda.
-            //
-            // Modo «listo para sync»: leyenda visible + SYNC VERDE latiendo
-            // (el semáforo se crea al presionarlo cuando cambie a verde) y
-            // el segundo botón pasa a CANCELAR. El slider de opacidad se
-            // oculta: detenido en rojo no hace falta y libera espacio.
-            if (readyToSync) {
+            // Panel de mensajería ligera («¿Ahí hay algo?»): reemplaza
+            // los botones mientras está abierto. Solo se abre detenido
+            // en un semáforo verificado (el servicio lo garantiza).
+            if (chatOpen && lightChat != null) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                ) {
+                    LightChatCard(
+                        chat = lightChat,
+                        myUserId = chatUserId,
+                        onAnswer = onAnswer,
+                        compact = true
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Button(
+                        onClick = onCloseChat,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF37474F),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.close_button),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            } else if (readyToSync) {
                 ReadyToSyncContent(
                     onSyncVerde = onSyncVerde,
                     onCancel = onAquiHaySemaforo
@@ -265,6 +313,28 @@ private fun FullWidgetOverlay(
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
+                    }
+
+                    // Mensajería ligera: solo detenido en un semáforo
+                    // verificado cercano (el servicio decide cuándo).
+                    if (showAskButton) {
+                        Button(
+                            onClick = onAsk,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1565C0),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.chat_ask_button),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))

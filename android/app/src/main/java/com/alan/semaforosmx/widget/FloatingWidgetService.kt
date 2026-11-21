@@ -41,8 +41,11 @@ import com.alan.semaforosmx.data.UserIdentity
 import com.alan.semaforosmx.data.auth.AuthManager
 import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.data.aggregation.TimingAggregator
+import com.alan.semaforosmx.data.model.AnswerOption
 import com.alan.semaforosmx.data.model.AntiAbuse
 import com.alan.semaforosmx.data.model.DayType
+import com.alan.semaforosmx.data.model.LightChat
+import com.alan.semaforosmx.data.model.LightChatRules
 import com.alan.semaforosmx.data.model.LightStatus
 import com.alan.semaforosmx.data.model.NewLightStatus
 import com.alan.semaforosmx.data.model.ReportSource
@@ -153,6 +156,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
          */
         const val FULL_WIDGET_WIDTH_DP = 120
         const val FULL_WIDGET_HEIGHT_DP = 340
+        /** Altura extra del panel de mensajería cuando está abierto. */
+        const val CHAT_EXTRA_HEIGHT_DP = 300
         const val LED_WIDGET_WIDTH_DP = 160
         const val LED_WIDGET_HEIGHT_DP = 72
 
@@ -160,6 +165,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         const val FULL_WIDGET_TOP_DP = 120
         const val FULL_WIDGET_EDGE_MARGIN_DP = 8
         const val LED_WIDGET_TOP_DP = 24
+        /** Ticks de 1 s entre refrescos del chat abierto (~10 s). */
+        const val CHAT_REFRESH_TICKS = 10
 
         /** Cada cuántos segundos (ticks de 1 s) se re-evalúa el modo. */
         const val MODE_RECHECK_TICKS = 30
@@ -222,6 +229,19 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
     private var statusMessageResId by mutableStateOf<Int?>(null)
     private var statusIsError by mutableStateOf(false)
     private var statusMessageJob: Job? = null
+
+    /**
+     * Mensajería ligera por semáforo («¿Ahí hay algo?»): chat vigente
+     * del semáforo cercano y si el panel está abierto en el widget.
+     * Solo se puede preguntar/responder DETENIDO (velocidad 0) en un
+     * semáforo verificado a ≤ 150 m — nunca manejando.
+     */
+    private var lightChat by mutableStateOf<LightChat?>(null)
+    private var chatOpen by mutableStateOf(false)
+    /** Espejo observable de MovementDetector.isStopped (para el overlay). */
+    private var isStoppedState by mutableStateOf(false)
+    /** Ticks de 1 s desde el último refresco del chat (se refresca cada ~10 s). */
+    private var ticksSinceChatRefresh = 0
     /** Inicio del ciclo de prueba actual (ms); el LED cicla cada 30 s. */
     private var testCycleStartMillis: Long = 0L
     /** Ubicación simulada (~30 m del semáforo de prueba). */
@@ -421,6 +441,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                     readyToSync = readyToSync,
                     statusMessageResId = statusMessageResId,
                     statusIsError = statusIsError,
+                    showAskButton = nearbyLight != null && isStoppedState && !isTestMode,
+                    chatOpen = chatOpen,
+                    lightChat = lightChat,
+                    chatUserId = currentUserId(),
+                    onAsk = { onAskPressed() },
+                    onAnswer = { option -> onAnswerPressed(option) },
+                    onCloseChat = { onCloseChat() },
                     onOpacityChange = { value ->
                         opacity = value
                         getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -474,7 +501,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
 
     /** Tamaño de la ventana (ancho × alto, en dp) según el modo. */
     private fun widgetWindowSizeDp(mode: WidgetMode): Pair<Int, Int> = when (mode) {
-        WidgetMode.FULL -> FULL_WIDGET_WIDTH_DP to FULL_WIDGET_HEIGHT_DP
+        WidgetMode.FULL -> FULL_WIDGET_WIDTH_DP to
+            (FULL_WIDGET_HEIGHT_DP + if (chatOpen) CHAT_EXTRA_HEIGHT_DP else 0)
         WidgetMode.LED_ONLY -> LED_WIDGET_WIDTH_DP to LED_WIDGET_HEIGHT_DP
     }
 
@@ -681,6 +709,16 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             showCountdown = false
         }
 
+        // Si el panel de mensajería está abierto y el semáforo cercano
+        // cambió (el conductor se movió a otro cruce), cerrarlo: el chat
+        // pertenece a UN semáforo.
+        if (chatOpen) {
+            val chatLightId = lightChat?.question?.lightId
+            if (chatLightId != null && nearbyLight?.id != chatLightId) {
+                onCloseChat()
+            }
+        }
+
         // Visibilidad del overlay (con histéresis): aparece a ≤ 150 m, se
         // oculta cuando no hay nada a ≤ 200 m, y entre 150 y 200 m se queda
         // como está. Corre en el hilo principal (WindowManager + Compose).
@@ -723,6 +761,15 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 if (++ticksSinceModeCheck >= MODE_RECHECK_TICKS) {
                     ticksSinceModeCheck = 0
                     refreshWidgetMode()
+                }
+                // Espejo observable de «detenido» para el botón de
+                // mensajería (solo se puede preguntar/responder parado).
+                isStoppedState = movementDetector.isStopped
+                // Con el panel de mensajería abierto, refrescar las
+                // respuestas de otros conductores cada ~10 s.
+                if (chatOpen && ++ticksSinceChatRefresh >= CHAT_REFRESH_TICKS) {
+                    ticksSinceChatRefresh = 0
+                    refreshChatIfOpen()
                 }
                 // Si la app se abrió, el overlay se oculta (el menú está
                 // dentro de la app; el widget trabaja cuando está cerrada).
@@ -969,6 +1016,116 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             if (!armed) return@launch
             readyToSync = true
             scheduleReadyTimeout(pendingNewLightTracker.current)
+        }
+    }
+
+    /**
+     * El conductor presionó «¿Ahí hay algo?»: pregunta (o recupera la
+     * pregunta vigente) en el semáforo cercano y abre el panel de
+     * mensajería. Solo DETENIDO en un semáforo verificado a ≤ 150 m —
+     * nunca manejando (la app no fomenta textear al volante).
+     */
+    private fun onAskPressed() {
+        if (isTestMode) {
+            showServiceToast(R.string.test_mode_no_save)
+            return
+        }
+        if (loginRequired()) {
+            promptLogin()
+            return
+        }
+        scope.launch {
+            val light = nearbyLight
+            if (light == null) {
+                showServiceToast(R.string.no_light_nearby)
+                return@launch
+            }
+            if (!movementDetector.isStopped) {
+                showServiceToast(R.string.chat_only_stopped)
+                return@launch
+            }
+            val uid = currentUserId()
+            if (uid == null) {
+                promptLogin()
+                return@launch
+            }
+            val nickname = currentNickname()
+            val chat = withContext(Dispatchers.IO) {
+                val repo = RepositoryProvider.lightMessages
+                val question = repo.ask(light.id, uid, nickname)
+                repo.activeChat(light.id) ?: LightChat(question)
+            }
+            lightChat = chat
+            chatOpen = true
+            ticksSinceChatRefresh = 0
+            withContext(Dispatchers.Main) { updateOverlaySize(widgetMode) }
+        }
+    }
+
+    /** El conductor eligió una respuesta predefinida en el panel. */
+    private fun onAnswerPressed(option: AnswerOption) {
+        if (isTestMode) {
+            showServiceToast(R.string.test_mode_no_save)
+            return
+        }
+        if (loginRequired()) {
+            promptLogin()
+            return
+        }
+        scope.launch {
+            val chat = lightChat ?: return@launch
+            val uid = currentUserId()
+            if (uid == null) {
+                promptLogin()
+                return@launch
+            }
+            val updated = withContext(Dispatchers.IO) {
+                val repo = RepositoryProvider.lightMessages
+                repo.answer(chat.question.id, uid, option)
+                repo.activeChat(chat.question.lightId)
+            }
+            lightChat = updated ?: lightChat
+        }
+    }
+
+    /** Cierra el panel de mensajería y restaura el tamaño del widget. */
+    private fun onCloseChat() {
+        chatOpen = false
+        lightChat = null
+        updateOverlaySize(widgetMode)
+    }
+
+    /**
+     * Apodo visible para la mensajería: el nombre de la cuenta de
+     * Google si hay sesión; si no, «Conductor». Nunca se muestra
+     * nombre real ni correo en la mensajería (solo apodo).
+     */
+    private fun currentNickname(): String {
+        val name = AuthManager.cachedDisplayName()
+        return if (name.isNullOrBlank()) LightChatRules.DEFAULT_NICKNAME else name
+    }
+
+    /**
+     * Refresca el chat abierto (respuestas de otros conductores) y lo
+     * cierra si la pregunta expiró o el semáforo cambió. Lo llama el
+     * ticker cada ~10 s mientras el panel está abierto.
+     */
+    private suspend fun refreshChatIfOpen() {
+        if (!chatOpen) return
+        val chat = lightChat ?: return
+        val light = nearbyLight
+        if (light == null || light.id != chat.question.lightId) {
+            onCloseChat()
+            return
+        }
+        val updated = withContext(Dispatchers.IO) {
+            RepositoryProvider.lightMessages.activeChat(light.id)
+        }
+        if (updated == null) {
+            // La pregunta expiró: cerrar el panel.
+            onCloseChat()
+        } else {
+            lightChat = updated
         }
     }
 

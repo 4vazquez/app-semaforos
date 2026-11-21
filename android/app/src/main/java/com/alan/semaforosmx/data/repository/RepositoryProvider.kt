@@ -38,6 +38,24 @@ object RepositoryProvider {
     }
 
     /**
+     * Repositorio de mensajería ligera por semáforo («¿Ahí hay algo?»).
+     * Singleton: el widget y el mapa comparten el mismo estado.
+     * Sin Supabase configurado, la mensajería funciona en memoria
+     * (solo visible en el propio teléfono hasta que el backend viva).
+     */
+    val lightMessages: LightMessagesRepository by lazy {
+        if (useSupabase) {
+            SupabaseLightMessagesRepository(
+                BuildConfig.SUPABASE_URL,
+                BuildConfig.SUPABASE_ANON_KEY,
+                tokenProvider = { AuthManager.cachedAccessToken() }
+            )
+        } else {
+            InMemoryLightMessagesRepository()
+        }
+    }
+
+    /**
      * Inicialización al arrancar la app: siembra la base en memoria con
      * los semáforos del GeoJSON. Se llama desde la clase Application.
      * Si la carga falla, el repositorio usa los cruces de respaldo.

@@ -23,7 +23,7 @@ import android.content.Context
 object TermsAcceptance {
 
     /** Versión vigente de los términos (debe coincidir con el documento). */
-    const val CURRENT_VERSION = "1.7"
+    const val CURRENT_VERSION = "1.9"
 
     /** Versión vigente del Aviso de Privacidad (informativa, no bloquea). */
     const val PRIVACY_VERSION = "1.3"

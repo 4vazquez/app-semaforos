@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Map
@@ -58,6 +60,8 @@ import com.alan.semaforosmx.data.auth.AuthState
 import com.alan.semaforosmx.data.auth.RoleGate
 import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.data.legal.TermsAcceptance
+import com.alan.semaforosmx.data.model.LightChat
+import com.alan.semaforosmx.data.model.LightChatRules
 import com.alan.semaforosmx.data.model.LightStatus
 import com.alan.semaforosmx.data.model.NewLightStatus
 import com.alan.semaforosmx.data.model.ReportSource
@@ -70,6 +74,7 @@ import com.alan.semaforosmx.sensing.GpsVerification
 import com.alan.semaforosmx.sensing.LocationHelper
 import com.alan.semaforosmx.ui.alertas.AlertasScreen
 import com.alan.semaforosmx.ui.aportes.MisAportesScreen
+import com.alan.semaforosmx.ui.chat.LightChatCard
 import com.alan.semaforosmx.ui.map.TrafficLightMap
 import com.alan.semaforosmx.ui.settings.SettingsScreen
 import com.alan.semaforosmx.ui.sync.AquiHaySemaforoButton
@@ -689,6 +694,8 @@ class MainActivity : ComponentActivity() {
         var selectedLight by remember { mutableStateOf<TrafficLight?>(null) }
         var selectedRemovalCount by remember { mutableIntStateOf(0) }
         var selectedAlreadyReported by remember { mutableStateOf(false) }
+        /** Chat vigente («¿Ahí hay algo?») del semáforo seleccionado. */
+        var selectedChat by remember { mutableStateOf<LightChat?>(null) }
 
         // Corregir el mapa (agregar / reportar retiro) exige login con
         // Supabase; el sync desde el Mapa no (SPEC §4.7).
@@ -729,6 +736,10 @@ class MainActivity : ComponentActivity() {
                 }
             } else {
                 false
+            }
+            // Mensajería ligera: cargar el chat vigente de este semáforo.
+            selectedChat = withContext(Dispatchers.IO) {
+                RepositoryProvider.lightMessages.activeChat(light.id)
             }
         }
 
@@ -842,13 +853,16 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Detalle del semáforo tocado en el mapa (con «Ya no existe»).
+        // Detalle del semáforo tocado en el mapa (con «Ya no existe» y
+        // la mensajería ligera «¿Ahí hay algo?»).
         selectedLight?.let { light ->
             AlertDialog(
                 onDismissRequest = { selectedLight = null },
                 title = { Text(stringResource(R.string.light_details)) },
                 text = {
-                    Column {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    ) {
                         Text(light.name ?: "Semáforo")
                         if (light.status == LightStatus.UNVERIFIED) {
                             Spacer(modifier = Modifier.height(4.dp))
@@ -866,6 +880,54 @@ class MainActivity : ComponentActivity() {
                         if (selectedAlreadyReported) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(stringResource(R.string.already_reported))
+                        }
+                        // Mensajería ligera por semáforo: pregunta
+                        // «¿Ahí hay algo?» + respuestas predefinidas.
+                        Spacer(modifier = Modifier.height(12.dp))
+                        val chat = selectedChat
+                        if (chat != null) {
+                            LightChatCard(
+                                chat = chat,
+                                myUserId = repoUserId,
+                                onAnswer = { option ->
+                                    scope.launch {
+                                        val uid = repoUserId
+                                        if (uid == null) {
+                                            onRequireLogin()
+                                            return@launch
+                                        }
+                                        withContext(Dispatchers.IO) {
+                                            val repo = RepositoryProvider.lightMessages
+                                            repo.answer(chat.question.id, uid, option)
+                                            selectedChat = repo.activeChat(light.id)
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        val uid = repoUserId
+                                        if (uid == null) {
+                                            onRequireLogin()
+                                            return@launch
+                                        }
+                                        withContext(Dispatchers.IO) {
+                                            val repo = RepositoryProvider.lightMessages
+                                            val nickname = AuthManager.cachedDisplayName()
+                                                ?.takeIf { it.isNotBlank() }
+                                                ?: LightChatRules.DEFAULT_NICKNAME
+                                            val question = repo.ask(light.id, uid, nickname)
+                                            selectedChat = repo.activeChat(light.id)
+                                                ?: LightChat(question)
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.chat_ask_button))
+                            }
                         }
                     }
                 },
