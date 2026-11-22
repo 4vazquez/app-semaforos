@@ -50,4 +50,38 @@ class PendingNewLightTrackerTest {
     fun notArmedNeverExpires() {
         assertFalse(tracker.isExpired(nowMillis = Long.MAX_VALUE))
     }
+
+    @Test
+    fun autoCreateOnMovementWhenArmedAndNotExpired() {
+        assertTrue(tracker.arm(25.0, -100.0, 10f, nowMillis = 10_000L))
+        assertTrue(tracker.shouldAutoCreateOnMovement(startedAtMillis = 10_500L))
+        assertTrue(tracker.shouldAutoCreateOnMovement(startedAtMillis = 10_999L))
+    }
+
+    @Test
+    fun noAutoCreateOnMovementBeforeArming() {
+        assertTrue(tracker.arm(25.0, -100.0, 10f, nowMillis = 10_000L))
+        assertFalse(tracker.shouldAutoCreateOnMovement(startedAtMillis = 9_999L))
+    }
+
+    @Test
+    fun noAutoCreateOnMovementAfterTimeout() {
+        assertTrue(tracker.arm(25.0, -100.0, 10f, nowMillis = 10_000L))
+        assertFalse(tracker.shouldAutoCreateOnMovement(startedAtMillis = 11_000L))
+    }
+
+    @Test
+    fun noAutoCreateOnMovementWhenNotArmed() {
+        assertFalse(tracker.shouldAutoCreateOnMovement(startedAtMillis = 5_000L))
+    }
+
+    @Test
+    fun noAutoCreateOnMovementAfterCancelOrConsume() {
+        assertTrue(tracker.arm(25.0, -100.0, 10f, nowMillis = 0L))
+        tracker.cancel()
+        assertFalse(tracker.shouldAutoCreateOnMovement(startedAtMillis = 500L))
+        assertTrue(tracker.arm(25.0, -100.0, 10f, nowMillis = 0L))
+        tracker.consume()
+        assertFalse(tracker.shouldAutoCreateOnMovement(startedAtMillis = 500L))
+    }
 }

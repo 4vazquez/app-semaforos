@@ -28,7 +28,13 @@
 > sedán/pickup/SUV/tráiler en vista cenital (estilo propio, verde Vía
 > Verde; nada de copiar la flechita de Google/Waze), el usuario lo
 > escoge en Ajustes → Mi vehículo y el marcador gira con el rumbo
-> GPS. Reemplaza a MyLocationNewOverlay. App v1.1.14 — privilegios
+> GPS. Reemplaza a MyLocationNewOverlay. Detección pasiva de verde
+> para semáforos nuevos (en código, sin release aún): con un reporte
+> armado («Aquí hay un semáforo»), el arranque detectado por GPS
+> completa el alta del semáforo usando el instante del arranque como
+> timestamp del verde (fuente PASSIVE), sin exigir el toque de
+> SYNC VERDE; el toque manual sigue disponible (ver §7.1). App
+> v1.1.14 — privilegios
 > ADMIN de ubicación simulada:
 > el rol ADMIN (solo Alan) se salta la verificación GPS anti-abuso
 > (mock, frescura, precisión, distancia) y la detección de saltos
@@ -298,6 +304,9 @@ El conductor está detenido en un semáforo que la app no conoce:
    ubicaciones en caché) y crea el semáforo **en esa ubicación**, en estado
    **UNVERIFIED** (marcador gris, sin alertas), **y** registra el sync de
    verde de ese momento (el conductor lo presiona al cambiar a verde).
+   **Alternativa pasiva (widget):** si el conductor arma el reporte y
+   el coche arranca, el instante del arranque se toma como el verde y
+   el semáforo se crea sin el toque de SYNC VERDE (ver §7.1).
 3. **Deduplicación:** si ya hay un semáforo a menos de 30 m, no se crea
    un duplicado: el reporte se convierte en un sync sobre el existente
    (y lo confirma si estaba UNVERIFIED).
@@ -712,6 +721,38 @@ reporte pasivo por semáforo cada 60 s como máximo). Los reportes pasivos
 NO cuentan para la cuota Colaborador (el programa premia la contribución
 activa). La calibración fina de umbrales requiere pruebas de campo y
 queda para v1.
+
+### 7.1 Detección pasiva para semáforos nuevos (reporte armado)
+
+**Idea (Alan, 2026-11-19):** además del toque de SYNC VERDE, el
+timestamp del verde de un semáforo nuevo puede salir de la detección de
+movimiento GPS. El conductor arma el reporte detenido en rojo («Aquí
+hay un semáforo» → «¡LISTO, GRACIAS A TI!»); cuando el coche arranca,
+la app toma el instante del arranque como el momento del verde y crea
+el semáforo sin exigir el toque.
+
+**Reglas:**
+- Solo aplica con un reporte armado (el usuario identificó activamente
+  el semáforo); sin armado no hay creación pasiva.
+- El arranque debe ocurrir después de armar y dentro del timeout de
+  5 minutos (`PendingNewLightTracker.shouldAutoCreateOnMovement`).
+- El reporte de tiempo se registra con fuente PASSIVE y timestamp =
+  instante del arranque. La contribución (semáforo distinto) SÍ cuenta
+  para la cuota Colaborador porque la identificación fue activa; el
+  reporte pasivo de tiempo por sí solo no cuenta (ver §9).
+- Misma validación que el flujo manual: login obligatorio, anti-abuso
+  de salto sospechoso, deduplicación de 30 m, tope diario de 5 y
+  validación GPS en servidor (migración 006).
+- Si el conductor no arranca, sigue pudiendo presionar SYNC VERDE
+  manualmente; al expirar (5 min) o cancelar, no se crea nada.
+- Prioridad: el arranque con reporte armado se procesa como semáforo
+  nuevo y no genera además un reporte pasivo sobre el semáforo
+  verificado cercano.
+
+**Nota legal:** usa los mismos datos de movimiento GPS ya declarados
+en el Aviso de Privacidad (ubicación en segundo plano + coordenadas
+del reporte); no introduce categorías nuevas de datos personales.
+Revisión de abogado pendiente con el resto de los documentos.
 
 ## 8. Stack tecnológico y justificación
 

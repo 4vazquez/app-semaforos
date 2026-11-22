@@ -9,6 +9,7 @@ import com.alan.semaforosmx.data.model.TrafficLight
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -75,6 +76,30 @@ class MapCorrectionTest {
         assertEquals(NewLightStatus.CONFIRMED_EXISTING, outcome.status)
         assertEquals("l1", outcome.light!!.id)
         assertEquals(1, repo.lightsInCity("Monterrey").size)
+    }
+
+    @Test
+    fun `reporte pasivo de semaforo nuevo usa el instante del arranque`() = runBlocking {
+        val repo = InMemoryTimingRepository()
+        // Instante del arranque: hace 2 minutos (dentro de la ventana fresca).
+        val startedAt = System.currentTimeMillis() - 2 * 60_000L
+        val outcome = repo.reportNewLightAt(
+            25.6866, -100.3161, "user-a", 10f,
+            reportedAtMillis = startedAt,
+            source = ReportSource.PASSIVE
+        )
+        assertEquals(NewLightStatus.CREATED, outcome.status)
+        // El reporte de tiempo quedó en la franja del instante del arranque.
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = startedAt }
+        val hourSlot = cal.get(java.util.Calendar.HOUR_OF_DAY)
+        val dayType = when (cal.get(java.util.Calendar.DAY_OF_WEEK)) {
+            java.util.Calendar.SATURDAY -> DayType.SATURDAY
+            java.util.Calendar.SUNDAY -> DayType.SUNDAY_HOLIDAY
+            else -> DayType.WEEKDAY
+        }
+        val timing = repo.timingFor(outcome.light!!.id, hourSlot, dayType)
+        assertNotNull(timing)
+        assertEquals(1, timing!!.sampleCount)
     }
 
     @Test

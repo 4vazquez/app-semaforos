@@ -122,9 +122,21 @@ class InMemoryTimingRepository : TimingRepository {
         latitude: Double,
         longitude: Double,
         userId: String,
-        gpsAccuracyMeters: Float
+        gpsAccuracyMeters: Float,
+        reportedAtMillis: Long,
+        source: ReportSource
     ): NewLightOutcome {
         val now = System.currentTimeMillis()
+        // El reporte de tiempo va con el momento del verde: en el flujo
+        // manual es «ahora»; en la detección pasiva es el instante del
+        // arranque detectado por GPS.
+        val reportCal = Calendar.getInstance().apply { timeInMillis = reportedAtMillis }
+        val reportHourSlot = reportCal.get(Calendar.HOUR_OF_DAY)
+        val reportDayType = when (reportCal.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.SATURDAY -> DayType.SATURDAY
+            Calendar.SUNDAY -> DayType.SUNDAY_HOLIDAY
+            else -> DayType.WEEKDAY
+        }
         // ¿Ya hay un semáforo en ese punto? No duplicar: el reporte se
         // convierte en un sync sobre el existente (lo confirma si es UNVERIFIED).
         val existing = lights.values
@@ -139,10 +151,10 @@ class InMemoryTimingRepository : TimingRepository {
             submitReport(
                 TimingReport(
                     lightId = existing.id,
-                    reportedAtMillis = now,
-                    hourSlot = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-                    dayType = currentDayType(),
-                    source = ReportSource.MANUAL_SYNC,
+                    reportedAtMillis = reportedAtMillis,
+                    hourSlot = reportHourSlot,
+                    dayType = reportDayType,
+                    source = source,
                     gpsAccuracyMeters = gpsAccuracyMeters,
                     userId = userId
                 )
@@ -166,10 +178,10 @@ class InMemoryTimingRepository : TimingRepository {
         submitReport(
             TimingReport(
                 lightId = light.id,
-                reportedAtMillis = now,
-                hourSlot = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-                dayType = currentDayType(),
-                source = ReportSource.MANUAL_SYNC,
+                reportedAtMillis = reportedAtMillis,
+                hourSlot = reportHourSlot,
+                dayType = reportDayType,
+                source = source,
                 gpsAccuracyMeters = gpsAccuracyMeters,
                 userId = userId
             )

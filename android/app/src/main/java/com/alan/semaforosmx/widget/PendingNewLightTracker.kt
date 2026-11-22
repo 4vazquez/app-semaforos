@@ -67,6 +67,19 @@ class PendingNewLightTracker(
         return nowMillis - armed.armedAtMillis >= timeoutMillis
     }
 
+    /**
+     * ¿Un arranque en [startedAtMillis] completa automáticamente el
+     * reporte armado? Sí si hay uno armado, el arranque ocurrió después
+     * de armarlo y todavía no expiró. Es la detección pasiva de verde
+     * para semáforos nuevos: el conductor armó el reporte detenido en
+     * rojo y el arranque GPS marca el momento del verde.
+     */
+    fun shouldAutoCreateOnMovement(startedAtMillis: Long): Boolean {
+        val armed = pending ?: return false
+        if (startedAtMillis < armed.armedAtMillis) return false
+        return !isExpired(startedAtMillis)
+    }
+
     companion object {
         /** 5 minutos para presionar SYNC VERDE; si no, se cancela solo. */
         const val DEFAULT_TIMEOUT_MILLIS = 5 * 60 * 1000L

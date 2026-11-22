@@ -8,6 +8,7 @@ import com.alan.semaforosmx.data.model.NewLightOutcome
 import com.alan.semaforosmx.data.model.NewLightStatus
 import com.alan.semaforosmx.data.model.RemovalOutcome
 import com.alan.semaforosmx.data.model.RemovalReport
+import com.alan.semaforosmx.data.model.ReportSource
 import com.alan.semaforosmx.data.model.TimingReport
 import com.alan.semaforosmx.data.model.TrafficLight
 import com.alan.semaforosmx.data.model.UserContribution
@@ -43,12 +44,19 @@ interface TimingRepository {
      * (anti-spam: un usuario solo reporta cada semáforo una vez). Si el
      * usuario llegó al tope diario de semáforos nuevos
      * ([MapCorrection.MAX_NEW_LIGHTS_PER_DAY]), devuelve DAILY_CAP_REACHED.
+     *
+     * [reportedAtMillis] y [source] describen el momento y el origen del
+     * reporte de tiempo incluido: en el flujo manual son «ahora» y
+     * MANUAL_SYNC (valores por defecto); en la detección pasiva por
+     * movimiento GPS son el instante del arranque y PASSIVE.
      */
     suspend fun reportNewLightAt(
         latitude: Double,
         longitude: Double,
         userId: String,
-        gpsAccuracyMeters: Float
+        gpsAccuracyMeters: Float,
+        reportedAtMillis: Long = System.currentTimeMillis(),
+        source: ReportSource = ReportSource.MANUAL_SYNC
     ): NewLightOutcome
 
     /**

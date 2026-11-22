@@ -113,8 +113,21 @@ class SupabaseTimingRepository(
         latitude: Double,
         longitude: Double,
         userId: String,
-        gpsAccuracyMeters: Float
+        gpsAccuracyMeters: Float,
+        reportedAtMillis: Long,
+        source: ReportSource
     ): NewLightOutcome {
+        // El reporte de tiempo va con el momento del verde: en el flujo
+        // manual es «ahora»; en la detección pasiva es el instante del
+        // arranque detectado por GPS.
+        val reportCal = java.util.Calendar.getInstance()
+            .apply { timeInMillis = reportedAtMillis }
+        val reportHourSlot = reportCal.get(java.util.Calendar.HOUR_OF_DAY)
+        val reportDayType = when (reportCal.get(java.util.Calendar.DAY_OF_WEEK)) {
+            java.util.Calendar.SATURDAY -> DayType.SATURDAY
+            java.util.Calendar.SUNDAY -> DayType.SUNDAY_HOLIDAY
+            else -> DayType.WEEKDAY
+        }
         val existing = lightsNear(latitude, longitude, MapCorrection.DEDUP_RADIUS_METERS)
             .minByOrNull { it.distanceToMeters(latitude, longitude) }
         if (existing != null) {
@@ -124,11 +137,10 @@ class SupabaseTimingRepository(
             submitReport(
                 TimingReport(
                     lightId = existing.id,
-                    reportedAtMillis = System.currentTimeMillis(),
-                    hourSlot = java.util.Calendar.getInstance()
-                        .get(java.util.Calendar.HOUR_OF_DAY),
-                    dayType = InMemoryTimingRepository.currentDayType(),
-                    source = ReportSource.MANUAL_SYNC,
+                    reportedAtMillis = reportedAtMillis,
+                    hourSlot = reportHourSlot,
+                    dayType = reportDayType,
+                    source = source,
                     gpsAccuracyMeters = gpsAccuracyMeters,
                     latitude = latitude,
                     longitude = longitude,
@@ -150,11 +162,10 @@ class SupabaseTimingRepository(
         submitReport(
             TimingReport(
                 lightId = light.id,
-                reportedAtMillis = System.currentTimeMillis(),
-                hourSlot = java.util.Calendar.getInstance()
-                    .get(java.util.Calendar.HOUR_OF_DAY),
-                dayType = InMemoryTimingRepository.currentDayType(),
-                source = ReportSource.MANUAL_SYNC,
+                reportedAtMillis = reportedAtMillis,
+                hourSlot = reportHourSlot,
+                dayType = reportDayType,
+                source = source,
                 gpsAccuracyMeters = gpsAccuracyMeters,
                 latitude = latitude,
                 longitude = longitude,

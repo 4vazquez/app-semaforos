@@ -1162,6 +1162,23 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
      * verde en este instante (el momento del cambio a verde).
      */
     private fun onPendingSyncVerdePressed(pending: PendingNewLight) {
+        completePendingNewLight(
+            pending, System.currentTimeMillis(), ReportSource.MANUAL_SYNC
+        )
+    }
+
+    /**
+     * Completa el semáforo nuevo armado: crea el semáforo en la ubicación
+     * guardada y registra el sync de verde en [greenAtMillis] con la
+     * fuente [source]. Lo comparten el toque manual de SYNC VERDE
+     * (verde = ahora, MANUAL_SYNC) y la detección pasiva por movimiento
+     * GPS (verde = instante del arranque, PASSIVE).
+     */
+    private fun completePendingNewLight(
+        pending: PendingNewLight,
+        greenAtMillis: Long,
+        source: ReportSource
+    ) {
         scope.launch {
             val uid = currentUserId()
             if (uid == null) {
@@ -1177,7 +1194,9 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             val outcome = withContext(Dispatchers.IO) {
                 val repo = RepositoryProvider.repository
                 val result = repo.reportNewLightAt(
-                    pending.latitude, pending.longitude, uid, pending.accuracyMeters
+                    pending.latitude, pending.longitude, uid, pending.accuracyMeters,
+                    reportedAtMillis = greenAtMillis,
+                    source = source
                 )
                 if ((result.status == NewLightStatus.CREATED ||
                         result.status == NewLightStatus.CONFIRMED_EXISTING) &&
@@ -1224,6 +1243,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
         // En modo prueba la detección pasiva no reporta: el coche está
         // parado en el sillón, no en un semáforo.
         if (isTestMode) return
+        // Detección pasiva para semáforo nuevo armado: el conductor armó
+        // el reporte detenido en rojo y el arranque GPS marca el verde.
+        // El timestamp del sync es el instante del arranque (fuente
+        // PASSIVE); la contribución cuenta porque el usuario identificó
+        // el semáforo activamente al armarlo. Tiene prioridad sobre el
+        // reporte pasivo de semáforos verificados: el arranque fue en
+        // este semáforo sin mapear, no en el verificado cercano.
+        val pending = pendingNewLightTracker.current
+        if (pending != null &&
+            pendingNewLightTracker.shouldAutoCreateOnMovement(startedAtMillis)
+        ) {
+            completePendingNewLight(pending, startedAtMillis, ReportSource.PASSIVE)
+            return
+        }
         scope.launch(Dispatchers.IO) {
             val light = nearestLight ?: return@launch
             if (light.status != LightStatus.VERIFIED) return@launch
