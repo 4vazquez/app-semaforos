@@ -75,6 +75,25 @@ object RepositoryProvider {
     }
 
     /**
+     * Repositorio de verificación de conductor (sello Colaborador,
+     * SPEC §6.9). Singleton: la pantalla de verificación comparte el
+     * mismo estado. En modo local guarda las solicitudes en memoria;
+     * con Supabase sube la foto al bucket privado `license-photos` y
+     * crea la fila en `verification_requests`.
+     */
+    val verification: VerificationRepository by lazy {
+        if (useSupabase) {
+            SupabaseVerificationRepository(
+                BuildConfig.SUPABASE_URL,
+                BuildConfig.SUPABASE_ANON_KEY,
+                tokenProvider = { AuthManager.cachedAccessToken() }
+            )
+        } else {
+            InMemoryVerificationRepository()
+        }
+    }
+
+    /**
      * Inicialización al arrancar la app: siembra la base en memoria con
      * los semáforos del GeoJSON. Se llama desde la clase Application.
      * Si la carga falla, el repositorio usa los cruces de respaldo.

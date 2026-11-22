@@ -32,4 +32,5 @@ java -cp "$CP" org.junit.runner.JUnitCore \
   com.alan.semaforosmx.data.auth.AuthModelsTest \
   com.alan.semaforosmx.widget.LedBorderTest \
   com.alan.semaforosmx.data.repository.LightMessagesTest \
-  com.alan.semaforosmx.data.repository.RankingTest
+  com.alan.semaforosmx.data.repository.RankingTest \
+  com.alan.semaforosmx.data.repository.VerificationTest

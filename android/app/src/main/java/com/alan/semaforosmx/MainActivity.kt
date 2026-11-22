@@ -83,6 +83,7 @@ import com.alan.semaforosmx.ui.terms.LegalDocument
 import com.alan.semaforosmx.ui.terms.TermsMode
 import com.alan.semaforosmx.ui.terms.TermsScreen
 import com.alan.semaforosmx.ui.theme.SemaforosMxTheme
+import com.alan.semaforosmx.ui.verification.VerificationScreen
 import com.alan.semaforosmx.update.ReleaseInfo
 import com.alan.semaforosmx.update.SelfUpdater
 import com.alan.semaforosmx.update.UpdateDialog
@@ -114,7 +115,7 @@ import java.util.Calendar
  */
 class MainActivity : ComponentActivity() {
 
-    private enum class AppScreen { MAP, APORTES, ALERTAS, SETTINGS, TERMS_VIEW, PRIVACY_VIEW }
+    private enum class AppScreen { MAP, APORTES, ALERTAS, SETTINGS, TERMS_VIEW, PRIVACY_VIEW, VERIFICATION }
 
     /**
      * Contador de onResume: permite reanudar la descarga de una
@@ -429,6 +430,18 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        // Verificación de conductor desde Ajustes: pantalla completa,
+        // sin menú (igual que Términos/Privacidad).
+        if (screen == AppScreen.VERIFICATION) {
+            VerificationScreen(
+                userId = repoUserId,
+                isSignedIn = authState.isSignedIn,
+                supabaseConfigured = RepositoryProvider.useSupabase,
+                onClose = { screen = AppScreen.SETTINGS }
+            )
+            return
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -442,6 +455,7 @@ class MainActivity : ComponentActivity() {
                                     AppScreen.SETTINGS -> R.string.settings
                                     AppScreen.TERMS_VIEW -> R.string.terms_title
                                     AppScreen.PRIVACY_VIEW -> R.string.privacy_title
+                                    AppScreen.VERIFICATION -> R.string.verification_title
                                 }
                             )
                         )
@@ -548,6 +562,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onTermsClick = { screen = AppScreen.TERMS_VIEW },
                     onPrivacyClick = { screen = AppScreen.PRIVACY_VIEW },
+                    onVerificationClick = { screen = AppScreen.VERIFICATION },
                     authState = authState,
                     onSignInClick = {
                         updateScope.launch { AuthManager.signIn(this@MainActivity) }
@@ -580,6 +595,7 @@ class MainActivity : ComponentActivity() {
                 )
                 AppScreen.TERMS_VIEW -> Unit // Se maneja arriba (sin menú).
                 AppScreen.PRIVACY_VIEW -> Unit // Se maneja arriba (sin menú).
+                AppScreen.VERIFICATION -> Unit // Se maneja arriba (sin menú).
             }
         }
 

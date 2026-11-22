@@ -86,6 +86,7 @@ fun SettingsScreen(
     onVibrationChange: (Boolean) -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
+    onVerificationClick: () -> Unit = {},
     authState: AuthState,
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
@@ -285,6 +286,32 @@ fun SettingsScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+            }
+        }
+
+        // Verificación de conductor (sello Colaborador, SPEC §6.9).
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.verification_settings_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.verification_settings_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onVerificationClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(R.string.verification_settings_button))
                 }
             }
         }

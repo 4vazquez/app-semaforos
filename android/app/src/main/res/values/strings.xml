@@ -74,6 +74,32 @@
     <string name="ranking_save">Guardar</string>
     <string name="ranking_saved">Listo, ya apareces en el ranking.</string>
 
+    <!-- Verificación de conductor (sello Colaborador, SPEC §6.9). -->
+    <string name="verification_title">Verificación de conductor</string>
+    <string name="verification_intro">Sube una foto de tu licencia de chofer (tipo C o D en Nuevo León) para obtener el sello de conductor verificado.</string>
+    <string name="verification_license_type">Tipo de licencia</string>
+    <string name="verification_pick_photo">Seleccionar foto de la licencia</string>
+    <string name="verification_photo_ready">Foto lista — tocar para cambiar</string>
+    <string name="verification_consent">Autorizo el tratamiento de la foto de mi licencia para verificar mi condición de conductor.</string>
+    <string name="verification_privacy_note">La foto se guarda en un espacio privado, se revisa una sola vez y se borra tras la verificación. Solo queda guardado el estado, la fecha y el tipo de licencia, nunca la imagen.</string>
+    <string name="verification_submit">Enviar para revisión</string>
+    <string name="verification_sending">Enviando…</string>
+    <string name="verification_sent">Solicitud enviada. Te avisaremos cuando se revise.</string>
+    <string name="verification_pending">En revisión</string>
+    <string name="verification_pending_body">Tu foto está siendo revisada por el equipo. Solo guardamos el estado de verificación, nunca la imagen.</string>
+    <string name="verification_approved">¡Verificado!</string>
+    <string name="verification_approved_body">Tu licencia fue verificada. Ya tienes el sello de conductor verificado.</string>
+    <string name="verification_rejected">Solicitud rechazada</string>
+    <string name="verification_rejected_body">Motivo: %1$s. Puedes enviar una nueva solicitud.</string>
+    <string name="verification_rejected_generic">La foto no se pudo validar</string>
+    <string name="verification_login_required">Inicia sesión con Google para verificar tu licencia.</string>
+    <string name="verification_error">No se pudo enviar. Intenta de nuevo.</string>
+    <string name="verification_close">Cerrar</string>
+    <string name="verification_submitted_on">Enviada el %1$s</string>
+    <string name="verification_settings_title">Verificación de conductor</string>
+    <string name="verification_settings_body">Sube tu licencia de chofer y obtén el sello de conductor verificado.</string>
+    <string name="verification_settings_button">Verificar mi licencia</string>
+
     <!-- Alertas (pantalla de control del widget). -->
     <string name="alertas_title">Alertas</string>
     <string name="alertas_widget_title">Widget en segundo plano</string>

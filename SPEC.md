@@ -629,6 +629,14 @@ aportan de forma regular.
    puede ganar el sin anuncios por cuota, y puede volver a solicitar
    la verificación.
 
+   **Pantalla en la app (implementada 2026-11-22, commit por hacer):**
+   Ajustes → «Verificación de conductor» abre la pantalla completa
+   con el flujo: tipo de licencia (C/D), selector de foto, casilla de
+   consentimiento expreso (sin ella no se envía) y estado de la
+   solicitud (En revisión / Verificado / Rechazada con motivo y
+   reenvío). La revisión del Admin sigue fuera del APK público (panel
+   de Supabase + `resolve_verification()`).
+
 ### 6.10 Ranking semanal de Colaboradores (diseño aprobado por Alan el 19 nov 2026)
 
 Los conductores se aburren de su día a día: el ranking les da un motivo
