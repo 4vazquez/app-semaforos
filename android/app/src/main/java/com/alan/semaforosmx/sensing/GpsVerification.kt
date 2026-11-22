@@ -103,18 +103,26 @@ object GpsVerification {
      * Si [lightLatitude]/[lightLongitude] son null, solo se verifican
      * frescura y precisión (caso «Aquí hay un semáforo»: el punto nuevo
      * ES la ubicación actual).
+     *
+     * [allowMock] es el beneficio Plus de ubicación simulada: con el
+     * toggle activado, un fix simulado no se rechaza con MOCK (el
+     * llamador marca el reporte como `simulated` y no cuenta para la
+     * cuota ni el ranking). Sin Plus, un fix simulado siempre se rechaza.
      */
     fun check(
         location: Location?,
         lightLatitude: Double?,
         lightLongitude: Double?,
-        bypassAntiAbuse: Boolean = false
+        bypassAntiAbuse: Boolean = false,
+        allowMock: Boolean = false
     ): Check {
         if (location == null) return Check.NO_LOCATION
         // Privilegios totales del ADMIN (solo Alan): puede probar con
         // ubicación simulada (fake GPS) desde cualquier parte.
         if (bypassAntiAbuse) return Check.OK
-        if (isMock(location)) return Check.MOCK
+        // Plus con fake GPS activado: el fix simulado se acepta para
+        // uso personal; el reporte va marcado y no cuenta (SPEC §9).
+        if (isMock(location) && !allowMock) return Check.MOCK
         if (!isFresh(location)) return Check.STALE
         if (!isAccurateEnough(location)) return Check.INACCURATE
         if (lightLatitude != null && lightLongitude != null) {

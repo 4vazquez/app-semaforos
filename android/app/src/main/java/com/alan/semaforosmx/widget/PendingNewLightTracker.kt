@@ -18,7 +18,10 @@ data class PendingNewLight(
     val latitude: Double,
     val longitude: Double,
     val accuracyMeters: Float,
-    val armedAtMillis: Long
+    val armedAtMillis: Long,
+    /** Armado con ubicación simulada (Plus fake GPS): el reporte va
+     *  marcado y no cuenta para la cuota ni el ranking (SPEC §9). */
+    val simulated: Boolean = false
 )
 
 /**
@@ -42,10 +45,11 @@ class PendingNewLightTracker(
         latitude: Double,
         longitude: Double,
         accuracyMeters: Float,
-        nowMillis: Long
+        nowMillis: Long,
+        simulated: Boolean = false
     ): Boolean {
         if (pending != null) return false
-        pending = PendingNewLight(latitude, longitude, accuracyMeters, nowMillis)
+        pending = PendingNewLight(latitude, longitude, accuracyMeters, nowMillis, simulated)
         return true
     }
 

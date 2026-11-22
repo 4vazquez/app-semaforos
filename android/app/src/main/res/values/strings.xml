@@ -100,6 +100,15 @@
     <string name="verification_settings_body">Sube tu licencia de chofer y obtén el sello de conductor verificado.</string>
     <string name="verification_settings_button">Verificar mi licencia</string>
 
+    <!-- Plus (SPEC §9): sin anuncios + ubicación simulada. -->
+    <string name="plus_title">Plus</string>
+    <string name="plus_body">Sin anuncios y ubicación simulada para uso personal. Los reportes hechos con ubicación simulada no cuentan para la cuota ni el ranking.</string>
+    <string name="plus_fake_gps_title">Ubicación simulada (fake GPS)</string>
+    <string name="plus_fake_gps_body">Usa una ubicación falsa para probar las alertas. Los reportes hechos así no cuentan para la cuota ni el ranking.</string>
+    <string name="plus_not_active">Plus aún no está disponible.</string>
+    <string name="dev_simulate_plus_title">Simular Plus</string>
+    <string name="dev_simulate_plus_body">Activa la condición Plus sin compra (solo pruebas, hasta que exista la compra en Google Play).</string>
+
     <!-- Alertas (pantalla de control del widget). -->
     <string name="alertas_title">Alertas</string>
     <string name="alertas_widget_title">Widget en segundo plano</string>

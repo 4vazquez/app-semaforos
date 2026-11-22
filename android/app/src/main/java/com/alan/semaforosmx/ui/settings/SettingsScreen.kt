@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alan.semaforosmx.BuildConfig
 import com.alan.semaforosmx.R
+import com.alan.semaforosmx.data.PlusPrefs
 import com.alan.semaforosmx.data.auth.AuthState
 import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.ui.RoleBadge
@@ -108,6 +109,10 @@ fun SettingsScreen(
 
     /** Vehículo elegido para la miniatura de «Mi ubicación» en el mapa. */
     var vehicleType by remember { mutableStateOf(VehiclePrefs.load(context)) }
+
+    /** Plus y su toggle de ubicación simulada (SPEC §9). */
+    var plusEnabled by remember { mutableStateOf(PlusPrefs.isPlus(context)) }
+    var fakeGpsEnabled by remember { mutableStateOf(PlusPrefs.isFakeGpsEnabled(context)) }
 
     /** Íconos de los vehículos (se dibujan una sola vez por composición). */
     val vehicleIcons = remember {
@@ -316,6 +321,59 @@ fun SettingsScreen(
             }
         }
 
+        // Plus (SPEC §9): sin anuncios + ubicación simulada para uso
+        // personal. La compra (Play Billing) llega después; por ahora
+        // la condición Plus se activa desde las opciones de desarrollador.
+        Card(
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.plus_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.plus_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (plusEnabled) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plus_fake_gps_title),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = fakeGpsEnabled,
+                            onCheckedChange = { enabled ->
+                                PlusPrefs.setFakeGps(context, enabled)
+                                fakeGpsEnabled = enabled
+                            }
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.plus_fake_gps_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.plus_not_active),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         // Preferencias: vibración + Términos y Condiciones.
         Card(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -519,6 +577,30 @@ fun SettingsScreen(
                     }
                     Text(
                         text = stringResource(R.string.test_mode_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.dev_simulate_plus_title),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = plusEnabled,
+                            onCheckedChange = { enabled ->
+                                PlusPrefs.setPlus(context, enabled)
+                                plusEnabled = enabled
+                                if (!enabled) fakeGpsEnabled = false
+                            }
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.dev_simulate_plus_body),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

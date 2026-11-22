@@ -124,7 +124,8 @@ class InMemoryTimingRepository : TimingRepository {
         userId: String,
         gpsAccuracyMeters: Float,
         reportedAtMillis: Long,
-        source: ReportSource
+        source: ReportSource,
+        simulated: Boolean
     ): NewLightOutcome {
         val now = System.currentTimeMillis()
         // El reporte de tiempo va con el momento del verde: en el flujo
@@ -156,7 +157,8 @@ class InMemoryTimingRepository : TimingRepository {
                     dayType = reportDayType,
                     source = source,
                     gpsAccuracyMeters = gpsAccuracyMeters,
-                    userId = userId
+                    userId = userId,
+                    simulated = simulated
                 )
             )
             return NewLightOutcome(existing, NewLightStatus.CONFIRMED_EXISTING)
@@ -183,7 +185,8 @@ class InMemoryTimingRepository : TimingRepository {
                 dayType = reportDayType,
                 source = source,
                 gpsAccuracyMeters = gpsAccuracyMeters,
-                userId = userId
+                userId = userId,
+                simulated = simulated
             )
         )
         return NewLightOutcome(light, NewLightStatus.CREATED)
@@ -231,7 +234,10 @@ class InMemoryTimingRepository : TimingRepository {
         // este usuario fue en otro semáforo y llegar hasta aquí implicaría
         // ir a más de 180 km/h, el reporte se rechaza (ubicación falsa o
         // GPS brincando). No se guarda ni cuenta para nada.
-        if (userId != null) {
+        // Los reportes simulados (Plus fake GPS) no pasan por este chequeo:
+        // son uso personal y no cuentan para nada, así que no deben
+        // envenenar la base de saltos de los reportes reales.
+        if (userId != null && !report.simulated) {
             val previous = lastReportByUser[userId]
             val light = lights[report.lightId]
             if (previous != null && light != null) {
@@ -250,8 +256,9 @@ class InMemoryTimingRepository : TimingRepository {
 
         reports.getOrPut(report.lightId) { mutableListOf() }.add(report)
         // Confirmación de semáforos UNVERIFIED: cada usuario distinto que
-        // reporta tiempo en el semáforo es un voto de que existe.
-        if (userId != null) {
+        // reporta tiempo en el semáforo es un voto de que existe. Los
+        // reportes simulados no confirman nada (el usuario no está ahí).
+        if (userId != null && !report.simulated) {
             val confirmedBy = confirmations.getOrPut(report.lightId) { mutableSetOf() }
             confirmedBy.add(userId)
             val light = lights[report.lightId]
@@ -273,7 +280,7 @@ class InMemoryTimingRepository : TimingRepository {
         dayType: DayType
     ): LightTiming? {
         val all = reports[lightId].orEmpty()
-            .filter { it.hourSlot == hourSlot && it.dayType == dayType }
+            .filter { it.hourSlot == hourSlot && it.dayType == dayType && !it.simulated }
         val weights = all.mapNotNull { it.userId }.distinct()
             .associateWith { trustFor(it) }
         val result = TimingAggregator.aggregateWithFeedback(

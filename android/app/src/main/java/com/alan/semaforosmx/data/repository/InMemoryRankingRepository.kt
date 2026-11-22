@@ -31,10 +31,12 @@ class InMemoryRankingRepository(
         val start = WeekWindow.weekStartMillis(now)
         val end = start + 7L * 24 * 60 * 60 * 1000
 
-        // Solo syncs manuales con login dentro de la semana.
+        // Solo syncs manuales con login dentro de la semana. Los
+        // reportes simulados (Plus fake GPS) no cuentan (SPEC §9).
         val weekReports = timing.allTimingReports().filter { report ->
             report.source == ReportSource.MANUAL_SYNC &&
                 report.userId != null &&
+                !report.simulated &&
                 report.reportedAtMillis >= start &&
                 report.reportedAtMillis < end
         }

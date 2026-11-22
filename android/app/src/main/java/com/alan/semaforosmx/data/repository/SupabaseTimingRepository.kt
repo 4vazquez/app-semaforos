@@ -115,7 +115,8 @@ class SupabaseTimingRepository(
         userId: String,
         gpsAccuracyMeters: Float,
         reportedAtMillis: Long,
-        source: ReportSource
+        source: ReportSource,
+        simulated: Boolean
     ): NewLightOutcome {
         // El reporte de tiempo va con el momento del verde: en el flujo
         // manual es «ahora»; en la detección pasiva es el instante del
@@ -144,7 +145,8 @@ class SupabaseTimingRepository(
                     gpsAccuracyMeters = gpsAccuracyMeters,
                     latitude = latitude,
                     longitude = longitude,
-                    userId = userId
+                    userId = userId,
+                    simulated = simulated
                 )
             )
             return NewLightOutcome(existing, NewLightStatus.CONFIRMED_EXISTING)
@@ -169,7 +171,8 @@ class SupabaseTimingRepository(
                 gpsAccuracyMeters = gpsAccuracyMeters,
                 latitude = latitude,
                 longitude = longitude,
-                userId = userId
+                userId = userId,
+                simulated = simulated
             )
         )
         return NewLightOutcome(light, NewLightStatus.CREATED)
@@ -403,7 +406,8 @@ class SupabaseTimingRepository(
         @Json(name = "gps_accuracy_m") val gpsAccuracyMeters: Float,
         @Json(name = "latitude") val latitude: Double? = null,
         @Json(name = "longitude") val longitude: Double? = null,
-        @Json(name = "user_id") val userId: String?
+        @Json(name = "user_id") val userId: String?,
+        val simulated: Boolean = false
     ) {
         fun toDomain(): TimingReport = TimingReport(
             id = id,
@@ -416,7 +420,8 @@ class SupabaseTimingRepository(
             gpsAccuracyMeters = gpsAccuracyMeters,
             latitude = latitude,
             longitude = longitude,
-            userId = userId
+            userId = userId,
+            simulated = simulated
         )
 
         companion object {
@@ -436,7 +441,8 @@ class SupabaseTimingRepository(
                     gpsAccuracyMeters = r.gpsAccuracyMeters,
                     latitude = r.latitude,
                     longitude = r.longitude,
-                    userId = r.userId
+                    userId = r.userId,
+                    simulated = r.simulated
                 )
             }
         }

@@ -86,7 +86,13 @@ data class TimingReport(
      *  del lado servidor, migración 006). Null en modo local. */
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val userId: String? = null
+    val userId: String? = null,
+    /**
+     * Reporte hecho con ubicación simulada (fake GPS, beneficio Plus).
+     * Se guarda marcado pero NO cuenta para la cuota Colaborador ni
+     * para el ranking, y no alimenta el modelo de tiempos (SPEC §9).
+     */
+    val simulated: Boolean = false
 )
 
 /**

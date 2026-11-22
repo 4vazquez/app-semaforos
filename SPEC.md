@@ -422,6 +422,8 @@ agregado por un usuario empieza `UNVERIFIED`.
 | `day_type` | enum | `WEEKDAY` / `SATURDAY` / `SUNDAY_HOLIDAY` |
 | `source` | enum | `MANUAL_SYNC` (botón) / `PASSIVE` (sensor) |
 | `gps_accuracy_m` | float | Precisión del GPS al reportar |
+| `latitude` / `longitude` | double? | Coordenadas del fix (validación servidor, migración 006) |
+| `simulated` | boolean | `true` si el reporte se hizo con ubicación simulada (Plus fake-GPS, migración 009): se guarda marcado pero NO cuenta para cuota, ranking, confirmación ni agregación |
 | `user_id` | UUID? | Usuario con login en v1; nulo para syncs sin login desde el Mapa y para reportes del MVP anónimo (ver §6.9 y §10) |
 
 ### 6.3 Tiempos agregados (`light_timings`, calculado)
@@ -629,7 +631,7 @@ aportan de forma regular.
    puede ganar el sin anuncios por cuota, y puede volver a solicitar
    la verificación.
 
-   **Pantalla en la app (implementada 2026-11-22, commit por hacer):**
+   **Pantalla en la app (implementada 2026-11-22, commit abb30df):**
    Ajustes → «Verificación de conductor» abre la pantalla completa
    con el flujo: tipo de licencia (C/D), selector de foto, casilla de
    consentimiento expreso (sin ella no se envía) y estado de la
@@ -678,7 +680,7 @@ formal («sin definir como competencia»).
 - **Legal:** es un reconocimiento por mérito (quien más aporta, gana),
   no un sorteo: no hay azar. Las reglas van en los Términos (pendiente
   de revisión del abogado, como el resto del documento).
-- **En la app (implementado 2026-11-22, commit por hacer):** Mis aportes
+- **En la app (implementado 2026-11-22, commit a6d6aac):** Mis aportes
   muestra el top 3 de la semana en curso y tu lugar (si estás en el
   top 10 y tienes opt-in), con formulario de opt-in (apodo +
   interruptor) en la misma tarjeta. En modo local el ranking se
@@ -813,6 +815,24 @@ Tres niveles:
    **En el MVP no hay flujo de pago:** solo existe el flag
    `AdsManager.isPlusUser()` (stub, siempre false) al que la
    integración de Google Play Billing se conectará en v1+.
+   **Implementación del toggle fake-GPS (2026-11-22, 139/139
+   pruebas):** `PlusPrefs` (SharedPreferences: `plus_enabled` /
+   `plus_fake_gps`, ambos false por defecto; desactivar Plus apaga
+   el fake GPS). `GpsVerification.check(allowMock=…)` permite el
+   mock solo con Plus + fake-GPS activos (el bypass ADMIN sigue
+   primero). Regla de integridad: los reportes simulados se guardan
+   marcados (`timing_reports.simulated`, migración
+   `supabase/009_plus_simulated.sql`, pendiente de correr en la BD
+   viva) pero NO alimentan la agregación (`timingFor` los filtra),
+   NO confirman semáforos UNVERIFIED, NO cuentan para la cuota ni
+   para el ranking, NO actualizan la base del chequeo de salto
+   imposible y no lo disparan. La UI: tarjeta Plus en Ajustes con
+   interruptor «Ubicación simulada (fake GPS)» (visible solo con
+   Plus activo; sin Plus dice «Plus aún no está disponible») y un
+   interruptor dev «Simular Plus» en opciones de desarrollador.
+   **Play Billing sigue bloqueado:** requiere cuenta de
+   desarrollador en Google Play Console, que requiere la cuenta
+   Google del negocio (adminviaverdemx@gmail.com, aún sin crear).
 
 **Futuro (fuera del MVP):** la base de datos de tiempos de semáforos
 agregada y anonimizada es el activo de mayor valor (ciudades, logística,

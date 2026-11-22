@@ -910,15 +910,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 promptLogin()
                 return@launch
             }
+            val allowMock = com.alan.semaforosmx.data.PlusPrefs.isFakeGpsEnabled(this@FloatingWidgetService)
             val check = GpsVerification.check(
                 location, light.latitude, light.longitude,
-                bypassAntiAbuse = isAdmin()
+                bypassAntiAbuse = isAdmin(),
+                allowMock = allowMock
             )
             if (check != GpsVerification.Check.OK) {
                 showServiceToast(GpsVerification.messageRes(check))
                 return@launch
             }
-            if (!isAdmin() && isSuspiciousJump()) {
+            // Reporte con ubicación simulada (Plus fake GPS): se guarda
+            // marcado para uso personal, sin contar para la cuota.
+            val simulated = allowMock && location.isFromMockProvider
+            if (!isAdmin() && !simulated && isSuspiciousJump()) {
                 showServiceToast(R.string.report_rejected)
                 return@launch
             }
@@ -934,10 +939,11 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                         gpsAccuracyMeters = location.accuracy,
                         latitude = location.latitude,
                         longitude = location.longitude,
-                        userId = uid
+                        userId = uid,
+                        simulated = simulated
                     )
                 )
-                if (ok) {
+                if (ok && !simulated) {
                     repo.recordContribution(
                         uid, InMemoryTimingRepository.currentMonth(), light.id
                     )
@@ -995,14 +1001,20 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 promptLogin()
                 return@launch
             }
+            val allowMock = com.alan.semaforosmx.data.PlusPrefs.isFakeGpsEnabled(this@FloatingWidgetService)
             val check = GpsVerification.check(
-                location, null, null, bypassAntiAbuse = isAdmin()
+                location, null, null,
+                bypassAntiAbuse = isAdmin(),
+                allowMock = allowMock
             )
             if (check != GpsVerification.Check.OK) {
                 showServiceToast(GpsVerification.messageRes(check))
                 return@launch
             }
-            if (!isAdmin() && isSuspiciousJump()) {
+            // Armado con ubicación simulada (Plus fake GPS): el reporte
+            // va marcado y no cuenta para la cuota (SPEC §9).
+            val simulated = allowMock && location.isFromMockProvider
+            if (!isAdmin() && !simulated && isSuspiciousJump()) {
                 showServiceToast(R.string.report_rejected)
                 return@launch
             }
@@ -1011,7 +1023,8 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
             // crea al presionar SYNC VERDE cuando cambie a verde.
             val armed = pendingNewLightTracker.arm(
                 location.latitude, location.longitude, location.accuracy,
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
+                simulated = simulated
             )
             if (!armed) return@launch
             readyToSync = true
@@ -1186,7 +1199,7 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 promptLogin()
                 return@launch
             }
-            if (!isAdmin() && isSuspiciousJump()) {
+            if (!isAdmin() && !pending.simulated && isSuspiciousJump()) {
                 cancelPendingNewLight(showToast = false)
                 showServiceToast(R.string.report_rejected)
                 return@launch
@@ -1196,11 +1209,13 @@ class FloatingWidgetService : Service(), SavedStateRegistryOwner {
                 val result = repo.reportNewLightAt(
                     pending.latitude, pending.longitude, uid, pending.accuracyMeters,
                     reportedAtMillis = greenAtMillis,
-                    source = source
+                    source = source,
+                    simulated = pending.simulated
                 )
                 if ((result.status == NewLightStatus.CREATED ||
                         result.status == NewLightStatus.CONFIRMED_EXISTING) &&
-                    result.light != null
+                    result.light != null &&
+                    !pending.simulated
                 ) {
                     repo.recordContribution(
                         uid, InMemoryTimingRepository.currentMonth(), result.light.id

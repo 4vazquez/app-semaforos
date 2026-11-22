@@ -1012,13 +1012,18 @@ class MainActivity : ComponentActivity() {
             ).minByOrNull {
                 it.distanceToMeters(location.latitude, location.longitude)
             } ?: return@withContext SyncResult.NoLight
+            val allowMock = com.alan.semaforosmx.data.PlusPrefs.isFakeGpsEnabled(this@MainActivity)
             val check = GpsVerification.check(
                 location, nearestLight.latitude, nearestLight.longitude,
-                bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN
+                bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN,
+                allowMock = allowMock
             )
             if (check != GpsVerification.Check.OK) {
                 return@withContext SyncResult.CheckFailed(check)
             }
+            // Reporte con ubicación simulada (Plus fake GPS): se guarda
+            // marcado para uso personal, sin contar para la cuota.
+            val simulated = allowMock && location.isFromMockProvider
             val acceptedReport = repo.submitReport(
                 TimingReport(
                     lightId = nearestLight.id,
@@ -1029,11 +1034,12 @@ class MainActivity : ComponentActivity() {
                     gpsAccuracyMeters = location.accuracy,
                     latitude = location.latitude,
                     longitude = location.longitude,
-                    userId = userId
+                    userId = userId,
+                    simulated = simulated
                 )
             )
             if (!acceptedReport) return@withContext SyncResult.Rejected
-            if (userId != null) {
+            if (userId != null && !simulated) {
                 repo.recordContribution(
                     userId, InMemoryTimingRepository.currentMonth(), nearestLight.id
                 )
@@ -1063,22 +1069,29 @@ class MainActivity : ComponentActivity() {
             showToast(R.string.no_gps_fix)
             return
         }
+        val allowMock = com.alan.semaforosmx.data.PlusPrefs.isFakeGpsEnabled(this)
         val check = GpsVerification.check(
             location, null, null,
-            bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN
+            bypassAntiAbuse = AuthManager.cachedUserRole() == UserRole.ADMIN,
+            allowMock = allowMock
         )
         if (check != GpsVerification.Check.OK) {
             showToast(messageFor(check))
             return
         }
+        // Armado con ubicación simulada (Plus fake GPS): el reporte va
+        // marcado y no cuenta para la cuota (SPEC §9).
+        val simulated = allowMock && location.isFromMockProvider
         val outcome = withContext(Dispatchers.IO) {
             val repo = RepositoryProvider.repository
             val result = repo.reportNewLightAt(
-                location.latitude, location.longitude, userId, location.accuracy
+                location.latitude, location.longitude, userId, location.accuracy,
+                simulated = simulated
             )
             if ((result.status == NewLightStatus.CREATED ||
                     result.status == NewLightStatus.CONFIRMED_EXISTING) &&
-                result.light != null
+                result.light != null &&
+                !simulated
             ) {
                 repo.recordContribution(
                     userId, InMemoryTimingRepository.currentMonth(), result.light.id

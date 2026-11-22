@@ -49,6 +49,10 @@ interface TimingRepository {
      * reporte de tiempo incluido: en el flujo manual son «ahora» y
      * MANUAL_SYNC (valores por defecto); en la detección pasiva por
      * movimiento GPS son el instante del arranque y PASSIVE.
+     *
+     * [simulated] marca un reporte hecho con ubicación simulada (Plus
+     * fake GPS): se guarda marcado pero no cuenta para la cuota ni el
+     * ranking (SPEC §9).
      */
     suspend fun reportNewLightAt(
         latitude: Double,
@@ -56,7 +60,8 @@ interface TimingRepository {
         userId: String,
         gpsAccuracyMeters: Float,
         reportedAtMillis: Long = System.currentTimeMillis(),
-        source: ReportSource = ReportSource.MANUAL_SYNC
+        source: ReportSource = ReportSource.MANUAL_SYNC,
+        simulated: Boolean = false
     ): NewLightOutcome
 
     /**
