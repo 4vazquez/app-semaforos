@@ -314,6 +314,9 @@ class InMemoryTimingRepository : TimingRepository {
         )
     }
 
+    /** Todos los reportes de tiempo (para el ranking semanal, SPEC §6.10). */
+    fun allTimingReports(): List<TimingReport> = reports.values.flatMap { it }
+
     override suspend fun contributionFor(userId: String, month: String): UserContribution {
         val count = contributedLights["$userId|$month"].orEmpty().size
         return UserContribution(userId, month, updateCount = count)

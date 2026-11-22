@@ -56,6 +56,25 @@ object RepositoryProvider {
     }
 
     /**
+     * Repositorio del ranking semanal de Colaboradores (SPEC §6.10).
+     * Singleton: Mis aportes comparte el mismo estado. En modo local
+     * calcula el ranking desde los reportes en memoria; con Supabase
+     * usa la función `top_collaborators_week` y la preferencia de
+     * aparición vive en la tabla `users`.
+     */
+    val ranking: RankingRepository by lazy {
+        if (useSupabase) {
+            SupabaseRankingRepository(
+                BuildConfig.SUPABASE_URL,
+                BuildConfig.SUPABASE_ANON_KEY,
+                tokenProvider = { AuthManager.cachedAccessToken() }
+            )
+        } else {
+            InMemoryRankingRepository(repository as InMemoryTimingRepository)
+        }
+    }
+
+    /**
      * Inicialización al arrancar la app: siembra la base en memoria con
      * los semáforos del GeoJSON. Se llama desde la clase Application.
      * Si la carga falla, el repositorio usa los cruces de respaldo.

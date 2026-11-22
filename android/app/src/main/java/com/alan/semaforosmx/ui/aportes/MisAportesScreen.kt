@@ -23,15 +23,19 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,12 +46,15 @@ import com.alan.semaforosmx.R
 import com.alan.semaforosmx.data.auth.UserRole
 import com.alan.semaforosmx.data.model.ContributionHistoryEntry
 import com.alan.semaforosmx.data.model.HistoryKind
+import com.alan.semaforosmx.data.model.RankingEntry
+import com.alan.semaforosmx.data.model.RankingOptIn
 import com.alan.semaforosmx.data.model.TrustLevel
 import com.alan.semaforosmx.data.model.UserContribution
 import com.alan.semaforosmx.data.model.UserTrust
 import com.alan.semaforosmx.data.repository.InMemoryTimingRepository
 import com.alan.semaforosmx.data.repository.RepositoryProvider
 import com.alan.semaforosmx.ui.RoleBadge
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -80,11 +87,14 @@ fun MisAportesScreen(
     // solo los suyos (SPEC §6.9). Se invita a iniciar sesión.
     val needsLogin = supabaseConfigured && !isSignedIn
     val effectiveUserId = repoUserId ?: ""
+    val scope = rememberCoroutineScope()
     var contribution by remember {
         mutableStateOf(UserContribution(effectiveUserId, InMemoryTimingRepository.currentMonth()))
     }
     var trust by remember { mutableStateOf(UserTrust(effectiveUserId)) }
     var history by remember { mutableStateOf<List<ContributionHistoryEntry>>(emptyList()) }
+    var ranking by remember { mutableStateOf<List<RankingEntry>>(emptyList()) }
+    var optIn by remember { mutableStateOf(RankingOptIn()) }
 
     LaunchedEffect(repoUserId) {
         val uid = repoUserId ?: return@LaunchedEffect
@@ -93,6 +103,9 @@ fun MisAportesScreen(
         contribution = repo.contributionFor(uid, month)
         trust = repo.userTrust(uid)
         history = repo.contributionHistory(uid)
+        val rankingRepo = RepositoryProvider.ranking
+        ranking = rankingRepo.topWeek(10)
+        optIn = rankingRepo.optInFor(uid)
     }
 
     LazyColumn(
@@ -130,6 +143,23 @@ fun MisAportesScreen(
         }
         item {
             TrustCard(trust)
+        }
+        item {
+            RankingCard(
+                ranking = ranking,
+                userId = repoUserId,
+                optIn = optIn,
+                onOptInSave = { nickname, show ->
+                    val uid = repoUserId ?: return@RankingCard
+                    // Se guarda y se recarga el ranking para reflejar el cambio.
+                    scope.launch {
+                        val rankingRepo = RepositoryProvider.ranking
+                        rankingRepo.setOptIn(uid, nickname, show)
+                        optIn = rankingRepo.optInFor(uid)
+                        ranking = rankingRepo.topWeek(10)
+                    }
+                }
+            )
         }
         item {
             Text(
@@ -272,6 +302,127 @@ private fun TrustCard(trust: UserTrust) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+/**
+ * Tarjeta del ranking semanal (SPEC §6.10): top 3 de la semana, tu
+ * lugar si apareces (top 10 con opt-in) y el formulario de opt-in
+ * (apodo + interruptor) si aún no apareces. Solo el apodo es visible,
+ * nunca el nombre real ni el correo.
+ */
+@Composable
+private fun RankingCard(
+    ranking: List<RankingEntry>,
+    userId: String?,
+    optIn: RankingOptIn,
+    onOptInSave: (nickname: String, showInRanking: Boolean) -> Unit
+) {
+    var nickname by remember(optIn.nickname) { mutableStateOf(optIn.nickname ?: "") }
+    var showInRanking by remember(optIn.showInRanking) { mutableStateOf(optIn.showInRanking) }
+    val myPlace = ranking.indexOfFirst { it.userId == userId } + 1
+
+    Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = stringResource(R.string.ranking_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = stringResource(R.string.ranking_beta_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            if (ranking.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.ranking_empty),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                ranking.take(3).forEachIndexed { index, entry ->
+                    val isMe = entry.userId == userId
+                    Text(
+                        text = stringResource(
+                            R.string.ranking_entry,
+                            index + 1,
+                            entry.nickname,
+                            entry.distinctLights
+                        ),
+                        style = if (isMe) {
+                            MaterialTheme.typography.bodyLarge
+                        } else {
+                            MaterialTheme.typography.bodyMedium
+                        },
+                        color = if (isMe) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                if (userId != null) {
+                    if (myPlace > 0) {
+                        Text(
+                            text = stringResource(R.string.ranking_my_place, myPlace),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else if (optIn.isVisible) {
+                        Text(
+                            text = stringResource(R.string.ranking_not_ranked),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            // Formulario de opt-in: solo con sesión (sin login no hay
+            // identidad que mostrar en el ranking).
+            if (userId != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.ranking_optin_title),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = nickname,
+                    onValueChange = { nickname = it },
+                    label = { Text(stringResource(R.string.ranking_nickname_hint)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.ranking_show_label),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Switch(
+                        checked = showInRanking,
+                        onCheckedChange = { showInRanking = it }
+                    )
+                }
+                Button(
+                    onClick = { onOptInSave(nickname, showInRanking) },
+                    enabled = nickname.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(R.string.ranking_save))
+                }
+            }
         }
     }
 }

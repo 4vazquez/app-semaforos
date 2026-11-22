@@ -670,9 +670,12 @@ formal («sin definir como competencia»).
 - **Legal:** es un reconocimiento por mérito (quien más aporta, gana),
   no un sorteo: no hay azar. Las reglas van en los Términos (pendiente
   de revisión del abogado, como el resto del documento).
-- **En la app:** Mis aportes muestra el top 3 de la semana en curso y
-  tu lugar (si estás en el top 10 y tienes opt-in). La UI es trabajo
-  de v1.2 (necesita el backend vivo).
+- **En la app (implementado 2026-11-22, commit por hacer):** Mis aportes
+  muestra el top 3 de la semana en curso y tu lugar (si estás en el
+  top 10 y tienes opt-in), con formulario de opt-in (apodo +
+  interruptor) en la misma tarjeta. En modo local el ranking se
+  calcula desde los reportes en memoria; con Supabase usa la función
+  `top_collaborators_week` y la preferencia vive en `users`.
 - **Sostenibilidad:** $600/semana lo paga Alan en el piloto; a futuro,
   patrocinios o ajuste del monto según usuarios activos. El programa
   puede modificarse o terminarse con aviso en la app.
